@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>短线博弈复盘 · 2026-08-14</title>
+  <style>
+    :root{
+      --ink:#17221f;--muted:#66736e;--paper:#f3f1ea;--card:#fffef9;--line:#dcded6;
+      --red:#df4138;--red-soft:#fbe9e5;--green:#168b6a;--green-soft:#e3f3ec;
+      --orange:#ee8a3b;--blue:#3f6f87;--black:#101714;--shadow:0 10px 35px rgba(24,36,31,.07)
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;font-size:14px}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .top-rule{height:4px;background:linear-gradient(90deg,var(--red) 0 38%,var(--black) 38% 73%,var(--green) 73%)}
+    header{position:sticky;top:0;z-index:20;background:rgba(243,241,234,.93);backdrop-filter:blur(14px);border-bottom:1px solid rgba(23,34,31,.12)}
+    .nav{max-width:1440px;margin:auto;height:66px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px;min-width:max-content}
+    .brand-mark{width:32px;height:32px;display:grid;place-items:center;background:var(--red);color:white;font-family:Georgia,serif;font-size:20px;font-weight:700}
+    .brand strong{display:block;font-size:15px;letter-spacing:.14em}
+    .brand small{color:var(--muted);font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.12em}
+    nav{display:flex;align-items:center;gap:22px}
+    nav a{color:var(--muted);text-decoration:none;font-size:12px;font-weight:600}
+    nav a:hover{color:var(--red)}
+    .date-tool{display:flex;align-items:center;gap:8px}
+    .date-input{height:36px;border:1px solid var(--line);background:var(--card);padding:0 10px;color:var(--ink);outline:none}
+    .date-input:focus{border-color:var(--red)}
+    .run-btn{height:36px;border:0;background:var(--black);color:#fff;padding:0 15px;font-weight:700}
+    main{max-width:1440px;margin:auto;padding:34px 28px 72px}
+    .eyebrow{font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:800;text-transform:uppercase}
+    .hero{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.75fr);gap:20px;margin-bottom:20px}
+    .hero-main{background:var(--black);color:white;min-height:330px;padding:36px 38px;position:relative;overflow:hidden}
+    .hero-main:after{content:"";position:absolute;width:320px;height:320px;border:1px solid rgba(255,255,255,.08);border-radius:50%;right:-70px;top:-95px;box-shadow:0 0 0 65px rgba(255,255,255,.025),0 0 0 130px rgba(255,255,255,.018)}
+    .hero-date{display:flex;align-items:center;gap:10px;color:#b8c2bd;font:12px ui-monospace,monospace;letter-spacing:.12em}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(223,65,56,.18)}
+    h1{font-family:Georgia,"Noto Serif SC",serif;font-size:clamp(40px,5.8vw,82px);line-height:.98;letter-spacing:-.04em;margin:38px 0 21px;max-width:760px}
+    h1 em{font-style:normal;color:var(--red)}
+    .hero-summary{max-width:720px;color:#cbd2ce;font-size:15px;line-height:1.85;border-left:2px solid var(--red);padding-left:16px}
+    .hero-stamp{position:absolute;right:36px;bottom:28px;font:10px ui-monospace,monospace;color:#78827e;letter-spacing:.12em;z-index:1}
+    .score-card{background:var(--card);border:1px solid var(--line);padding:28px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow)}
+    .score-head{display:flex;justify-content:space-between;align-items:start}
+    .score-head h2{font:700 13px/1.3 ui-monospace,monospace;margin:0;letter-spacing:.12em}
+    .status-tag{color:var(--orange);background:#fff0df;padding:6px 9px;font-size:11px;font-weight:700}
+    .score-wrap{display:flex;align-items:center;gap:24px;margin:20px 0}
+    .gauge{--score:42;width:136px;height:136px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--red) calc(var(--score)*1%),#e7e7df 0);position:relative;flex:0 0 auto}
+    .gauge:before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--card)}
+    .gauge-value{position:relative;text-align:center}
+    .gauge-value strong{font:700 40px/1 ui-monospace,monospace}
+    .gauge-value span{display:block;color:var(--muted);font-size:10px;margin-top:5px;letter-spacing:.1em}
+    .score-copy strong{font-family:Georgia,"Noto Serif SC",serif;font-size:23px}
+    .score-copy p{color:var(--muted);line-height:1.7;margin:8px 0 0}
+    .meter{height:6px;background:#e8e8e1;margin:5px 0 17px;overflow:hidden}
+    .meter i{height:100%;display:block;background:var(--red)}
+    .score-label{display:flex;justify-content:space-between;font-size:11px}
+    .score-label span{color:var(--muted)}
+    .ticker{display:grid;grid-template-columns:repeat(7,1fr);background:var(--card);border:1px solid var(--line);margin-bottom:32px;box-shadow:var(--shadow)}
+    .tick{padding:18px 19px;border-right:1px solid var(--line)}
+    .tick:last-child{border-right:0}
+    .tick span{display:block;color:var(--muted);font-size:10px;letter-spacing:.08em;margin-bottom:8px}
+    .tick strong{font:700 22px/1 ui-monospace,monospace}
+    .up{color:var(--red)!important}.down{color:var(--green)!important}.neutral{color:var(--orange)!important}
+    .section{margin-top:44px;scroll-margin-top:92px}
+    .section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px;border-bottom:1px solid #cdd0c9;padding-bottom:13px}
+    .title-group{display:flex;align-items:baseline;gap:13px}
+    .section-no{font:700 11px ui-monospace,monospace;color:var(--red)}
+    h2{font-family:Georgia,"Noto Serif SC",serif;font-size:27px;margin:0;letter-spacing:-.02em}
+    .section-note{font-size:11px;color:var(--muted)}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);padding:23px;box-shadow:var(--shadow)}
+    .card-kicker{font:700 10px ui-monospace,monospace;letter-spacing:.15em;color:var(--muted)}
+    .card h3{font-size:18px;margin:11px 0 9px}
+    .card p{color:var(--muted);line-height:1.75;margin:0}
+    .cycle-card{position:relative;overflow:hidden;min-height:188px}
+    .cycle-card.active{background:var(--red);border-color:var(--red);color:white}
+    .cycle-card.active .card-kicker,.cycle-card.active p{color:#ffe1dc}
+    .cycle-index{position:absolute;right:17px;bottom:4px;font:700 72px Georgia,serif;opacity:.08}
+    .evidence{margin-top:14px;display:flex;gap:7px;flex-wrap:wrap}
+    .pill{font-size:10px;padding:5px 7px;background:#f0efe8;color:var(--muted)}
+    .active .pill{background:rgba(255,255,255,.15);color:white}
+    .ladder{display:grid;grid-template-columns:105px 1fr;background:var(--card);border:1px solid var(--line)}
+    .ladder+.ladder{border-top:0}
+    .level{display:grid;place-items:center;text-align:center;background:var(--black);color:white;padding:20px 10px}
+    .level strong{font:700 30px ui-monospace,monospace}
+    .level small{font-size:10px;letter-spacing:.1em;color:#aeb7b2}
+    .level.red{background:var(--red)}
+    .stocks{display:grid;grid-template-columns:repeat(5,1fr)}
+    .stock{padding:19px;border-right:1px solid var(--line);min-height:110px}
+    .stock:last-child{border:0}
+    .stock strong{display:block;font-size:15px;margin-bottom:6px}
+    .stock code{font-size:10px;color:var(--muted)}
+    .stock p{font-size:11px;line-height:1.5;margin:12px 0 0;color:var(--muted)}
+    .quality-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;background:var(--orange)}
+    .quality-dot.good{background:var(--red)}.quality-dot.bad{background:var(--green)}
+    .strength-grid{display:grid;grid-template-columns:1.05fr 1.95fr;gap:14px}
+    .seal-list{display:flex;flex-direction:column;gap:17px;margin-top:20px}
+    .seal-row{display:grid;grid-template-columns:74px 1fr 68px;gap:10px;align-items:center}
+    .seal-row b{font-size:12px}.seal-row span{text-align:right;font:700 12px ui-monospace,monospace}
+    .bar{height:8px;background:#ecece5}.bar i{height:100%;display:block;background:var(--red)}
+    .bar.green i{background:var(--green)}.bar.orange i{background:var(--orange)}
+    .alert{margin-top:22px;padding:13px 14px;background:var(--red-soft);border-left:3px solid var(--red);font-size:12px;line-height:1.6}
+    .money-table{width:100%;border-collapse:collapse;margin-top:12px}
+    .money-table th{text-align:left;padding:9px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--line);letter-spacing:.08em}
+    .money-table td{padding:14px 8px;border-bottom:1px solid #e9e9e2;font-size:12px}
+    .money-table tr:last-child td{border:0}
+    .money-table td:nth-child(n+3),.money-table th:nth-child(n+3){text-align:right}
+    .anchor-grid{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:14px}
+    .anchor-main{background:var(--black);color:white;padding:27px;min-height:244px;position:relative;overflow:hidden}
+    .anchor-main h3{font-family:Georgia,"Noto Serif SC",serif;font-size:31px;margin:30px 0 7px}
+    .anchor-code{color:#8c9791;font:12px ui-monospace,monospace}
+    .anchor-move{font:700 36px ui-monospace,monospace;color:var(--red);margin-top:25px}
+    .anchor-main p{color:#aab4af;line-height:1.65}
+    .anchor-card{display:flex;flex-direction:column;justify-content:space-between}
+    .anchor-card .move{font:700 27px ui-monospace,monospace;margin:18px 0}
+    .signal{font-size:11px;line-height:1.6;padding-top:13px;border-top:1px solid var(--line);color:var(--muted)}
+    .discipline-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+    .rules{counter-reset:rules;margin-top:18px}
+    .rule{counter-increment:rules;display:grid;grid-template-columns:31px 1fr;gap:13px;padding:14px 0;border-bottom:1px solid var(--line)}
+    .rule:before{content:counter(rules,decimal-leading-zero);font:700 11px ui-monospace,monospace;color:var(--red);padding-top:2px}
+    .rule:last-child{border:0}
+    .rule strong{display:block;margin-bottom:5px}
+    .rule p{font-size:12px}
+    .empty-test{background:var(--black);color:white;padding:27px}
+    .test-head{display:flex;justify-content:space-between;align-items:center}
+    .test-head h3{font-family:Georgia,"Noto Serif SC",serif;font-size:24px;margin:0}
+    .switch{width:48px;height:25px;background:#35403b;border-radius:20px;position:relative;border:0;transition:.2s}
+    .switch:after{content:"";width:19px;height:19px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:.2s}
+    .switch.on{background:var(--red)}.switch.on:after{left:26px}
+    .checks{margin-top:20px}
+    .check{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #303a35;color:#bdc6c1;font-size:12px}
+    .check:last-child{border:0}
+    .check b{font:700 12px ui-monospace,monospace;color:var(--red)}
+    .verdict{margin-top:18px;background:#232d28;padding:16px;line-height:1.7;color:#e2e7e4}
+    .params{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+    .param label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px;color:var(--muted)}
+    input[type=range]{width:100%;accent-color:var(--red)}
+    .source-list{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .source{border-top:2px solid var(--ink);padding:13px 2px}
+    .source a{color:var(--ink);text-decoration:none;font-weight:700;font-size:12px}
+    .source a:hover{color:var(--red)}
+    .source p{font-size:10px;color:var(--muted);line-height:1.5;margin:6px 0}
+    footer{max-width:1440px;margin:auto;padding:25px 28px 40px;border-top:1px solid var(--line);display:flex;justify-content:space-between;color:var(--muted);font-size:10px}
+    .closed{display:none;max-width:760px;margin:10vh auto;background:var(--card);border:1px solid var(--line);padding:55px;text-align:center;box-shadow:var(--shadow)}
+    .closed-icon{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;background:var(--green-soft);color:var(--green);font-size:28px}
+    .closed h2{font-size:34px}.closed p{color:var(--muted);line-height:1.8}
+    .closed button{border:0;background:var(--black);color:white;padding:12px 18px;margin-top:14px}
+    .toast{position:fixed;right:25px;bottom:25px;background:var(--black);color:white;padding:13px 17px;font-size:12px;transform:translateY(100px);opacity:0;transition:.25s;z-index:50}
+    .toast.show{transform:none;opacity:1}
+    .print-btn{border:1px solid var(--line);background:transparent;height:36px;padding:0 12px}
+    @media(max-width:1050px){
+      nav{display:none}.ticker{grid-template-columns:repeat(4,1fr)}.tick:nth-child(4){border-right:0}.tick:nth-child(n+5){border-top:1px solid var(--line)}
+      .stocks{grid-template-columns:repeat(3,1fr)}.anchor-grid{grid-template-columns:repeat(2,1fr)}.anchor-main{grid-column:span 2}
+    }
+    @media(max-width:760px){
+      .nav{height:auto;padding:13px 16px;flex-wrap:wrap}.date-tool{width:100%}.date-input{flex:1}.print-btn{display:none}
+      main{padding:20px 14px 50px}.hero{grid-template-columns:1fr}.hero-main{padding:27px 23px;min-height:360px}
+      .hero-stamp{display:none}.score-card{min-height:290px}.ticker{grid-template-columns:repeat(2,1fr)}
+      .tick,.tick:nth-child(4){border-right:1px solid var(--line);border-top:1px solid var(--line)}.tick:nth-child(odd){border-right:1px solid var(--line)}
+      .grid-3,.strength-grid,.discipline-grid{grid-template-columns:1fr}.ladder{grid-template-columns:68px 1fr}.stocks{grid-template-columns:1fr 1fr}.stock{border-bottom:1px solid var(--line)}
+      .anchor-grid{grid-template-columns:1fr}.anchor-main{grid-column:auto}.params,.source-list{grid-template-columns:1fr 1fr}
+      .section-title{align-items:start}.section-note{display:none}footer{padding:20px 14px;flex-direction:column;gap:7px}
+    }
+    @media print{
+      header,.date-tool,.print-btn,.params,.toast{display:none!important}body{background:white}.card,.score-card,.ticker{box-shadow:none}
+      main{max-width:none;padding:12px}.section{break-inside:avoid;margin-top:28px}.hero-main{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    }
+  </style>
+</head>
+<body>
+  <div class="top-rule"></div>
+  <header>
+    <div class="nav">
+      <div class="brand">
+        <div class="brand-mark">弈</div>
+        <div><strong>短线博弈复盘</strong><small>MARKET TACTICS · A SHARE</small></div>
+      </div>
+      <nav>
+        <a href="#cycle">情绪周期</a><a href="#ladder">样本梯队</a><a href="#capital">资金观察</a><a href="#discipline">次日纪律</a>
+      </nav>
+      <div class="date-tool">
+        <input class="date-input" id="tradeDate" type="date" value="2026-08-14" min="2026-01-01" max="2026-12-31" aria-label="复盘交易日">
+        <button class="run-btn" id="runReview">运行复盘</button>
+        <button class="print-btn" onclick="window.print()">打印 / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="closedView" class="closed">
+    <div class="closed-icon">休</div>
+    <div class="eyebrow">MARKET CLOSED</div>
+    <h2 id="closedTitle">该日休市</h2>
+    <p id="closedReason"></p>
+    <button onclick="resetDate()">返回已收录交易日</button>
+  </div>
+
+  <main id="dashboard">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="hero-date"><i class="live-dot"></i> REVIEWED SESSION · FRI, 14 AUG 2026</div>
+        <h1>缩量修复，<br><em>高位退潮。</em></h1>
+        <div class="hero-summary">指数红盘掩盖个股弱势，AI 硬件回流但情绪接力断层。高标仅蓝盾光电穿越，昨日 3 板以上样本大面积负反馈；当下要做的是辨别修复强度，而不是为红盘买单。</div>
+        <div class="hero-stamp">DATA CUT-OFF · 2026-08-14 18:48 CST</div>
+      </div>
+      <aside class="score-card">
+        <div class="score-head"><h2>RISK / REWARD<br>TACTICAL SCORE</h2><span class="status-tag" id="positionTag">防守 · 3成仓</span></div>
+        <div class="score-wrap">
+          <div class="gauge" id="gauge"><div class="gauge-value"><strong id="scoreValue">42</strong><span>/ 100</span></div></div>
+          <div class="score-copy"><strong id="cycleVerdict">弱修复期</strong><p id="scoreExplain">指数修复与短线情绪背离，低位优于高位，确认优于预判。</p></div>
+        </div>
+        <div>
+          <div class="score-label"><b>进攻许可</b><span id="permitText">谨慎</span></div><div class="meter"><i id="permitBar" style="width:42%"></i></div>
+          <div class="score-label"><b>亏钱效应</b><span>偏高</span></div><div class="meter"><i style="width:68%;background:var(--green)"></i></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="ticker" aria-label="市场核心数据">
+      <div class="tick"><span>上证指数</span><strong class="up">+0.01%</strong></div>
+      <div class="tick"><span>深证成指</span><strong class="up">+0.45%</strong></div>
+      <div class="tick"><span>创业板指</span><strong class="up">+1.12%</strong></div>
+      <div class="tick"><span>两市成交额</span><strong>2.14万亿</strong></div>
+      <div class="tick"><span>较前日</span><strong class="down">-4081亿</strong></div>
+      <div class="tick"><span>涨 / 跌家数</span><strong>2400 / 2970</strong></div>
+      <div class="tick"><span>涨停 / 炸板</span><strong class="neutral">63 / 19</strong></div>
+    </section>
+
+    <section class="section" id="cycle">
+      <div class="section-title"><div class="title-group"><span class="section-no">01</span><h2>情绪周期判断</h2></div><span class="section-note">不是冰点，也不是主升；修复集中在科技权重与低位首板</span></div>
+      <div class="grid-3">
+        <article class="card cycle-card"><span class="card-kicker">INDEX · 指数层</span><h3>缩量 V 型修复</h3><p>三大指数收红，创业板收复 30 日线；但成交额骤减 4081 亿，红盘缺少增量确认。</p><div class="evidence"><span class="pill">创业板 +1.12%</span><span class="pill">缩量 16%</span></div><b class="cycle-index">I</b></article>
+        <article class="card cycle-card active"><span class="card-kicker">SENTIMENT · 情绪层</span><h3>退潮后的弱修复</h3><p>晋级率仅 27.27%，昨日 3 板以上除蓝盾光电外全线失守；高低切换明显。</p><div class="evidence"><span class="pill">封板率 77%</span><span class="pill">晋级率 27.27%</span></div><b class="cycle-index">II</b></article>
+        <article class="card cycle-card"><span class="card-kicker">STRUCTURE · 结构层</span><h3>主线回流，扩散有限</h3><p>CPO、算力租赁承接最强，通信获大额流入；但全市场仍有 2970 股收跌。</p><div class="evidence"><span class="pill">通信 +81.57亿</span><span class="pill">跌多涨少</span></div><b class="cycle-index">III</b></article>
+      </div>
+    </section>
+
+    <section class="section" id="ladder">
+      <div class="section-title"><div class="title-group"><span class="section-no">02</span><h2>绝对高位 · 样本梯队</h2></div><span class="section-note">连板样本来自公开涨停复盘；“观察”不等于推荐</span></div>
+      <div class="ladder">
+        <div class="level red"><strong>5</strong><small>最高板</small></div>
+        <div class="stocks">
+          <div class="stock"><strong><i class="quality-dot bad"></i>蓝盾光电</strong><code>300862 · 并购重组</code><p>20cm 5连板；5次开板，换手剧烈，封单仅流通市值 0.44%。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>开开实业</strong><code>600272 · 医药商业</code><p>7天5板反包，板块由逻辑行情转向低位投机扩散。</p></div>
+        </div>
+      </div>
+      <div class="ladder">
+        <div class="level"><strong>3</strong><small>强分歧</small></div>
+        <div class="stocks">
+          <div class="stock"><strong><i class="quality-dot"></i>澳洋健康</strong><code>002172 · 医药</code><p>3连板；“洋”字辈情绪加成。</p></div>
+          <div class="stock"><strong><i class="quality-dot good"></i>天洋新材</strong><code>603330 · 光伏/材料</code><p>3连板；低位辨识度样本。</p></div>
+          <div class="stock"><strong><i class="quality-dot good"></i>坤泰股份</strong><code>001260 · 汽车零部件</code><p>3连板；封单量占流通股 25.28%。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>金螳螂</strong><code>002081 · 装饰</code><p>3连板；机构与北向分歧。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>华西股份</strong><code>000936 · 光通信</code><p>3连板；主线共振但面临高位淘汰。</p></div>
+        </div>
+      </div>
+      <div class="ladder">
+        <div class="level"><strong>2</strong><small>低位试错</small></div>
+        <div class="stocks">
+          <div class="stock"><strong><i class="quality-dot good"></i>共进股份</strong><code>603118 · 通信设备</code><p>2连板；CPO/光通信主线。</p></div>
+          <div class="stock"><strong><i class="quality-dot good"></i>博济医药</strong><code>300404 · CRO</code><p>20cm 2连板；趋势逻辑仍强。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>神奇制药</strong><code>600613 · 医药</code><p>2连板；封单量占流通股 4.86%。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>海洋王</strong><code>002724 · 专用照明</code><p>2连板；名称情绪属性更重。</p></div>
+          <div class="stock"><strong><i class="quality-dot"></i>理工能科</strong><code>002322 · 软件服务</code><p>2连板；梯队补涨观察。</p></div>
+        </div>
+      </div>
+      <div class="alert"><b>绝对高位警报：</b>秦安股份由昨日 5 板快速跌停，京投发展 4 进 5 上演“天地板”，德龙汇能跌停。高标负反馈没有消失，蓝盾光电属于孤立穿越样本，不应外推为全面回暖。</div>
+    </section>
+
+    <section class="section" id="capital">
+      <div class="section-title"><div class="title-group"><span class="section-no">03</span><h2>封单强度 · 主力资金</h2></div><span class="section-note">封单统计口径：收盘封单金额 / 封单量占流通股</span></div>
+      <div class="strength-grid">
+        <article class="card">
+          <span class="card-kicker">LIMIT-UP ORDERS · 封单</span><h3>硬度集中在低位首板</h3>
+          <div class="seal-list">
+            <div class="seal-row"><b>中石科技</b><div class="bar"><i style="width:100%"></i></div><span>10.43亿</span></div>
+            <div class="seal-row"><b>亨通光电</b><div class="bar"><i style="width:81%"></i></div><span>8.44亿</span></div>
+            <div class="seal-row"><b>华正新材</b><div class="bar orange"><i style="width:37%"></i></div><span>3.82亿</span></div>
+            <div class="seal-row"><b>蓝盾光电</b><div class="bar green"><i style="width:3%"></i></div><span>0.31亿</span></div>
+          </div>
+          <div class="alert">中石科技一字 20cm 的 10.43 亿封单是板块强度锚；蓝盾光电虽为最高板，封单金额与开板次数提示筹码已松。</div>
+        </article>
+        <article class="card">
+          <span class="card-kicker">CAPITAL FLOW · 资金流</span><h3>通信吸金，市场整体仍净流出</h3>
+          <table class="money-table">
+            <thead><tr><th>对象</th><th>属性 / 状态</th><th>主力净额</th><th>确认信号</th></tr></thead>
+            <tbody>
+              <tr><td><b>通信行业</b></td><td>行业第一</td><td class="up">+81.57亿</td><td>远超其他行业</td></tr>
+              <tr><td><b>网宿科技</b></td><td>算力租赁 · 20cm</td><td class="up">+20.72亿</td><td>龙虎榜净买 9.72亿</td></tr>
+              <tr><td><b>新易盛</b></td><td>CPO · 趋势</td><td class="up">+18.38亿</td><td>涨超 4%</td></tr>
+              <tr><td><b>天孚通信</b></td><td>CPO · 趋势</td><td class="up">+12.58亿</td><td>尾盘继续抢筹</td></tr>
+              <tr><td><b>中际旭创</b></td><td>CPO · 催化源</td><td class="up">+9.02亿</td><td>入股中石科技</td></tr>
+              <tr><td><b>全市场</b></td><td>沪深两市合计</td><td class="down">-42.46亿</td><td>结构性回流</td></tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><div class="title-group"><span class="section-no">04</span><h2>人气锚点</h2></div><span class="section-note">锚点用于判断资金偏好，不作为无条件买入清单</span></div>
+      <div class="anchor-grid">
+        <article class="anchor-main">
+          <span class="card-kicker">PRIMARY ANCHOR · 核心锚</span>
+          <h3>网宿科技</h3><div class="anchor-code">300017.SZ · 算力租赁 / CDN</div>
+          <div class="anchor-move">+20.01%</div>
+          <p>成交 76.62 亿，主力净流入 20.72 亿居全 A 第一；龙虎榜净买入 9.72 亿，深股通净买 5.01 亿。它是“资金回流是否持续”的第一观察位。</p>
+        </article>
+        <article class="card anchor-card"><div><span class="card-kicker">HEIGHT · 高度</span><h3>蓝盾光电</h3><div class="move up">5 × 20CM</div></div><div class="signal">锚定高标容错。低开闷杀或快速跌破分时承接，视作高位继续退潮。</div></article>
+        <article class="card anchor-card"><div><span class="card-kicker">SECTOR · 板块</span><h3>中石科技</h3><div class="move up">+20.00%</div></div><div class="signal">锚定 CPO 散热支线。封单 10.43 亿；次日封单衰减与开板承接决定扩散强度。</div></article>
+        <article class="card anchor-card"><div><span class="card-kicker">NEGATIVE · 负反馈</span><h3>京投发展</h3><div class="move down">天地板</div></div><div class="signal">锚定高位亏钱效应。若次日无修复，三板以上接力继续降级处理。</div></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><div class="title-group"><span class="section-no">05</span><h2>龙虎榜观察</h2></div><span class="section-note">统计时间 2026-08-14 收盘后；不同媒体“上榜家数”口径有差异</span></div>
+      <div class="grid-3">
+        <article class="card"><span class="card-kicker">TOP INFLOW · 净买第一</span><h3>网宿科技 <b class="up">+9.72亿</b></h3><p>机构净买 1.84 亿，深股通净买 5.01 亿，武汉紫阳东路席位净买 2.07 亿。合力明确，但次日需防一致性高开兑现。</p></article>
+        <article class="card"><span class="card-kicker">INSTITUTION · 机构</span><h3>15 买 / 17 卖</h3><p>32 只个股出现机构席位，合计净买 3.22 亿。机构净买最多为中国稀土；净卖最多为誉衡药业。</p></article>
+        <article class="card"><span class="card-kicker">NORTHBOUND · 北向席位</span><h3>合计 <b class="up">+9.08亿</b></h3><p>参与 26 股，净买 14、净卖 12。共同净买网宿科技、中国稀土、中瓷电子、华宏科技；龙旗科技净卖 1.60 亿。</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="discipline">
+      <div class="section-title"><div class="title-group"><span class="section-no">06</span><h2>次日纪律 · 空仓检验</h2></div><span class="section-note">下一个交易日：2026-08-17 周一</span></div>
+      <div class="discipline-grid">
+        <article class="card">
+          <span class="card-kicker">PLAYBOOK · 执行预案</span><h3>先看负反馈，再看主线回流</h3>
+          <div class="rules">
+            <div class="rule"><div><strong>9:25 竞价不追一致</strong><p>网宿科技、中石科技若大幅高开，先等第一次分歧；竞价量不匹配则放弃。</p></div></div>
+            <div class="rule"><div><strong>9:35 检验高标容错</strong><p>蓝盾光电、京投发展若继续核按钮，高位接力仓位归零，只观察低位首板。</p></div></div>
+            <div class="rule"><div><strong>10:00 只做主线确认</strong><p>通信板块需维持前排强度且成交同步放大；孤立个股脉冲不算板块回流。</p></div></div>
+            <div class="rule"><div><strong>仓位上限 30%</strong><p id="positionRule">弱修复基准仓位 3 成；单笔风险不超过总资金 0.8%，不加仓摊薄亏损。</p></div></div>
+            <div class="rule"><div><strong>触发即撤退</strong><p>最高板跌停、主线核心炸板无回封、两市量能继续显著萎缩，满足任一则停止开仓。</p></div></div>
+          </div>
+        </article>
+        <aside class="empty-test">
+          <div class="test-head"><h3>今天能空仓吗？</h3><button id="emptySwitch" class="switch on" aria-label="空仓检验开关"></button></div>
+          <div class="checks">
+            <div class="check"><span>晋级率是否低于阈值？</span><b id="checkPromotion">YES · 27.27%</b></div>
+            <div class="check"><span>高位是否有天地板 / 跌停？</span><b>YES · 多只</b></div>
+            <div class="check"><span>指数上涨是否得到放量确认？</span><b>NO · 缩量</b></div>
+            <div class="check"><span>主线是否扩散到多数个股？</span><b>NO · 跌多涨少</b></div>
+          </div>
+          <div class="verdict" id="emptyVerdict"><b>检验结论：空仓完全合理。</b><br>机会集中、确认不足且高位负反馈显著。错过一次弱修复的成本，小于在退潮阶段承担错误接力的成本。</div>
+          <div class="params">
+            <div class="param"><label>晋级率警戒线 <b id="promotionVal">35%</b></label><input id="promotion" type="range" min="20" max="60" value="35"></div>
+            <div class="param"><label>封板率及格线 <b id="sealVal">75%</b></label><input id="seal" type="range" min="60" max="90" value="75"></div>
+            <div class="param"><label>最高仓位 <b id="positionVal">30%</b></label><input id="position" type="range" min="0" max="80" step="10" value="30"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><div class="title-group"><span class="section-no">07</span><h2>风险提示 · 数据来源</h2></div><span class="section-note">本页数据已内联，断网可查看；外链仅用于溯源</span></div>
+      <div class="alert" style="margin:0 0 20px"><b>风险提示：</b>本工具是基于公开盘后数据的复盘框架，不构成证券研究报告、投资建议或收益承诺。涨停封单、主力资金等统计受口径影响，且盘后结论不能替代次日实时盘口。高位股、并购重组股存在剧烈波动、停牌与交易规则风险。</div>
+      <div class="source-list">
+        <div class="source"><a href="https://www.cls.cn/detail/2454650" target="_blank" rel="noreferrer">财联社 · 焦点复盘 ↗</a><p>涨停、炸板、连板晋级率、市场梯队与热点结构</p></div>
+        <div class="source"><a href="https://www.egsea.com/news/detail/2326975.html" target="_blank" rel="noreferrer">证券时报 · 数据宝 ↗</a><p>涨跌家数、封单金额与封单量占流通股比例</p></div>
+        <div class="source"><a href="https://www.egsea.com/news/detail/2326982.html" target="_blank" rel="noreferrer">证券时报 · 主力资金 ↗</a><p>行业与个股主力资金、尾盘资金流向</p></div>
+        <div class="source"><a href="https://finance.eastmoney.com/a/202608143841820774.html" target="_blank" rel="noreferrer">东方财富 Choice ↗</a><p>龙虎榜上榜数量、成交总额、净买入排名</p></div>
+        <div class="source"><a href="https://finance.sina.cn/2026-08-14/detail-ininhtfn2599666.d.html" target="_blank" rel="noreferrer">21世纪经济报道 ↗</a><p>机构、北向席位与龙虎榜资金交叉观察</p></div>
+        <div class="source"><a href="https://news.qq.com/rain/a/20260814A0EMTD00" target="_blank" rel="noreferrer">腾讯新闻 · 涨停复盘 ↗</a><p>5板、3板、2板样本梯队核对</p></div>
+        <div class="source"><a href="https://www.sse.com.cn/disclosure/announcement/general/c/c_20251222_10802507.shtml" target="_blank" rel="noreferrer">上交所 · 休市安排 ↗</a><p>2026 年法定节假日休市判断依据</p></div>
+        <div class="source"><a href="https://stock.jrj.com.cn/2026/08/14134358109061.shtml" target="_blank" rel="noreferrer">金融界 · 蓝盾光电 ↗</a><p>换手、异常波动与并购重组风险</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>短线博弈复盘工具 · LOCAL SINGLE FILE EDITION</span><span>统计交易日：2026-08-14 · 数据截止：18:48 CST</span></footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (() => {
+      "use strict";
+      const DATA_DATE = "2026-08-14";
+      const holidays = [
+        ["2026-01-01","2026-01-03","元旦休市"],
+        ["2026-02-15","2026-02-23","春节休市"],
+        ["2026-04-04","2026-04-06","清明节休市"],
+        ["2026-05-01","2026-05-05","劳动节休市"],
+        ["2026-06-19","2026-06-21","端午节休市"],
+        ["2026-09-25","2026-09-27","中秋节休市"],
+        ["2026-10-01","2026-10-07","国庆节休市"]
+      ];
+      const $ = id => document.getElementById(id);
+      const dateInput = $("tradeDate");
+      const dashboard = $("dashboard");
+      const closed = $("closedView");
+      const footer = document.querySelector("footer");
+
+      function localDate(value){ return new Date(value + "T12:00:00+08:00"); }
+      function closedReason(value){
+        const d = localDate(value), day = d.getDay();
+        if(day === 0 || day === 6) return "周末休市";
+        const hit = holidays.find(([start,end]) => value >= start && value <= end);
+        return hit ? hit[2] : "";
+      }
+      function showToast(message){
+        const toast = $("toast"); toast.textContent = message; toast.classList.add("show");
+        clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+      function run(){
+        const value = dateInput.value;
+        if(!value){ showToast("请先选择交易日"); return; }
+        const reason = closedReason(value);
+        if(reason){
+          dashboard.style.display = "none"; footer.style.display = "none"; closed.style.display = "block";
+          $("closedTitle").textContent = value + " 休市";
+          $("closedReason").textContent = reason + "。依据上交所 2026 年休市安排，本日无 A 股交易，不生成情绪与资金复盘。";
+          document.title = "休市 · " + value; return;
+        }
+        if(value !== DATA_DATE){
+          dashboard.style.display = "none"; footer.style.display = "none"; closed.style.display = "block";
+          $("closedTitle").textContent = value + " 未收录";
+          $("closedReason").textContent = "该日按日历判断为交易日，但本离线文件只内置 " + DATA_DATE + " 的真实盘后数据。为避免伪造行情，程序在此停止；请将该日公开行情写入数据区后再运行。";
+          document.title = "数据未收录 · " + value; return;
+        }
+        closed.style.display = "none"; dashboard.style.display = ""; footer.style.display = ""; document.title = "短线博弈复盘 · " + DATA_DATE;
+        showToast("交易日已确认 · 已载入 " + DATA_DATE + " 盘后数据");
+      }
+      window.resetDate = () => { dateInput.value = DATA_DATE; run(); };
+      $("runReview").addEventListener("click", run);
+      dateInput.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+
+      const controls = {promotion:$("promotion"),seal:$("seal"),position:$("position")};
+      function updateModel(){
+        const promotionLimit = +controls.promotion.value;
+        const sealLimit = +controls.seal.value;
+        const maxPosition = +controls.position.value;
+        $("promotionVal").textContent = promotionLimit + "%";
+        $("sealVal").textContent = sealLimit + "%";
+        $("positionVal").textContent = maxPosition + "%";
+        const promotionPenalty = 27.27 < promotionLimit ? 18 : 4;
+        const sealBonus = 77 >= sealLimit ? 8 : -4;
+        const raw = Math.max(18, Math.min(68, 52 - promotionPenalty + sealBonus));
+        $("scoreValue").textContent = raw;
+        $("gauge").style.setProperty("--score", raw);
+        $("permitBar").style.width = raw + "%";
+        $("permitText").textContent = raw < 40 ? "低" : raw < 55 ? "谨慎" : "可试错";
+        const actualPosition = Math.min(maxPosition, raw < 40 ? 20 : raw < 55 ? 30 : 50);
+        $("positionTag").textContent = actualPosition === 0 ? "空仓" : "防守 · " + (actualPosition/10) + "成仓";
+        $("positionRule").textContent = "模型仓位上限 " + actualPosition + "%；单笔风险不超过总资金 0.8%，不加仓摊薄亏损。";
+        $("checkPromotion").textContent = (27.27 < promotionLimit ? "YES" : "NO") + " · 27.27%";
+        localStorage.setItem("reviewParams", JSON.stringify({promotionLimit,sealLimit,maxPosition}));
+      }
+      Object.values(controls).forEach(control => control.addEventListener("input", updateModel));
+      try{
+        const saved = JSON.parse(localStorage.getItem("reviewParams"));
+        if(saved){ controls.promotion.value=saved.promotionLimit;controls.seal.value=saved.sealLimit;controls.position.value=saved.maxPosition; }
+      }catch(e){}
+      updateModel();
+
+      $("emptySwitch").addEventListener("click", function(){
+        this.classList.toggle("on");
+        const on = this.classList.contains("on");
+        $("emptyVerdict").innerHTML = on
+          ? "<b>检验结论：空仓完全合理。</b><br>机会集中、确认不足且高位负反馈显著。错过一次弱修复的成本，小于在退潮阶段承担错误接力的成本。"
+          : "<b>检验已暂时关闭。</b><br>关闭检验不会改变市场风险，仅用于比较不同执行偏好。再次点击可恢复纪律检查。";
+      });
+    })();
+  </script>
+</body>
+</html>
