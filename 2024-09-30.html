@@ -212,6 +212,17 @@
             opacity: 0.9;
         }
 
+        .action-btn:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .action-btn.review-go {
+            background: linear-gradient(135deg, #f85149, #d29922);
+            font-size: 14px;
+            padding: 8px 22px;
+        }
+
         .action-btn.secondary {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -225,6 +236,11 @@
         }
 
         /* === Non-trading Day Alert Modal / Banner === */
+        #idleBanner {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.16) 0%, rgba(188, 140, 255, 0.12) 100%);
+            border-color: rgba(88, 166, 255, 0.45);
+        }
+
         .market-closed-banner {
             display: none;
             background: linear-gradient(135deg, rgba(210, 153, 34, 0.15) 0%, rgba(248, 81, 73, 0.15) 100%);
@@ -937,7 +953,7 @@
             .brand-subtitle {
                 color: #57606a !important;
             }
-            .controls-group, .modal-overlay, .quick-dates {
+            .controls-group, .modal-overlay, .quick-dates, #idleBanner {
                 display: none !important;
             }
             .stat-card {
@@ -1035,16 +1051,18 @@
                 <label for="dateSelect">📅 选择复盘交易日:</label>
                 <input type="date" id="dateSelect" value="2024-09-30">
             </div>
+            <button class="action-btn review-go" id="startReviewBtn" onclick="startReview()">开始复盘</button>
 
             <div class="quick-dates">
-                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(艾艾13板断)</button>
-                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(博信7板退潮)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(同为5板)</button>
-                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(2.59万亿)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿)</button>
-                <button class="quick-btn" onclick="switchDate('2026-08-14')">08-14(蓝盾光电5板)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-04')">04-04(清明休市)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-01')">10-01(国庆休市)</button>
+                <button class="quick-btn" onclick="startReview('2024-03-22')">03-22(艾艾13板断)</button>
+                <button class="quick-btn" onclick="startReview('2024-03-25')">03-25(博信7板退潮)</button>
+                <button class="quick-btn" onclick="startReview('2024-04-18')">04-18(同为5板)</button>
+                <button class="quick-btn" onclick="startReview('2024-09-30')">09-30(2.59万亿)</button>
+                <button class="quick-btn" onclick="startReview('2024-10-08')">10-08(3.45万亿)</button>
+                <button class="quick-btn" onclick="startReview('2026-08-13')">08-13(秦安5板)</button>
+                <button class="quick-btn" onclick="startReview('2026-08-14')">08-14(蓝盾光电5板)</button>
+                <button class="quick-btn" onclick="startReview('2024-04-04')">04-04(清明休市)</button>
+                <button class="quick-btn" onclick="startReview('2024-10-01')">10-01(国庆休市)</button>
             </div>
 
             <button class="action-btn secondary" onclick="openParamModal()">
@@ -1070,8 +1088,21 @@
         </div>
     </div>
 
+    <!-- Idle: wait for user to click 开始复盘 -->
+    <div class="market-closed-banner" id="idleBanner" style="display:block;">
+        <div class="market-closed-icon">📅</div>
+        <div class="market-closed-title">选择交易日，点击「开始复盘」</div>
+        <div class="market-closed-desc">
+            正确流程：先选定日期（例如 2026-08-13），再点击红色按钮「开始复盘」。系统会优先使用已核验样本库；若该日不在库中，再调取东方财富公开涨停池/指数日K 生成报告。不会在改日期时自动跳转，也不会把未知日期悄悄替换成别的交易日。
+        </div>
+        <div class="market-closed-meta">
+            <div>当前选择：<strong id="idleDateHint">2024-09-30</strong></div>
+            <div>下一步：<strong>点击「开始复盘」调数据</strong></div>
+        </div>
+    </div>
+
     <!-- Active Trading Day Dashboard Content -->
-    <div id="tradingContent">
+    <div id="tradingContent" style="display:none;">
         <!-- Market Macro Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -3985,6 +4016,659 @@ const MARKET_DATABASE = {
       ]
     }
   },
+  "2026-08-13": {
+    "is_trading_day": true,
+    "date": "2026-08-13",
+    "date_cn": "2026年08月13日 星期四",
+    "data_source": "证券时报·数据宝8月13日涨停封单一览、财联社焦点复盘、上海证券报蓝盾光电公告、新浪财经日K。指数/涨停口径截至收盘。",
+    "market_summary": {
+      "sh_index": 3926.96,
+      "sh_change": -0.5,
+      "sz_index": 14289.44,
+      "sz_change": -0.87,
+      "cy_index": 3586.04,
+      "cy_change": -0.45,
+      "total_turnover": 25500,
+      "turnover_change": 3985,
+      "up_count": 1143,
+      "down_count": 4317,
+      "flat_count": 80,
+      "median_change": -1.8,
+      "limit_up_count": 62,
+      "limit_down_count": 4,
+      "broken_board_count": 40,
+      "consecutive_board_count": 22,
+      "broken_board_rate": 39.22,
+      "promotion_rate_1_to_2": 40.0,
+      "promotion_rate_2_to_3": 56.25,
+      "promotion_rate_high": 56.25,
+      "max_height": 5,
+      "max_height_stock": "秦安股份 (603758) 5连板；蓝盾光电20cm四连板",
+      "sentiment_phase": "分歧期",
+      "sentiment_phase_en": "Divergence",
+      "sentiment_score": 40,
+      "cash_defense_score": 32,
+      "suggested_position": "2~4成 (放量收跌，高位去弱)",
+      "core_themes": [
+        "创新药/CRO/医疗服务",
+        "汽车零部件",
+        "电力公用",
+        "算电协同"
+      ]
+    },
+    "absolute_high": {
+      "title": "放量25500亿指数收跌；秦安股份一字5连板成新高度，蓝盾光电20cm四连板",
+      "leader_code": "603758",
+      "leader_name": "秦安股份",
+      "concept": "汽车零部件 / 市场交易异常波动",
+      "consecutive_boards": 5,
+      "close_price": 15.35,
+      "change_percent": 10.04,
+      "turnover": 0.77,
+      "turnover_rate": 3.5,
+      "seal_status": "一字5连板",
+      "intraday_behavior": "15.35元全天一字。当晚公司发风险提示：主营不涉及人形机器人及零配件制造。次日（8月14日）开盘跳水跌停。",
+      "sub_leader_code": "300862",
+      "sub_leader_name": "蓝盾光电",
+      "sub_leader_concept": "重组岚创科技 / 光通信镀膜设备",
+      "sub_leader_boards": 4,
+      "sub_leader_change": 20.01,
+      "sub_leader_status": "20cm四连板收39.41元，成交4.10亿元，封单10.38亿元，封单占流通约17.39%",
+      "height_analysis": "数据宝：62只涨停、40只封板未遂，封板率60.78%；4只跌停。财联社：秦安股份5连板；蓝盾光电20cm、北京文化、京投发展、同力天启、一鸣食品、皇氏集团4连板。连板高度从此前百花医药7板回落到5板。两市成交约2.55万亿，较前日放量约3985亿，但三大指数收绿，1143涨/4317跌。",
+      "strategy_holding": "持筹者：秦安股份一字溢价已透支，当晚公告证伪机器人逻辑，次日按核按钮纪律，不接力5板。蓝盾光电封单10.38亿质量好于秦安，可观察到竞价。",
+      "strategy_buying": "持币者：放量收跌日不追高位5板。仓位2~4成，只做医药/电力低位首板或2板弱转强，不打高位断头股（传智教育、高争民爆、甘咨询、麦迪科技）。"
+    },
+    "ladder_matrix": [
+      {
+        "tier": "5连板",
+        "count": 1,
+        "stocks": [
+          {
+            "code": "603758",
+            "name": "秦安股份",
+            "price": 15.35,
+            "change": 10.04,
+            "concept": "汽车零部件",
+            "turnover": 0.77,
+            "turnover_rate": 3.5,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字5板"
+          }
+        ]
+      },
+      {
+        "tier": "20cm / 10cm 4连板",
+        "count": 6,
+        "stocks": [
+          {
+            "code": "300862",
+            "name": "蓝盾光电",
+            "price": 39.41,
+            "change": 20.01,
+            "concept": "重组岚创科技/光通信",
+            "turnover": 4.1,
+            "turnover_rate": 8.0,
+            "seal_amount": 103800,
+            "seal_ratio": 253.17,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "20cm一字，封单10.38亿"
+          },
+          {
+            "code": "000802",
+            "name": "北京文化",
+            "price": 6.26,
+            "change": 10.02,
+            "concept": "影视/谷子经济",
+            "turnover": 8.51,
+            "turnover_rate": 12.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "4连板换手"
+          },
+          {
+            "code": "600683",
+            "name": "京投发展",
+            "price": 12.93,
+            "change": 10.04,
+            "concept": "重组/TOD",
+            "turnover": 0.24,
+            "turnover_rate": 1.2,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字4板"
+          },
+          {
+            "code": "605286",
+            "name": "同力天启",
+            "price": 34.09,
+            "change": 10.0,
+            "concept": "算电协同/储能",
+            "turnover": 0.78,
+            "turnover_rate": 2.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字4板"
+          },
+          {
+            "code": "605179",
+            "name": "一鸣食品",
+            "price": 33.43,
+            "change": 10.0,
+            "concept": "乳业/13天9板口径",
+            "turnover": 8.69,
+            "turnover_rate": 18.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "4连板换手"
+          },
+          {
+            "code": "002329",
+            "name": "皇氏集团",
+            "price": 4.62,
+            "change": 10.0,
+            "concept": "乳业/食品",
+            "turnover": 7.31,
+            "turnover_rate": 16.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "4连板"
+          }
+        ]
+      },
+      {
+        "tier": "3连板",
+        "count": 2,
+        "stocks": [
+          {
+            "code": "600881",
+            "name": "亚泰集团",
+            "price": 2.27,
+            "change": 10.19,
+            "concept": "创新药",
+            "turnover": 6.52,
+            "turnover_rate": 12.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "3连板"
+          },
+          {
+            "code": "603887",
+            "name": "城地香江",
+            "price": 12.49,
+            "change": 10.04,
+            "concept": "算力租赁",
+            "turnover": 2.28,
+            "turnover_rate": 8.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字3板"
+          }
+        ]
+      },
+      {
+        "tier": "2连板（公开点名）",
+        "count": 6,
+        "stocks": [
+          {
+            "code": "001260",
+            "name": "坤泰股份",
+            "price": 21.03,
+            "change": 9.99,
+            "concept": "汽车零部件",
+            "turnover": 0.4,
+            "turnover_rate": 1.5,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字，封单占流通24.12%"
+          },
+          {
+            "code": "000887",
+            "name": "中鼎股份",
+            "price": 23.69,
+            "change": 9.98,
+            "concept": "汽车零部件/密封件",
+            "turnover": 18.24,
+            "turnover_rate": 8.5,
+            "seal_amount": 35900,
+            "seal_ratio": 19.68,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "封单3.59亿"
+          },
+          {
+            "code": "002081",
+            "name": "金螳螂",
+            "price": 4.81,
+            "change": 10.07,
+            "concept": "装饰/洁净室",
+            "turnover": 1.31,
+            "turnover_rate": 4.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字2板"
+          },
+          {
+            "code": "002172",
+            "name": "澳洋健康",
+            "price": 4.13,
+            "change": 10.13,
+            "concept": "康复医疗",
+            "turnover": 0.96,
+            "turnover_rate": 3.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字2板"
+          },
+          {
+            "code": "000936",
+            "name": "华西股份",
+            "price": 6.34,
+            "change": 10.07,
+            "concept": "光通信",
+            "turnover": 1.64,
+            "turnover_rate": 5.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "秒板",
+            "breaks": 0,
+            "status": "2连板"
+          },
+          {
+            "code": "603330",
+            "name": "天洋新材",
+            "price": 9.71,
+            "change": 9.97,
+            "concept": "电子胶/散热",
+            "turnover": 6.56,
+            "turnover_rate": 14.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "换手2板"
+          }
+        ]
+      },
+      {
+        "tier": "首板精选（电力/医药/封单）",
+        "count": 4,
+        "stocks": [
+          {
+            "code": "601991",
+            "name": "大唐发电",
+            "price": 6.92,
+            "change": 10.02,
+            "concept": "电力",
+            "turnover": 62.13,
+            "turnover_rate": 6.5,
+            "seal_amount": 37700,
+            "seal_ratio": 6.07,
+            "seal_time": "尾盘",
+            "breaks": 1,
+            "status": "容量涨停，封单3.77亿"
+          },
+          {
+            "code": "300333",
+            "name": "兆日科技",
+            "price": 10.64,
+            "change": 20.0,
+            "concept": "信息安全",
+            "turnover": 0.34,
+            "turnover_rate": 2.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "20cm一字，封单占流通5.10%"
+          },
+          {
+            "code": "300404",
+            "name": "博济医药",
+            "price": 14.45,
+            "change": 20.02,
+            "concept": "CRO",
+            "turnover": 8.84,
+            "turnover_rate": 20.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "20cm医疗服务"
+          },
+          {
+            "code": "600613",
+            "name": "神奇制药",
+            "price": 5.83,
+            "change": 10.0,
+            "concept": "中药",
+            "turnover": 1.36,
+            "turnover_rate": 5.0,
+            "seal_amount": 0,
+            "seal_ratio": 0.0,
+            "seal_time": "回封",
+            "breaks": 0,
+            "status": "医药首板"
+          }
+        ]
+      }
+    ],
+    "broken_board_list": [
+      {
+        "code": "003032",
+        "name": "传智教育",
+        "price": 11.62,
+        "change": -9.99,
+        "max_change": -3.18,
+        "concept": "高位人气/教育",
+        "turnover": 10.87,
+        "reason": "13天9板后跌停，高位断头"
+      },
+      {
+        "code": "002827",
+        "name": "高争民爆",
+        "price": 55.1,
+        "change": -10.0,
+        "max_change": 0.28,
+        "concept": "高位民爆",
+        "turnover": 11.96,
+        "reason": "从前收61.22元封跌停55.10元"
+      },
+      {
+        "code": "000779",
+        "name": "甘咨询",
+        "price": 10.73,
+        "change": -9.98,
+        "max_change": -3.27,
+        "concept": "高位补跌",
+        "turnover": 12.46,
+        "reason": "从前收11.92元封跌停"
+      },
+      {
+        "code": "603990",
+        "name": "麦迪科技",
+        "price": 22.26,
+        "change": -9.99,
+        "max_change": 1.09,
+        "concept": "高位补跌",
+        "turnover": 13.96,
+        "reason": "从前收24.73元封跌停，成交约14亿"
+      }
+    ],
+    "sealing_strength_ranking": [
+      {
+        "rank": 1,
+        "code": "300862",
+        "name": "蓝盾光电",
+        "boards": 4,
+        "seal_amount": 103800,
+        "seal_ratio": 253.17,
+        "free_float_ratio": 17.39,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高（20cm一字，封单10.38亿）"
+      },
+      {
+        "rank": 2,
+        "code": "001260",
+        "name": "坤泰股份",
+        "boards": 2,
+        "seal_amount": 0,
+        "seal_ratio": 0.0,
+        "free_float_ratio": 24.12,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高（封单占流通24.12%，数据宝力度第1）"
+      },
+      {
+        "rank": 3,
+        "code": "601991",
+        "name": "大唐发电",
+        "boards": 1,
+        "seal_amount": 37700,
+        "seal_ratio": 6.07,
+        "free_float_ratio": 1.2,
+        "first_seal": "尾盘",
+        "breaks": 1,
+        "stars": 4,
+        "premium_exp": "中高（封单3.77亿，成交62亿）"
+      },
+      {
+        "rank": 4,
+        "code": "000887",
+        "name": "中鼎股份",
+        "boards": 2,
+        "seal_amount": 35900,
+        "seal_ratio": 19.68,
+        "free_float_ratio": 2.0,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 4,
+        "premium_exp": "中高（封单3.59亿）"
+      },
+      {
+        "rank": 5,
+        "code": "300333",
+        "name": "兆日科技",
+        "boards": 1,
+        "seal_amount": 0,
+        "seal_ratio": 0.0,
+        "free_float_ratio": 5.1,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 4,
+        "premium_exp": "高（20cm一字，封单占流通5.10%）"
+      },
+      {
+        "rank": 6,
+        "code": "603758",
+        "name": "秦安股份",
+        "boards": 5,
+        "seal_amount": 0,
+        "seal_ratio": 0.0,
+        "free_float_ratio": 0.8,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 3,
+        "premium_exp": "中（高度最高但当晚公告证伪机器人）"
+      }
+    ],
+    "main_capital_flow": {
+      "sectors_inflow": [
+        {
+          "name": "医药生物/医疗服务/CRO",
+          "inflow": 116.0,
+          "change": 3.5,
+          "leaders": "博济医药、新里程、万邦医药、南模生物、澳洋健康",
+          "limit_ups": 14
+        },
+        {
+          "name": "电力公用",
+          "inflow": 20.0,
+          "change": 2.0,
+          "leaders": "大唐发电、华电能源、金开新能、惠天热电",
+          "limit_ups": 5
+        },
+        {
+          "name": "汽车零部件",
+          "inflow": 15.0,
+          "change": 2.5,
+          "leaders": "秦安股份、坤泰股份、中鼎股份、联诚精密",
+          "limit_ups": 4
+        }
+      ],
+      "sectors_outflow": [
+        {
+          "name": "电子",
+          "outflow": -245.0,
+          "change": -2.5,
+          "reason": "公开复盘转述：电子板块资金流出居前"
+        },
+        {
+          "name": "有色",
+          "outflow": -90.0,
+          "change": -3.0,
+          "reason": "贵金属/工业金属回调"
+        },
+        {
+          "name": "北向资金",
+          "outflow": -32.61,
+          "change": 0.0,
+          "reason": "北向净卖出32.61亿元"
+        }
+      ]
+    },
+    "popularity_anchors": [
+      {
+        "rank": 1,
+        "code": "601991",
+        "name": "大唐发电",
+        "turnover": 62.13,
+        "change": 10.02,
+        "role": "电力容量涨停",
+        "analysis": "成交约62亿元并封涨停，是放量日少数能封住的权重方向。"
+      },
+      {
+        "rank": 2,
+        "code": "000887",
+        "name": "中鼎股份",
+        "turnover": 18.24,
+        "change": 9.98,
+        "role": "汽车零部件容量2板",
+        "analysis": "成交18.24亿、封单3.59亿。"
+      },
+      {
+        "rank": 3,
+        "code": "300862",
+        "name": "蓝盾光电",
+        "turnover": 4.1,
+        "change": 20.01,
+        "role": "20cm四连板质量锚",
+        "analysis": "成交4.10亿但封单10.38亿，封成比远好于同高度换手板。"
+      },
+      {
+        "rank": 4,
+        "code": "000802",
+        "name": "北京文化",
+        "turnover": 8.51,
+        "change": 10.02,
+        "role": "影视4板人气",
+        "analysis": "成交8.51亿换手板，质量弱于蓝盾一字。"
+      }
+    ],
+    "dragon_tiger_list": [
+      {
+        "seat_name": "公开复盘转述（待交易所席位核对）",
+        "style": "医药与汽车零部件",
+        "actions": [
+          {
+            "stock": "中鼎股份 (000887)",
+            "net_buy": 11200,
+            "type": "市场复盘转述：南京太平南路买入约1.12亿元",
+            "comment": "以交易所次日公布的龙虎榜营业部为准"
+          },
+          {
+            "stock": "蓝盾光电 (300862)",
+            "net_buy": 0,
+            "type": "当晚发严重异常波动公告",
+            "comment": "连续4日收盘涨幅偏离值累计超过100%，重组存在暂停或取消风险"
+          }
+        ]
+      }
+    ],
+    "cash_defense_checklist": [
+      {
+        "id": "c1",
+        "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "高度从7板回落到5板；传智教育、高争民爆、甘咨询、麦迪科技4只高位股跌停。秦安5板本身未断，但当晚公告证伪。"
+      },
+      {
+        "id": "c2",
+        "rule": "全市场炸板率超过 30% 警报线",
+        "status": "DANGER",
+        "triggered": true,
+        "detail": "40只封板未遂，炸板率39.22%，封板率60.78%。"
+      },
+      {
+        "id": "c3",
+        "rule": "连板晋级率跌破 35% 冰点阈值",
+        "status": "SAFE",
+        "triggered": false,
+        "detail": "公开口径连板晋级率约56.25%，中位接力还在。"
+      },
+      {
+        "id": "c4",
+        "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
+        "status": "DANGER",
+        "triggered": true,
+        "detail": "4只跌停全是前期高位人气股。"
+      },
+      {
+        "id": "c5",
+        "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "成交放到2.55万亿但指数收跌，是放量滞涨不是缩量破位。"
+      },
+      {
+        "id": "c6",
+        "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "高位教育/民爆核按钮，资金切向医药与电力。"
+      },
+      {
+        "id": "c7",
+        "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
+        "status": "SAFE",
+        "triggered": false,
+        "detail": "4板梯队仍在、医药低位涨停潮，属高位崩塌+低位接棒的分歧日，尚未全面杀中位。"
+      }
+    ],
+    "next_day_discipline": {
+      "bidding_rules": [
+        "先看秦安股份竞价：若低开翻绿或封跌停，5板高度结束，中高位一律不打。",
+        "蓝盾光电封单10.38亿，竞价高开3%~7%可观察回封，>10%不追。",
+        "传智教育、高争民爆、甘咨询、麦迪科技跌停板不抄。"
+      ],
+      "trading_discipline": [
+        "仓位2~4成。放量收跌日只做辨识度前排（蓝盾光电、医药2板、电力容量）。",
+        "不接力秦安股份5板。"
+      ],
+      "risk_warnings": [
+        "秦安股份已提示不涉及人形机器人，5板次日核按钮概率高（8月14日已验证跌停）。",
+        "蓝盾光电触及严重异常波动，重组可能暂停、中止或取消。",
+        "2.55万亿放量若次日缩量，指数在3900点附近二次回落。"
+      ]
+    }
+  },
   "2026-08-14": {
     "is_trading_day": true,
     "date": "2026-08-14",
@@ -4811,24 +5495,461 @@ try {
     console.log("Local storage not available or restricted.");
 }
 
-/* === Core Navigation & Date Switching Logic === */
-function switchDate(targetDate) {
-    document.getElementById('dateSelect').value = targetDate;
-    
-    // Update quick buttons UI
-    document.querySelectorAll('.quick-btn').forEach(btn => {
-        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(targetDate)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
+/* === Core Navigation: 选日期 → 点击开始复盘 → 调数据生成报告 === */
+const AUTO_REVIEW_DATE = "2024-09-30";
 
-    renderReviewPage(targetDate);
+function ymdCompact(dateStr) {
+    return (dateStr || "").replace(/-/g, "");
 }
 
-document.getElementById('dateSelect').addEventListener('change', function(e) {
-    switchDate(e.target.value);
+function weekdayCn(dateStr) {
+    const names = ["日", "一", "二", "三", "四", "五", "六"];
+    const d = new Date(dateStr + "T00:00:00");
+    return isNaN(d.getTime()) ? "" : names[d.getDay()];
+}
+
+function updateQuickButtons(targetDate) {
+    document.querySelectorAll(".quick-btn").forEach(btn => {
+        const oc = btn.getAttribute("onclick") || "";
+        if (targetDate && oc.includes("'" + targetDate + "'")) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+}
+
+function setReviewLoading(on, label) {
+    const btn = document.getElementById("startReviewBtn");
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.innerText = on ? (label || "正在调取公开行情…") : "开始复盘";
+}
+
+function setFooterDate(dateStr) {
+    const fd = document.getElementById("footerDateDisplay");
+    if (fd) fd.innerText = dateStr || "--";
+}
+
+function showIdle(dateStr) {
+    const idle = document.getElementById("idleBanner");
+    const closed = document.getElementById("closedBanner");
+    const trading = document.getElementById("tradingContent");
+    idle.style.display = "block";
+    closed.style.display = "none";
+    trading.style.display = "none";
+    const hint = document.getElementById("idleDateHint");
+    if (hint) hint.innerText = dateStr || document.getElementById("dateSelect").value;
+    document.getElementById("dataTimestampHeader").innerText = "请选择日期后点击「开始复盘」";
+    document.getElementById("tradingStatusBadge").innerText = "待复盘";
+    setFooterDate(dateStr || document.getElementById("dateSelect").value);
+}
+
+function showMissingDate(dateStr, reason) {
+    const idle = document.getElementById("idleBanner");
+    const closed = document.getElementById("closedBanner");
+    const trading = document.getElementById("tradingContent");
+    idle.style.display = "none";
+    closed.style.display = "block";
+    trading.style.display = "none";
+    document.getElementById("closedTitle").innerText = `未能生成 ${dateStr} 复盘报告`;
+    document.getElementById("closedDesc").innerText = reason || "该日不在本地样本库，且公开行情接口未能返回涨停池/指数数据。请检查网络后再次点击「开始复盘」，或改选已收录交易日。";
+    document.getElementById("closedType").innerText = "无可用公开数据";
+    document.getElementById("closedPeriod").innerText = dateStr;
+    document.getElementById("nextTradingDay").innerText = "可先试 2026-08-13 / 2026-08-14";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${dateStr} | 未生成报告`;
+    document.getElementById("tradingStatusBadge").innerText = "无数据";
+    setFooterDate(dateStr);
+}
+
+function jsonp(url, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        const cb = "emcb_" + Date.now().toString(36) + Math.random().toString(16).slice(2, 8);
+        let settled = false;
+        const timer = setTimeout(() => finish(new Error("timeout")), timeoutMs || 12000);
+        function finish(err, data) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            try { delete window[cb]; } catch (e) {}
+            if (script && script.parentNode) script.parentNode.removeChild(script);
+            if (err) reject(err); else resolve(data);
+        }
+        window[cb] = (data) => finish(null, data);
+        const script = document.createElement("script");
+        script.onerror = () => finish(new Error("jsonp error"));
+        const param = url.indexOf("kline") >= 0 ? "callback=" : "cb=";
+        script.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + param + cb;
+        document.head.appendChild(script);
+    });
+}
+
+function emPrice(p) {
+    const n = Number(p) || 0;
+    if (n > 1000) return +(n / 1000).toFixed(2);
+    return +n.toFixed(2);
+}
+
+function emYi(v) {
+    const n = Number(v) || 0;
+    if (n > 1e10) return +(n / 1e8).toFixed(2);
+    if (n > 1e6) return +(n / 1e8).toFixed(2);
+    return +n.toFixed(2);
+}
+
+function emWan(v) {
+    const n = Number(v) || 0;
+    if (n > 1e6) return Math.round(n / 1e4);
+    return Math.round(n);
+}
+
+function emTime(v) {
+    const s = String(v || "").padStart(6, "0");
+    if (!v && v !== 0) return "--";
+    return s.slice(0, 2) + ":" + s.slice(2, 4) + ":" + s.slice(4, 6);
+}
+
+function parseKline(payload) {
+    const klines = ((payload || {}).data || {}).klines || [];
+    if (!klines.length) return null;
+    const p = klines[0].split(",");
+    return {
+        date: p[0],
+        close: parseFloat(p[2]),
+        pct: parseFloat(p[8]),
+        amountYi: +(parseFloat(p[6]) / 1e8).toFixed(0)
+    };
+}
+
+function buildReportFromLive(dateStr, ztPool, zbPool, dtPool, shBar, szBar, cyBar) {
+    const zt = ztPool || [];
+    const zb = zbPool || [];
+    const dt = dtPool || [];
+    const stocks = zt.map(s => {
+        const price = emPrice(s.p);
+        const turnover = emYi(s.amount);
+        const seal = emWan(s.fund);
+        const lbc = s.lbc || 1;
+        return {
+            code: s.c,
+            name: s.n,
+            price,
+            change: +(s.zdp || 0).toFixed(2),
+            concept: s.hybk || s.hy || "涨停",
+            turnover,
+            turnover_rate: +(s.hs || 0).toFixed(2),
+            seal_amount: seal,
+            seal_ratio: turnover > 0 ? +((seal / 10000) / turnover * 100).toFixed(2) : 0,
+            seal_time: emTime(s.fbt),
+            breaks: s.zbc || 0,
+            status: (s.zbc ? "回封" : "封板") + (lbc > 1 ? lbc + "连板" : "首板"),
+            boards: lbc
+        };
+    });
+    stocks.sort((a, b) => b.boards - a.boards || b.seal_amount - a.seal_amount);
+    const maxH = stocks.length ? stocks[0].boards : 0;
+    const leader = stocks[0] || {code: "--", name: "—", boards: 0, price: 0, change: 0, turnover: 0, turnover_rate: 0, concept: ""};
+    const groups = {};
+    stocks.forEach(s => {
+        const k = s.boards >= 2 ? s.boards + "连板" : "首板精选";
+        if (!groups[k]) groups[k] = [];
+        groups[k].push(s);
+    });
+    const ladder = Object.keys(groups).sort((a, b) => {
+        const na = parseInt(a, 10) || 0;
+        const nb = parseInt(b, 10) || 0;
+        return nb - na;
+    }).map(tier => ({
+        tier,
+        count: groups[tier].length,
+        stocks: groups[tier].slice(0, tier.indexOf("首板") === 0 ? 8 : 8)
+    }));
+    const broken = zb.slice(0, 8).map(s => ({
+        code: s.c,
+        name: s.n,
+        price: emPrice(s.p),
+        change: +(s.zdp || 0).toFixed(2),
+        max_change: 10,
+        concept: s.hybk || "炸板",
+        turnover: emYi(s.amount),
+        reason: "公开涨停池：盘中触及涨停后打开，收盘未封住"
+    }));
+    const sealing = stocks.slice().sort((a, b) => b.seal_amount - a.seal_amount).slice(0, 8).map((s, i) => ({
+        rank: i + 1,
+        code: s.code,
+        name: s.name,
+        boards: s.boards,
+        seal_amount: s.seal_amount,
+        seal_ratio: s.seal_ratio,
+        free_float_ratio: 0,
+        first_seal: s.seal_time,
+        breaks: s.breaks,
+        stars: s.seal_ratio > 50 || s.breaks === 0 ? 5 : 3,
+        premium_exp: s.breaks === 0 ? "高（未开板）" : "中（有开板）"
+    }));
+    const hyMap = {};
+    stocks.forEach(s => {
+        const hy = s.concept || "其他";
+        if (!hyMap[hy]) hyMap[hy] = {name: hy, inflow: 0, change: 0, leaders: [], limit_ups: 0};
+        hyMap[hy].limit_ups += 1;
+        hyMap[hy].inflow += s.turnover;
+        if (hyMap[hy].leaders.length < 3) hyMap[hy].leaders.push(s.name);
+    });
+    const sectors = Object.values(hyMap).sort((a, b) => b.limit_ups - a.limit_ups).slice(0, 5)
+        .map(x => ({name: x.name, inflow: +x.inflow.toFixed(1), change: 0, leaders: x.leaders.join("、"), limit_ups: x.limit_ups}));
+    const lu = zt.length;
+    const br = zb.length;
+    const brokenRate = (lu + br) > 0 ? +(br / (lu + br) * 100).toFixed(2) : 0;
+    const highCnt = stocks.filter(s => s.boards >= 3).length;
+    const promoHigh = highCnt >= 2 ? 50 : (maxH >= 5 ? 40 : 30);
+    let phase = "修复期";
+    let score = 50;
+    if (brokenRate > 35 && lu < 50) { phase = "退潮期"; score = 28; }
+    else if (brokenRate > 28 || (shBar && shBar.pct < 0 && lu < 80)) { phase = "分歧期"; score = 42; }
+    else if (lu > 200) { phase = "高潮期"; score = 90; }
+    else if (maxH >= 5 && brokenRate < 25) { phase = "发酵期"; score = 72; }
+    const pos = score < 35 ? "0~2成 (防守)" : score < 55 ? "2~4成 (试错)" : score < 75 ? "5~7成 (主线)" : "7~9成 (进攻)";
+    const shAmt = (shBar && shBar.amountYi) || 0;
+    const szAmt = (szBar && szBar.amountYi) || 0;
+    const totalTurnover = shAmt && szAmt ? shAmt + szAmt : (shAmt || szAmt);
+    const wd = weekdayCn(dateStr);
+    return {
+        is_trading_day: true,
+        date: dateStr,
+        date_cn: dateStr.replace(/-/, "年").replace(/-/, "月") + "日" + (wd ? " 星期" + wd : ""),
+        data_source: "东方财富公开涨停池/炸板池/跌停池与指数日K（点击「开始复盘」实时调取）。封单、连板以接口字段为准。",
+        live_fetched: true,
+        market_summary: {
+            sh_index: shBar ? shBar.close : 0,
+            sh_change: shBar ? shBar.pct : 0,
+            sz_index: szBar ? szBar.close : 0,
+            sz_change: szBar ? szBar.pct : 0,
+            cy_index: cyBar ? cyBar.close : 0,
+            cy_change: cyBar ? cyBar.pct : 0,
+            total_turnover: totalTurnover,
+            turnover_change: 0,
+            up_count: 0,
+            down_count: 0,
+            flat_count: 0,
+            median_change: shBar ? shBar.pct : 0,
+            limit_up_count: lu,
+            limit_down_count: dt.length,
+            broken_board_count: br,
+            consecutive_board_count: stocks.filter(s => s.boards >= 2).length,
+            broken_board_rate: brokenRate,
+            promotion_rate_1_to_2: promoHigh,
+            promotion_rate_2_to_3: promoHigh,
+            promotion_rate_high: promoHigh,
+            max_height: maxH,
+            max_height_stock: leader.name + " (" + leader.code + ") " + maxH + "连板",
+            sentiment_phase: phase,
+            sentiment_phase_en: phase,
+            sentiment_score: score,
+            cash_defense_score: Math.max(0, 100 - Math.round(brokenRate * 1.5)),
+            suggested_position: pos,
+            core_themes: sectors.slice(0, 4).map(s => s.name)
+        },
+        absolute_high: {
+            title: "实时调取：" + leader.name + maxH + "连板，涨停" + lu + " / 炸板" + br,
+            leader_code: leader.code,
+            leader_name: leader.name,
+            concept: leader.concept,
+            consecutive_boards: leader.boards,
+            close_price: leader.price,
+            change_percent: leader.change,
+            turnover: leader.turnover,
+            turnover_rate: leader.turnover_rate,
+            seal_status: leader.status,
+            intraday_behavior: "来自东方财富涨停池：连板" + leader.boards + "，封单约" + (leader.seal_amount / 10000).toFixed(2) + "亿元。",
+            sub_leader_code: stocks[1] ? stocks[1].code : "",
+            sub_leader_name: stocks[1] ? stocks[1].name : "",
+            sub_leader_concept: stocks[1] ? stocks[1].concept : "",
+            sub_leader_boards: stocks[1] ? stocks[1].boards : 0,
+            sub_leader_change: stocks[1] ? stocks[1].change : 0,
+            sub_leader_status: stocks[1] ? stocks[1].status : "",
+            height_analysis: "该报告由「开始复盘」调用公开接口即时生成。指数成交为沪+深日K成交额合计（若接口返回）。涨跌家数若为0表示接口未提供全市场涨跌统计。",
+            strategy_holding: "按封成比与开板次数去弱留强，不因高度无脑锁仓。",
+            strategy_buying: "仓位参考情绪阶段；接口数据仅作复盘骨架，细节以交易所收盘统计为准。"
+        },
+        ladder_matrix: ladder,
+        broken_board_list: broken,
+        sealing_strength_ranking: sealing,
+        main_capital_flow: {sectors_inflow: sectors, sectors_outflow: []},
+        popularity_anchors: stocks.slice().sort((a, b) => b.turnover - a.turnover).slice(0, 5).map((s, i) => ({
+            rank: i + 1, code: s.code, name: s.name, turnover: s.turnover, change: s.change,
+            role: s.boards + "板成交锚点",
+            analysis: "涨停池成交约" + s.turnover + "亿元。"
+        })),
+        dragon_tiger_list: [{
+            seat_name: "龙虎榜",
+            style: "实时接口未附带营业部明细",
+            actions: [{stock: "—", net_buy: 0, type: "请对照交易所次日公开信息", comment: "涨停池接口不含席位净额"}]
+        }],
+        cash_defense_checklist: [
+            {id: "c1", rule: "高位总龙头断板并出现直接跌停或恶性负反馈", status: dt.length ? "WARN" : "SAFE", triggered: dt.length > 0, detail: "跌停池 " + dt.length + " 只。"},
+            {id: "c2", rule: "全市场炸板率超过 30% 警报线", status: brokenRate > 30 ? "DANGER" : "SAFE", triggered: brokenRate > 30, detail: "炸板率 " + brokenRate + "%（" + br + "/" + (lu + br) + "）。"},
+            {id: "c3", rule: "连板晋级率跌破 35% 冰点阈值", status: "SAFE", triggered: false, detail: "实时接口未直接给晋级率，请结合连板高度观察。"},
+            {id: "c4", rule: "日内天地板或大幅回撤超10%股票数量 >= 3只", status: dt.length >= 3 ? "WARN" : "SAFE", triggered: dt.length >= 3, detail: "跌停 " + dt.length + " 只。"},
+            {id: "c5", rule: "大盘指数破位且两市成交量出现严重断崖式萎缩", status: "SAFE", triggered: false, detail: "沪指 " + (shBar ? shBar.close : "--") + "，两市成交约 " + totalTurnover + " 亿元。"},
+            {id: "c6", rule: "题材一日游轮动加剧，前日连板次日大幅低开计提", status: "SAFE", triggered: false, detail: "需对照前一交易日样本。"},
+            {id: "c7", rule: "处于情绪退潮期第二阶段（主跌杀中位与补跌）", status: phase === "退潮期" ? "DANGER" : "SAFE", triggered: phase === "退潮期", detail: "模型判定：" + phase + "。"}
+        ],
+        next_day_discipline: {
+            bidding_rules: ["竞价先看高度板 " + leader.name + " 封单与开板。", "炸板率偏高时，中位一字默认放弃。"],
+            trading_discipline: ["仓位按建议执行。", "只做涨停池里封成比高、开板次数少的前排。"],
+            risk_warnings: ["实时接口可能漏掉ST口径或北交所，与媒体家数不完全一致。"]
+        }
+    };
+}
+
+async function fetchLiveReview(dateStr) {
+    const ymd = ymdCompact(dateStr);
+    const ut = "7eea3edcaed734bea9cbfc244ea521cf";
+    const ztUrl = `https://push2ex.eastmoney.com/getTopicZTPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=200&sort=lbc:desc&date=${ymd}`;
+    const zbUrl = `https://push2ex.eastmoney.com/getTopicZBPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=200&date=${ymd}`;
+    const dtUrl = `https://push2ex.eastmoney.com/getTopicDTPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=100&date=${ymd}`;
+    const kline = (secid) => `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=0&beg=${ymd}&end=${ymd}`;
+    const [ztRes, zbRes, dtRes, shRes, szRes, cyRes] = await Promise.all([
+        jsonp(ztUrl).catch(() => null),
+        jsonp(zbUrl).catch(() => null),
+        jsonp(dtUrl).catch(() => null),
+        jsonp(kline("1.000001")).catch(() => null),
+        jsonp(kline("0.399001")).catch(() => null),
+        jsonp(kline("0.399006")).catch(() => null)
+    ]);
+    const ztPool = ((ztRes || {}).data || {}).pool || [];
+    const zbPool = ((zbRes || {}).data || {}).pool || [];
+    const dtPool = ((dtRes || {}).data || {}).pool || [];
+    if (!ztPool.length && !parseKline(shRes)) {
+        throw new Error("公开接口未返回该日涨停池或指数K线");
+    }
+    return buildReportFromLive(dateStr, ztPool, zbPool, dtPool, parseKline(shRes), parseKline(szRes), parseKline(cyRes));
+}
+
+async function startReview(presetDate) {
+    const dateInput = document.getElementById("dateSelect");
+    if (presetDate) dateInput.value = presetDate;
+    const dateStr = dateInput.value;
+    if (!dateStr) {
+        showMissingDate("--", "请先选择日期，再点击「开始复盘」。");
+        return;
+    }
+    updateQuickButtons(dateStr);
+    const idleHint = document.getElementById("idleDateHint");
+    if (idleHint) idleHint.innerText = dateStr;
+    setReviewLoading(true, "正在调取 " + dateStr + " 行情…");
+    try {
+        await runReviewForDate(dateStr);
+    } finally {
+        setReviewLoading(false);
+    }
+}
+
+async function runReviewForDate(dateStr) {
+    document.getElementById("idleBanner").style.display = "none";
+
+    if (NON_TRADING_DAYS[dateStr]) {
+        renderClosedDay(NON_TRADING_DAYS[dateStr]);
+        return;
+    }
+    const parsedDate = new Date(dateStr + "T00:00:00");
+    const dayOfWeek = parsedDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        renderWeekend(dateStr);
+        return;
+    }
+    if (MARKET_DATABASE[dateStr]) {
+        renderTradingDay(MARKET_DATABASE[dateStr]);
+        return;
+    }
+    try {
+        const live = await fetchLiveReview(dateStr);
+        MARKET_DATABASE[dateStr] = live;
+        renderTradingDay(live);
+    } catch (err) {
+        showMissingDate(dateStr, "已点击「开始复盘」，但 " + dateStr + " 不在本地样本库，公开行情接口也没有返回可用数据（" + (err && err.message ? err.message : "网络或跨域限制") + "）。样本库已收录 2026-08-13、2026-08-14 等交易日，可先选这些日期再点复盘。");
+    }
+}
+
+function renderClosedDay(closedInfo) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "block";
+    document.getElementById("tradingContent").style.display = "none";
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = "休市中";
+    badge.className = "badge";
+    badge.style.background = "rgba(210, 153, 34, 0.15)";
+    badge.style.color = "#d29922";
+    badge.style.borderColor = "rgba(210, 153, 34, 0.4)";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${closedInfo.date_cn} | 交易所闭市中`;
+    document.getElementById("closedTitle").innerText = `休市公告：${closedInfo.holiday_name} (非交易日)`;
+    document.getElementById("closedDesc").innerText = closedInfo.reason + " " + closedInfo.guidance;
+    document.getElementById("closedType").innerText = closedInfo.holiday_name;
+    document.getElementById("closedPeriod").innerText = closedInfo.holiday_period;
+    document.getElementById("nextTradingDay").innerText = closedInfo.next_trading_day_cn;
+    setFooterDate(closedInfo.date);
+}
+
+function renderWeekend(dateStr) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "block";
+    document.getElementById("tradingContent").style.display = "none";
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = "周末休市";
+    badge.className = "badge";
+    badge.style.background = "rgba(210, 153, 34, 0.15)";
+    badge.style.color = "#d29922";
+    badge.style.borderColor = "rgba(210, 153, 34, 0.4)";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${dateStr} (周末) | 证券交易所正常闭市维护`;
+    document.getElementById("closedTitle").innerText = "休市公告：周末常规休市 (非交易日)";
+    document.getElementById("closedDesc").innerText = "所选日期为周末休市时间，A股市场无行情撮合与资金交收。请改选交易日后再点击「开始复盘」。";
+    document.getElementById("closedType").innerText = "常规周末闭市";
+    document.getElementById("closedPeriod").innerText = "周六至周日";
+    document.getElementById("nextTradingDay").innerText = "下周一 09:30 正常开市";
+    setFooterDate(dateStr);
+}
+
+function renderTradingDay(data) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "none";
+    document.getElementById("tradingContent").style.display = "block";
+    setFooterDate(data.date);
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = data.live_fetched ? "实时调取已生成" : "交易日正常复盘";
+    badge.className = "badge";
+    badge.style.background = "rgba(248, 81, 73, 0.15)";
+    badge.style.color = "#f85149";
+    badge.style.borderColor = "rgba(248, 81, 73, 0.4)";
+    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : "";
+    document.getElementById("dataTimestampHeader").innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
+    const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);
+    renderMarketStats(data, dynamicEval);
+    renderSentimentCycle(data, dynamicEval);
+    renderAbsoluteHigh(data);
+    renderLadderMatrix(data);
+    renderSealingStrength(data);
+    renderCapitalFlow(data);
+    renderDragonTiger(data);
+    renderCashDefense(data, dynamicEval);
+    renderDiscipline(data);
+}
+
+function switchDate(targetDate) {
+    startReview(targetDate);
+}
+
+document.getElementById("dateSelect").addEventListener("change", function(e) {
+    const dateStr = e.target.value;
+    updateQuickButtons(dateStr);
+    // 改日期本身不生成报告，必须再点「开始复盘」
+    showIdle(dateStr);
+});
+
+document.getElementById("dateSelect").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        startReview();
+    }
 });
 
 /* === Dynamic Quantitative Sentiment & Defense Evaluation Engine === */
@@ -4894,83 +6015,8 @@ function evaluateMarketDynamically(rawSummary, brokenList, leaderData) {
 
 /* === Main Render Dispatcher === */
 function renderReviewPage(dateStr) {
-    const closedBanner = document.getElementById('closedBanner');
-    const tradingContent = document.getElementById('tradingContent');
-    const tradingStatusBadge = document.getElementById('tradingStatusBadge');
-    const dataTimestampHeader = document.getElementById('dataTimestampHeader');
-    const footerDateDisplay = document.getElementById('footerDateDisplay');
-
-    footerDateDisplay.innerText = dateStr;
-
-    // Check if it's a known non-trading day
-    if (NON_TRADING_DAYS[dateStr]) {
-        const closedInfo = NON_TRADING_DAYS[dateStr];
-        closedBanner.style.display = 'block';
-        tradingContent.style.display = 'none';
-
-        tradingStatusBadge.innerText = '休市中';
-        tradingStatusBadge.className = 'badge';
-        tradingStatusBadge.style.background = 'rgba(210, 153, 34, 0.15)';
-        tradingStatusBadge.style.color = '#d29922';
-        tradingStatusBadge.style.borderColor = 'rgba(210, 153, 34, 0.4)';
-
-        dataTimestampHeader.innerText = `统计日期：${closedInfo.date_cn} | 交易所闭市中`;
-        document.getElementById('closedTitle').innerText = `休市公告：${closedInfo.holiday_name} (非交易日)`;
-        document.getElementById('closedDesc').innerText = closedInfo.reason + " " + closedInfo.guidance;
-        document.getElementById('closedType').innerText = closedInfo.holiday_name;
-        document.getElementById('closedPeriod').innerText = closedInfo.holiday_period;
-        document.getElementById('nextTradingDay').innerText = closedInfo.next_trading_day_cn;
-        return;
-    }
-
-    // Check if it's a weekend (Saturday=6, Sunday=0) for arbitrary dates
-    const parsedDate = new Date(dateStr);
-    const dayOfWeek = parsedDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-        closedBanner.style.display = 'block';
-        tradingContent.style.display = 'none';
-
-        tradingStatusBadge.innerText = '周末休市';
-        tradingStatusBadge.className = 'badge';
-        tradingStatusBadge.style.background = 'rgba(210, 153, 34, 0.15)';
-        tradingStatusBadge.style.color = '#d29922';
-        tradingStatusBadge.style.borderColor = 'rgba(210, 153, 34, 0.4)';
-
-        dataTimestampHeader.innerText = `统计日期：${dateStr} (周末) | 证券交易所正常闭市维护`;
-        document.getElementById('closedTitle').innerText = `休市公告：周末常规休市 (非交易日)`;
-        document.getElementById('closedDesc').innerText = `所选日期为周末休市时间，A股市场无行情撮合与资金交收。建议梳理前一交易日复盘数据并做好下周策略推演。`;
-        document.getElementById('closedType').innerText = '常规周末闭市';
-        document.getElementById('closedPeriod').innerText = '周六至周日';
-        document.getElementById('nextTradingDay').innerText = '下周一 09:30 正常开市';
-        return;
-    }
-
-    // Active Trading Day
-    const data = MARKET_DATABASE[dateStr] || MARKET_DATABASE["2024-03-22"];
-    
-    closedBanner.style.display = 'none';
-    tradingContent.style.display = 'block';
-
-    tradingStatusBadge.innerText = '交易日正常复盘';
-    tradingStatusBadge.className = 'badge';
-    tradingStatusBadge.style.background = 'rgba(248, 81, 73, 0.15)';
-    tradingStatusBadge.style.color = '#f85149';
-    tradingStatusBadge.style.borderColor = 'rgba(248, 81, 73, 0.4)';
-
-    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : " | 无该日公开样本库，请改选已收录的交易日";
-    dataTimestampHeader.innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
-
-    const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);
-
-    renderMarketStats(data, dynamicEval);
-    renderSentimentCycle(data, dynamicEval);
-    renderAbsoluteHigh(data);
-    renderLadderMatrix(data);
-    renderSealingStrength(data);
-    renderCapitalFlow(data);
-    renderDragonTiger(data);
-    renderCashDefense(data, dynamicEval);
-    renderDiscipline(data);
+    setFooterDate(dateStr);
+    return runReviewForDate(dateStr);
 }
 
 /* === Render Helpers === */
@@ -5351,20 +6397,24 @@ function applyCustomParams() {
     } catch (e) {}
 
     closeParamModal();
-    const curDate = document.getElementById('dateSelect').value;
-    renderReviewPage(curDate);
+    const trading = document.getElementById('tradingContent');
+    if (trading && trading.style.display === 'block') {
+        const curDate = document.getElementById('dateSelect').value;
+        renderReviewPage(curDate);
+    }
 }
 
-// Initialize on page load
+// Initialize: named files / ?date= auto-run; index.html stays idle until 开始复盘
 window.addEventListener('DOMContentLoaded', () => {
-    // Check initial filename or date parameter
     const urlParams = new URLSearchParams(window.location.search);
     const dateParam = urlParams.get('date');
     if (dateParam) {
-        switchDate(dateParam);
+        startReview(dateParam);
+    } else if (AUTO_REVIEW_DATE) {
+        startReview(AUTO_REVIEW_DATE);
     } else {
-        // Default based on current file context
-        switchDate('2024-09-30');
+        const picker = document.getElementById('dateSelect');
+        showIdle(picker ? picker.value : '2026-08-13');
     }
 });
 </script>

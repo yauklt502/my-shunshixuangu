@@ -1049,7 +1049,7 @@
         <div class="controls-group">
             <div class="date-picker-box">
                 <label for="dateSelect">📅 选择复盘交易日:</label>
-                <input type="date" id="dateSelect" value="2024-03-25">
+                <input type="date" id="dateSelect" value="2026-08-13">
             </div>
             <button class="action-btn review-go" id="startReviewBtn" onclick="startReview()">开始复盘</button>
 
@@ -1096,7 +1096,7 @@
             正确流程：先选定日期（例如 2026-08-13），再点击红色按钮「开始复盘」。系统会优先使用已核验样本库；若该日不在库中，再调取东方财富公开涨停池/指数日K 生成报告。不会在改日期时自动跳转，也不会把未知日期悄悄替换成别的交易日。
         </div>
         <div class="market-closed-meta">
-            <div>当前选择：<strong id="idleDateHint">2024-03-25</strong></div>
+            <div>当前选择：<strong id="idleDateHint">2026-08-13</strong></div>
             <div>下一步：<strong>点击「开始复盘」调数据</strong></div>
         </div>
     </div>
@@ -5496,7 +5496,7 @@ try {
 }
 
 /* === Core Navigation: 选日期 → 点击开始复盘 → 调数据生成报告 === */
-const AUTO_REVIEW_DATE = "2024-03-25";
+const AUTO_REVIEW_DATE = "2026-08-13";
 
 function ymdCompact(dateStr) {
     return (dateStr || "").replace(/-/g, "");

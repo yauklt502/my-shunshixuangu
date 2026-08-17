@@ -812,4 +812,180 @@ AUTHENTIC_DAYS = {
             ]
         }
     },
+    "2026-08-13": {
+        "is_trading_day": True,
+        "date": "2026-08-13",
+        "date_cn": "2026年08月13日 星期四",
+        "data_source": "证券时报·数据宝8月13日涨停封单一览、财联社焦点复盘、上海证券报蓝盾光电公告、新浪财经日K。指数/涨停口径截至收盘。",
+        "market_summary": {
+            "sh_index": 3926.96,
+            "sh_change": -0.50,
+            "sz_index": 14289.44,
+            "sz_change": -0.87,
+            "cy_index": 3586.04,
+            "cy_change": -0.45,
+            "total_turnover": 25500,
+            "turnover_change": 3985,
+            "up_count": 1143,
+            "down_count": 4317,
+            "flat_count": 80,
+            "median_change": -1.80,
+            "limit_up_count": 62,
+            "limit_down_count": 4,
+            "broken_board_count": 40,
+            "consecutive_board_count": 22,
+            "broken_board_rate": 39.22,
+            "promotion_rate_1_to_2": 40.0,
+            "promotion_rate_2_to_3": 56.25,
+            "promotion_rate_high": 56.25,
+            "max_height": 5,
+            "max_height_stock": "秦安股份 (603758) 5连板；蓝盾光电20cm四连板",
+            "sentiment_phase": "分歧期",
+            "sentiment_phase_en": "Divergence",
+            "sentiment_score": 40,
+            "cash_defense_score": 32,
+            "suggested_position": "2~4成 (放量收跌，高位去弱)",
+            "core_themes": ["创新药/CRO/医疗服务", "汽车零部件", "电力公用", "算电协同"]
+        },
+        "absolute_high": {
+            "title": "放量25500亿指数收跌；秦安股份一字5连板成新高度，蓝盾光电20cm四连板",
+            "leader_code": "603758",
+            "leader_name": "秦安股份",
+            "concept": "汽车零部件 / 市场交易异常波动",
+            "consecutive_boards": 5,
+            "close_price": 15.35,
+            "change_percent": 10.04,
+            "turnover": 0.77,
+            "turnover_rate": 3.50,
+            "seal_status": "一字5连板",
+            "intraday_behavior": "15.35元全天一字。当晚公司发风险提示：主营不涉及人形机器人及零配件制造。次日（8月14日）开盘跳水跌停。",
+            "sub_leader_code": "300862",
+            "sub_leader_name": "蓝盾光电",
+            "sub_leader_concept": "重组岚创科技 / 光通信镀膜设备",
+            "sub_leader_boards": 4,
+            "sub_leader_change": 20.01,
+            "sub_leader_status": "20cm四连板收39.41元，成交4.10亿元，封单10.38亿元，封单占流通约17.39%",
+            "height_analysis": "数据宝：62只涨停、40只封板未遂，封板率60.78%；4只跌停。财联社：秦安股份5连板；蓝盾光电20cm、北京文化、京投发展、同力天启、一鸣食品、皇氏集团4连板。连板高度从此前百花医药7板回落到5板。两市成交约2.55万亿，较前日放量约3985亿，但三大指数收绿，1143涨/4317跌。",
+            "strategy_holding": "持筹者：秦安股份一字溢价已透支，当晚公告证伪机器人逻辑，次日按核按钮纪律，不接力5板。蓝盾光电封单10.38亿质量好于秦安，可观察到竞价。",
+            "strategy_buying": "持币者：放量收跌日不追高位5板。仓位2~4成，只做医药/电力低位首板或2板弱转强，不打高位断头股（传智教育、高争民爆、甘咨询、麦迪科技）。"
+        },
+        "ladder_matrix": [
+            {
+                "tier": "5连板",
+                "count": 1,
+                "stocks": [
+                    {"code": "603758", "name": "秦安股份", "price": 15.35, "change": 10.04, "concept": "汽车零部件", "turnover": 0.77, "turnover_rate": 3.50, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字5板"}
+                ]
+            },
+            {
+                "tier": "20cm / 10cm 4连板",
+                "count": 6,
+                "stocks": [
+                    {"code": "300862", "name": "蓝盾光电", "price": 39.41, "change": 20.01, "concept": "重组岚创科技/光通信", "turnover": 4.10, "turnover_rate": 8.00, "seal_amount": 103800, "seal_ratio": 253.17, "seal_time": "09:25", "breaks": 0, "status": "20cm一字，封单10.38亿"},
+                    {"code": "000802", "name": "北京文化", "price": 6.26, "change": 10.02, "concept": "影视/谷子经济", "turnover": 8.51, "turnover_rate": 12.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "4连板换手"},
+                    {"code": "600683", "name": "京投发展", "price": 12.93, "change": 10.04, "concept": "重组/TOD", "turnover": 0.24, "turnover_rate": 1.20, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字4板"},
+                    {"code": "605286", "name": "同力天启", "price": 34.09, "change": 10.00, "concept": "算电协同/储能", "turnover": 0.78, "turnover_rate": 2.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字4板"},
+                    {"code": "605179", "name": "一鸣食品", "price": 33.43, "change": 10.00, "concept": "乳业/13天9板口径", "turnover": 8.69, "turnover_rate": 18.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "4连板换手"},
+                    {"code": "002329", "name": "皇氏集团", "price": 4.62, "change": 10.00, "concept": "乳业/食品", "turnover": 7.31, "turnover_rate": 16.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "4连板"}
+                ]
+            },
+            {
+                "tier": "3连板",
+                "count": 2,
+                "stocks": [
+                    {"code": "600881", "name": "亚泰集团", "price": 2.27, "change": 10.19, "concept": "创新药", "turnover": 6.52, "turnover_rate": 12.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "3连板"},
+                    {"code": "603887", "name": "城地香江", "price": 12.49, "change": 10.04, "concept": "算力租赁", "turnover": 2.28, "turnover_rate": 8.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字3板"}
+                ]
+            },
+            {
+                "tier": "2连板（公开点名）",
+                "count": 6,
+                "stocks": [
+                    {"code": "001260", "name": "坤泰股份", "price": 21.03, "change": 9.99, "concept": "汽车零部件", "turnover": 0.40, "turnover_rate": 1.50, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字，封单占流通24.12%"},
+                    {"code": "000887", "name": "中鼎股份", "price": 23.69, "change": 9.98, "concept": "汽车零部件/密封件", "turnover": 18.24, "turnover_rate": 8.50, "seal_amount": 35900, "seal_ratio": 19.68, "seal_time": "回封", "breaks": 1, "status": "封单3.59亿"},
+                    {"code": "002081", "name": "金螳螂", "price": 4.81, "change": 10.07, "concept": "装饰/洁净室", "turnover": 1.31, "turnover_rate": 4.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字2板"},
+                    {"code": "002172", "name": "澳洋健康", "price": 4.13, "change": 10.13, "concept": "康复医疗", "turnover": 0.96, "turnover_rate": 3.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "一字2板"},
+                    {"code": "000936", "name": "华西股份", "price": 6.34, "change": 10.07, "concept": "光通信", "turnover": 1.64, "turnover_rate": 5.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "秒板", "breaks": 0, "status": "2连板"},
+                    {"code": "603330", "name": "天洋新材", "price": 9.71, "change": 9.97, "concept": "电子胶/散热", "turnover": 6.56, "turnover_rate": 14.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "换手2板"}
+                ]
+            },
+            {
+                "tier": "首板精选（电力/医药/封单）",
+                "count": 4,
+                "stocks": [
+                    {"code": "601991", "name": "大唐发电", "price": 6.92, "change": 10.02, "concept": "电力", "turnover": 62.13, "turnover_rate": 6.50, "seal_amount": 37700, "seal_ratio": 6.07, "seal_time": "尾盘", "breaks": 1, "status": "容量涨停，封单3.77亿"},
+                    {"code": "300333", "name": "兆日科技", "price": 10.64, "change": 20.00, "concept": "信息安全", "turnover": 0.34, "turnover_rate": 2.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "09:25", "breaks": 0, "status": "20cm一字，封单占流通5.10%"},
+                    {"code": "300404", "name": "博济医药", "price": 14.45, "change": 20.02, "concept": "CRO", "turnover": 8.84, "turnover_rate": 20.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 1, "status": "20cm医疗服务"},
+                    {"code": "600613", "name": "神奇制药", "price": 5.83, "change": 10.00, "concept": "中药", "turnover": 1.36, "turnover_rate": 5.00, "seal_amount": 0, "seal_ratio": 0.0, "seal_time": "回封", "breaks": 0, "status": "医药首板"}
+                ]
+            }
+        ],
+        "broken_board_list": [
+            {"code": "003032", "name": "传智教育", "price": 11.62, "change": -9.99, "max_change": -3.18, "concept": "高位人气/教育", "turnover": 10.87, "reason": "13天9板后跌停，高位断头"},
+            {"code": "002827", "name": "高争民爆", "price": 55.10, "change": -10.00, "max_change": 0.28, "concept": "高位民爆", "turnover": 11.96, "reason": "从前收61.22元封跌停55.10元"},
+            {"code": "000779", "name": "甘咨询", "price": 10.73, "change": -9.98, "max_change": -3.27, "concept": "高位补跌", "turnover": 12.46, "reason": "从前收11.92元封跌停"},
+            {"code": "603990", "name": "麦迪科技", "price": 22.26, "change": -9.99, "max_change": 1.09, "concept": "高位补跌", "turnover": 13.96, "reason": "从前收24.73元封跌停，成交约14亿"}
+        ],
+        "sealing_strength_ranking": [
+            {"rank": 1, "code": "300862", "name": "蓝盾光电", "boards": 4, "seal_amount": 103800, "seal_ratio": 253.17, "free_float_ratio": 17.39, "first_seal": "09:25", "breaks": 0, "stars": 5, "premium_exp": "极高（20cm一字，封单10.38亿）"},
+            {"rank": 2, "code": "001260", "name": "坤泰股份", "boards": 2, "seal_amount": 0, "seal_ratio": 0.0, "free_float_ratio": 24.12, "first_seal": "09:25", "breaks": 0, "stars": 5, "premium_exp": "极高（封单占流通24.12%，数据宝力度第1）"},
+            {"rank": 3, "code": "601991", "name": "大唐发电", "boards": 1, "seal_amount": 37700, "seal_ratio": 6.07, "free_float_ratio": 1.20, "first_seal": "尾盘", "breaks": 1, "stars": 4, "premium_exp": "中高（封单3.77亿，成交62亿）"},
+            {"rank": 4, "code": "000887", "name": "中鼎股份", "boards": 2, "seal_amount": 35900, "seal_ratio": 19.68, "free_float_ratio": 2.00, "first_seal": "回封", "breaks": 1, "stars": 4, "premium_exp": "中高（封单3.59亿）"},
+            {"rank": 5, "code": "300333", "name": "兆日科技", "boards": 1, "seal_amount": 0, "seal_ratio": 0.0, "free_float_ratio": 5.10, "first_seal": "09:25", "breaks": 0, "stars": 4, "premium_exp": "高（20cm一字，封单占流通5.10%）"},
+            {"rank": 6, "code": "603758", "name": "秦安股份", "boards": 5, "seal_amount": 0, "seal_ratio": 0.0, "free_float_ratio": 0.80, "first_seal": "09:25", "breaks": 0, "stars": 3, "premium_exp": "中（高度最高但当晚公告证伪机器人）"}
+        ],
+        "main_capital_flow": {
+            "sectors_inflow": [
+                {"name": "医药生物/医疗服务/CRO", "inflow": 116.0, "change": 3.50, "leaders": "博济医药、新里程、万邦医药、南模生物、澳洋健康", "limit_ups": 14},
+                {"name": "电力公用", "inflow": 20.0, "change": 2.00, "leaders": "大唐发电、华电能源、金开新能、惠天热电", "limit_ups": 5},
+                {"name": "汽车零部件", "inflow": 15.0, "change": 2.50, "leaders": "秦安股份、坤泰股份、中鼎股份、联诚精密", "limit_ups": 4}
+            ],
+            "sectors_outflow": [
+                {"name": "电子", "outflow": -245.0, "change": -2.50, "reason": "公开复盘转述：电子板块资金流出居前"},
+                {"name": "有色", "outflow": -90.0, "change": -3.00, "reason": "贵金属/工业金属回调"},
+                {"name": "北向资金", "outflow": -32.61, "change": 0.00, "reason": "北向净卖出32.61亿元"}
+            ]
+        },
+        "popularity_anchors": [
+            {"rank": 1, "code": "601991", "name": "大唐发电", "turnover": 62.13, "change": 10.02, "role": "电力容量涨停", "analysis": "成交约62亿元并封涨停，是放量日少数能封住的权重方向。"},
+            {"rank": 2, "code": "000887", "name": "中鼎股份", "turnover": 18.24, "change": 9.98, "role": "汽车零部件容量2板", "analysis": "成交18.24亿、封单3.59亿。"},
+            {"rank": 3, "code": "300862", "name": "蓝盾光电", "turnover": 4.10, "change": 20.01, "role": "20cm四连板质量锚", "analysis": "成交4.10亿但封单10.38亿，封成比远好于同高度换手板。"},
+            {"rank": 4, "code": "000802", "name": "北京文化", "turnover": 8.51, "change": 10.02, "role": "影视4板人气", "analysis": "成交8.51亿换手板，质量弱于蓝盾一字。"}
+        ],
+        "dragon_tiger_list": [
+            {
+                "seat_name": "公开复盘转述（待交易所席位核对）",
+                "style": "医药与汽车零部件",
+                "actions": [
+                    {"stock": "中鼎股份 (000887)", "net_buy": 11200, "type": "市场复盘转述：南京太平南路买入约1.12亿元", "comment": "以交易所次日公布的龙虎榜营业部为准"},
+                    {"stock": "蓝盾光电 (300862)", "net_buy": 0, "type": "当晚发严重异常波动公告", "comment": "连续4日收盘涨幅偏离值累计超过100%，重组存在暂停或取消风险"}
+                ]
+            }
+        ],
+        "cash_defense_checklist": [
+            {"id": "c1", "rule": "高位总龙头断板并出现直接跌停或恶性负反馈", "status": "WARN", "triggered": True, "detail": "高度从7板回落到5板；传智教育、高争民爆、甘咨询、麦迪科技4只高位股跌停。秦安5板本身未断，但当晚公告证伪。"},
+            {"id": "c2", "rule": "全市场炸板率超过 30% 警报线", "status": "DANGER", "triggered": True, "detail": "40只封板未遂，炸板率39.22%，封板率60.78%。"},
+            {"id": "c3", "rule": "连板晋级率跌破 35% 冰点阈值", "status": "SAFE", "triggered": False, "detail": "公开口径连板晋级率约56.25%，中位接力还在。"},
+            {"id": "c4", "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只", "status": "DANGER", "triggered": True, "detail": "4只跌停全是前期高位人气股。"},
+            {"id": "c5", "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩", "status": "WARN", "triggered": True, "detail": "成交放到2.55万亿但指数收跌，是放量滞涨不是缩量破位。"},
+            {"id": "c6", "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提", "status": "WARN", "triggered": True, "detail": "高位教育/民爆核按钮，资金切向医药与电力。"},
+            {"id": "c7", "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）", "status": "SAFE", "triggered": False, "detail": "4板梯队仍在、医药低位涨停潮，属高位崩塌+低位接棒的分歧日，尚未全面杀中位。"}
+        ],
+        "next_day_discipline": {
+            "bidding_rules": [
+                "先看秦安股份竞价：若低开翻绿或封跌停，5板高度结束，中高位一律不打。",
+                "蓝盾光电封单10.38亿，竞价高开3%~7%可观察回封，>10%不追。",
+                "传智教育、高争民爆、甘咨询、麦迪科技跌停板不抄。"
+            ],
+            "trading_discipline": [
+                "仓位2~4成。放量收跌日只做辨识度前排（蓝盾光电、医药2板、电力容量）。",
+                "不接力秦安股份5板。"
+            ],
+            "risk_warnings": [
+                "秦安股份已提示不涉及人形机器人，5板次日核按钮概率高（8月14日已验证跌停）。",
+                "蓝盾光电触及严重异常波动，重组可能暂停、中止或取消。",
+                "2.55万亿放量若次日缩量，指数在3900点附近二次回落。"
+            ]
+        }
+    },
 }

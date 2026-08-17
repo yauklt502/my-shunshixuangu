@@ -224,6 +224,17 @@ def get_html_template():
             opacity: 0.9;
         }
 
+        .action-btn:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .action-btn.review-go {
+            background: linear-gradient(135deg, #f85149, #d29922);
+            font-size: 14px;
+            padding: 8px 22px;
+        }
+
         .action-btn.secondary {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -237,6 +248,11 @@ def get_html_template():
         }
 
         /* === Non-trading Day Alert Modal / Banner === */
+        #idleBanner {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.16) 0%, rgba(188, 140, 255, 0.12) 100%);
+            border-color: rgba(88, 166, 255, 0.45);
+        }
+
         .market-closed-banner {
             display: none;
             background: linear-gradient(135deg, rgba(210, 153, 34, 0.15) 0%, rgba(248, 81, 73, 0.15) 100%);
@@ -949,7 +965,7 @@ def get_html_template():
             .brand-subtitle {
                 color: #57606a !important;
             }
-            .controls-group, .modal-overlay, .quick-dates {
+            .controls-group, .modal-overlay, .quick-dates, #idleBanner {
                 display: none !important;
             }
             .stat-card {
@@ -1045,18 +1061,20 @@ def get_html_template():
         <div class="controls-group">
             <div class="date-picker-box">
                 <label for="dateSelect">📅 选择复盘交易日:</label>
-                <input type="date" id="dateSelect" value="2024-03-22">
+                <input type="date" id="dateSelect" value="2026-08-13">
             </div>
+            <button class="action-btn review-go" id="startReviewBtn" onclick="startReview()">开始复盘</button>
 
             <div class="quick-dates">
-                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(艾艾13板断)</button>
-                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(博信7板退潮)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(同为5板)</button>
-                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(2.59万亿)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿)</button>
-                <button class="quick-btn" onclick="switchDate('2026-08-14')">08-14(蓝盾光电5板)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-04')">04-04(清明休市)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-01')">10-01(国庆休市)</button>
+                <button class="quick-btn" onclick="startReview('2024-03-22')">03-22(艾艾13板断)</button>
+                <button class="quick-btn" onclick="startReview('2024-03-25')">03-25(博信7板退潮)</button>
+                <button class="quick-btn" onclick="startReview('2024-04-18')">04-18(同为5板)</button>
+                <button class="quick-btn" onclick="startReview('2024-09-30')">09-30(2.59万亿)</button>
+                <button class="quick-btn" onclick="startReview('2024-10-08')">10-08(3.45万亿)</button>
+                <button class="quick-btn" onclick="startReview('2026-08-13')">08-13(秦安5板)</button>
+                <button class="quick-btn" onclick="startReview('2026-08-14')">08-14(蓝盾光电5板)</button>
+                <button class="quick-btn" onclick="startReview('2024-04-04')">04-04(清明休市)</button>
+                <button class="quick-btn" onclick="startReview('2024-10-01')">10-01(国庆休市)</button>
             </div>
 
             <button class="action-btn secondary" onclick="openParamModal()">
@@ -1082,8 +1100,21 @@ def get_html_template():
         </div>
     </div>
 
+    <!-- Idle: wait for user to click 开始复盘 -->
+    <div class="market-closed-banner" id="idleBanner" style="display:block;">
+        <div class="market-closed-icon">📅</div>
+        <div class="market-closed-title">选择交易日，点击「开始复盘」</div>
+        <div class="market-closed-desc">
+            正确流程：先选定日期（例如 2026-08-13），再点击红色按钮「开始复盘」。系统会优先使用已核验样本库；若该日不在库中，再调取东方财富公开涨停池/指数日K 生成报告。不会在改日期时自动跳转，也不会把未知日期悄悄替换成别的交易日。
+        </div>
+        <div class="market-closed-meta">
+            <div>当前选择：<strong id="idleDateHint">2026-08-13</strong></div>
+            <div>下一步：<strong>点击「开始复盘」调数据</strong></div>
+        </div>
+    </div>
+
     <!-- Active Trading Day Dashboard Content -->
-    <div id="tradingContent">
+    <div id="tradingContent" style="display:none;">
         <!-- Market Macro Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -1466,24 +1497,461 @@ try {
     console.log("Local storage not available or restricted.");
 }
 
-/* === Core Navigation & Date Switching Logic === */
-function switchDate(targetDate) {
-    document.getElementById('dateSelect').value = targetDate;
-    
-    // Update quick buttons UI
-    document.querySelectorAll('.quick-btn').forEach(btn => {
-        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(targetDate)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
+/* === Core Navigation: 选日期 → 点击开始复盘 → 调数据生成报告 === */
+const AUTO_REVIEW_DATE = __AUTO_REVIEW_DATE__;
 
-    renderReviewPage(targetDate);
+function ymdCompact(dateStr) {
+    return (dateStr || "").replace(/-/g, "");
 }
 
-document.getElementById('dateSelect').addEventListener('change', function(e) {
-    switchDate(e.target.value);
+function weekdayCn(dateStr) {
+    const names = ["日", "一", "二", "三", "四", "五", "六"];
+    const d = new Date(dateStr + "T00:00:00");
+    return isNaN(d.getTime()) ? "" : names[d.getDay()];
+}
+
+function updateQuickButtons(targetDate) {
+    document.querySelectorAll(".quick-btn").forEach(btn => {
+        const oc = btn.getAttribute("onclick") || "";
+        if (targetDate && oc.includes("'" + targetDate + "'")) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+}
+
+function setReviewLoading(on, label) {
+    const btn = document.getElementById("startReviewBtn");
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.innerText = on ? (label || "正在调取公开行情…") : "开始复盘";
+}
+
+function setFooterDate(dateStr) {
+    const fd = document.getElementById("footerDateDisplay");
+    if (fd) fd.innerText = dateStr || "--";
+}
+
+function showIdle(dateStr) {
+    const idle = document.getElementById("idleBanner");
+    const closed = document.getElementById("closedBanner");
+    const trading = document.getElementById("tradingContent");
+    idle.style.display = "block";
+    closed.style.display = "none";
+    trading.style.display = "none";
+    const hint = document.getElementById("idleDateHint");
+    if (hint) hint.innerText = dateStr || document.getElementById("dateSelect").value;
+    document.getElementById("dataTimestampHeader").innerText = "请选择日期后点击「开始复盘」";
+    document.getElementById("tradingStatusBadge").innerText = "待复盘";
+    setFooterDate(dateStr || document.getElementById("dateSelect").value);
+}
+
+function showMissingDate(dateStr, reason) {
+    const idle = document.getElementById("idleBanner");
+    const closed = document.getElementById("closedBanner");
+    const trading = document.getElementById("tradingContent");
+    idle.style.display = "none";
+    closed.style.display = "block";
+    trading.style.display = "none";
+    document.getElementById("closedTitle").innerText = `未能生成 ${dateStr} 复盘报告`;
+    document.getElementById("closedDesc").innerText = reason || "该日不在本地样本库，且公开行情接口未能返回涨停池/指数数据。请检查网络后再次点击「开始复盘」，或改选已收录交易日。";
+    document.getElementById("closedType").innerText = "无可用公开数据";
+    document.getElementById("closedPeriod").innerText = dateStr;
+    document.getElementById("nextTradingDay").innerText = "可先试 2026-08-13 / 2026-08-14";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${dateStr} | 未生成报告`;
+    document.getElementById("tradingStatusBadge").innerText = "无数据";
+    setFooterDate(dateStr);
+}
+
+function jsonp(url, timeoutMs) {
+    return new Promise((resolve, reject) => {
+        const cb = "emcb_" + Date.now().toString(36) + Math.random().toString(16).slice(2, 8);
+        let settled = false;
+        const timer = setTimeout(() => finish(new Error("timeout")), timeoutMs || 12000);
+        function finish(err, data) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            try { delete window[cb]; } catch (e) {}
+            if (script && script.parentNode) script.parentNode.removeChild(script);
+            if (err) reject(err); else resolve(data);
+        }
+        window[cb] = (data) => finish(null, data);
+        const script = document.createElement("script");
+        script.onerror = () => finish(new Error("jsonp error"));
+        const param = url.indexOf("kline") >= 0 ? "callback=" : "cb=";
+        script.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + param + cb;
+        document.head.appendChild(script);
+    });
+}
+
+function emPrice(p) {
+    const n = Number(p) || 0;
+    if (n > 1000) return +(n / 1000).toFixed(2);
+    return +n.toFixed(2);
+}
+
+function emYi(v) {
+    const n = Number(v) || 0;
+    if (n > 1e10) return +(n / 1e8).toFixed(2);
+    if (n > 1e6) return +(n / 1e8).toFixed(2);
+    return +n.toFixed(2);
+}
+
+function emWan(v) {
+    const n = Number(v) || 0;
+    if (n > 1e6) return Math.round(n / 1e4);
+    return Math.round(n);
+}
+
+function emTime(v) {
+    const s = String(v || "").padStart(6, "0");
+    if (!v && v !== 0) return "--";
+    return s.slice(0, 2) + ":" + s.slice(2, 4) + ":" + s.slice(4, 6);
+}
+
+function parseKline(payload) {
+    const klines = ((payload || {}).data || {}).klines || [];
+    if (!klines.length) return null;
+    const p = klines[0].split(",");
+    return {
+        date: p[0],
+        close: parseFloat(p[2]),
+        pct: parseFloat(p[8]),
+        amountYi: +(parseFloat(p[6]) / 1e8).toFixed(0)
+    };
+}
+
+function buildReportFromLive(dateStr, ztPool, zbPool, dtPool, shBar, szBar, cyBar) {
+    const zt = ztPool || [];
+    const zb = zbPool || [];
+    const dt = dtPool || [];
+    const stocks = zt.map(s => {
+        const price = emPrice(s.p);
+        const turnover = emYi(s.amount);
+        const seal = emWan(s.fund);
+        const lbc = s.lbc || 1;
+        return {
+            code: s.c,
+            name: s.n,
+            price,
+            change: +(s.zdp || 0).toFixed(2),
+            concept: s.hybk || s.hy || "涨停",
+            turnover,
+            turnover_rate: +(s.hs || 0).toFixed(2),
+            seal_amount: seal,
+            seal_ratio: turnover > 0 ? +((seal / 10000) / turnover * 100).toFixed(2) : 0,
+            seal_time: emTime(s.fbt),
+            breaks: s.zbc || 0,
+            status: (s.zbc ? "回封" : "封板") + (lbc > 1 ? lbc + "连板" : "首板"),
+            boards: lbc
+        };
+    });
+    stocks.sort((a, b) => b.boards - a.boards || b.seal_amount - a.seal_amount);
+    const maxH = stocks.length ? stocks[0].boards : 0;
+    const leader = stocks[0] || {code: "--", name: "—", boards: 0, price: 0, change: 0, turnover: 0, turnover_rate: 0, concept: ""};
+    const groups = {};
+    stocks.forEach(s => {
+        const k = s.boards >= 2 ? s.boards + "连板" : "首板精选";
+        if (!groups[k]) groups[k] = [];
+        groups[k].push(s);
+    });
+    const ladder = Object.keys(groups).sort((a, b) => {
+        const na = parseInt(a, 10) || 0;
+        const nb = parseInt(b, 10) || 0;
+        return nb - na;
+    }).map(tier => ({
+        tier,
+        count: groups[tier].length,
+        stocks: groups[tier].slice(0, tier.indexOf("首板") === 0 ? 8 : 8)
+    }));
+    const broken = zb.slice(0, 8).map(s => ({
+        code: s.c,
+        name: s.n,
+        price: emPrice(s.p),
+        change: +(s.zdp || 0).toFixed(2),
+        max_change: 10,
+        concept: s.hybk || "炸板",
+        turnover: emYi(s.amount),
+        reason: "公开涨停池：盘中触及涨停后打开，收盘未封住"
+    }));
+    const sealing = stocks.slice().sort((a, b) => b.seal_amount - a.seal_amount).slice(0, 8).map((s, i) => ({
+        rank: i + 1,
+        code: s.code,
+        name: s.name,
+        boards: s.boards,
+        seal_amount: s.seal_amount,
+        seal_ratio: s.seal_ratio,
+        free_float_ratio: 0,
+        first_seal: s.seal_time,
+        breaks: s.breaks,
+        stars: s.seal_ratio > 50 || s.breaks === 0 ? 5 : 3,
+        premium_exp: s.breaks === 0 ? "高（未开板）" : "中（有开板）"
+    }));
+    const hyMap = {};
+    stocks.forEach(s => {
+        const hy = s.concept || "其他";
+        if (!hyMap[hy]) hyMap[hy] = {name: hy, inflow: 0, change: 0, leaders: [], limit_ups: 0};
+        hyMap[hy].limit_ups += 1;
+        hyMap[hy].inflow += s.turnover;
+        if (hyMap[hy].leaders.length < 3) hyMap[hy].leaders.push(s.name);
+    });
+    const sectors = Object.values(hyMap).sort((a, b) => b.limit_ups - a.limit_ups).slice(0, 5)
+        .map(x => ({name: x.name, inflow: +x.inflow.toFixed(1), change: 0, leaders: x.leaders.join("、"), limit_ups: x.limit_ups}));
+    const lu = zt.length;
+    const br = zb.length;
+    const brokenRate = (lu + br) > 0 ? +(br / (lu + br) * 100).toFixed(2) : 0;
+    const highCnt = stocks.filter(s => s.boards >= 3).length;
+    const promoHigh = highCnt >= 2 ? 50 : (maxH >= 5 ? 40 : 30);
+    let phase = "修复期";
+    let score = 50;
+    if (brokenRate > 35 && lu < 50) { phase = "退潮期"; score = 28; }
+    else if (brokenRate > 28 || (shBar && shBar.pct < 0 && lu < 80)) { phase = "分歧期"; score = 42; }
+    else if (lu > 200) { phase = "高潮期"; score = 90; }
+    else if (maxH >= 5 && brokenRate < 25) { phase = "发酵期"; score = 72; }
+    const pos = score < 35 ? "0~2成 (防守)" : score < 55 ? "2~4成 (试错)" : score < 75 ? "5~7成 (主线)" : "7~9成 (进攻)";
+    const shAmt = (shBar && shBar.amountYi) || 0;
+    const szAmt = (szBar && szBar.amountYi) || 0;
+    const totalTurnover = shAmt && szAmt ? shAmt + szAmt : (shAmt || szAmt);
+    const wd = weekdayCn(dateStr);
+    return {
+        is_trading_day: true,
+        date: dateStr,
+        date_cn: dateStr.replace(/-/, "年").replace(/-/, "月") + "日" + (wd ? " 星期" + wd : ""),
+        data_source: "东方财富公开涨停池/炸板池/跌停池与指数日K（点击「开始复盘」实时调取）。封单、连板以接口字段为准。",
+        live_fetched: true,
+        market_summary: {
+            sh_index: shBar ? shBar.close : 0,
+            sh_change: shBar ? shBar.pct : 0,
+            sz_index: szBar ? szBar.close : 0,
+            sz_change: szBar ? szBar.pct : 0,
+            cy_index: cyBar ? cyBar.close : 0,
+            cy_change: cyBar ? cyBar.pct : 0,
+            total_turnover: totalTurnover,
+            turnover_change: 0,
+            up_count: 0,
+            down_count: 0,
+            flat_count: 0,
+            median_change: shBar ? shBar.pct : 0,
+            limit_up_count: lu,
+            limit_down_count: dt.length,
+            broken_board_count: br,
+            consecutive_board_count: stocks.filter(s => s.boards >= 2).length,
+            broken_board_rate: brokenRate,
+            promotion_rate_1_to_2: promoHigh,
+            promotion_rate_2_to_3: promoHigh,
+            promotion_rate_high: promoHigh,
+            max_height: maxH,
+            max_height_stock: leader.name + " (" + leader.code + ") " + maxH + "连板",
+            sentiment_phase: phase,
+            sentiment_phase_en: phase,
+            sentiment_score: score,
+            cash_defense_score: Math.max(0, 100 - Math.round(brokenRate * 1.5)),
+            suggested_position: pos,
+            core_themes: sectors.slice(0, 4).map(s => s.name)
+        },
+        absolute_high: {
+            title: "实时调取：" + leader.name + maxH + "连板，涨停" + lu + " / 炸板" + br,
+            leader_code: leader.code,
+            leader_name: leader.name,
+            concept: leader.concept,
+            consecutive_boards: leader.boards,
+            close_price: leader.price,
+            change_percent: leader.change,
+            turnover: leader.turnover,
+            turnover_rate: leader.turnover_rate,
+            seal_status: leader.status,
+            intraday_behavior: "来自东方财富涨停池：连板" + leader.boards + "，封单约" + (leader.seal_amount / 10000).toFixed(2) + "亿元。",
+            sub_leader_code: stocks[1] ? stocks[1].code : "",
+            sub_leader_name: stocks[1] ? stocks[1].name : "",
+            sub_leader_concept: stocks[1] ? stocks[1].concept : "",
+            sub_leader_boards: stocks[1] ? stocks[1].boards : 0,
+            sub_leader_change: stocks[1] ? stocks[1].change : 0,
+            sub_leader_status: stocks[1] ? stocks[1].status : "",
+            height_analysis: "该报告由「开始复盘」调用公开接口即时生成。指数成交为沪+深日K成交额合计（若接口返回）。涨跌家数若为0表示接口未提供全市场涨跌统计。",
+            strategy_holding: "按封成比与开板次数去弱留强，不因高度无脑锁仓。",
+            strategy_buying: "仓位参考情绪阶段；接口数据仅作复盘骨架，细节以交易所收盘统计为准。"
+        },
+        ladder_matrix: ladder,
+        broken_board_list: broken,
+        sealing_strength_ranking: sealing,
+        main_capital_flow: {sectors_inflow: sectors, sectors_outflow: []},
+        popularity_anchors: stocks.slice().sort((a, b) => b.turnover - a.turnover).slice(0, 5).map((s, i) => ({
+            rank: i + 1, code: s.code, name: s.name, turnover: s.turnover, change: s.change,
+            role: s.boards + "板成交锚点",
+            analysis: "涨停池成交约" + s.turnover + "亿元。"
+        })),
+        dragon_tiger_list: [{
+            seat_name: "龙虎榜",
+            style: "实时接口未附带营业部明细",
+            actions: [{stock: "—", net_buy: 0, type: "请对照交易所次日公开信息", comment: "涨停池接口不含席位净额"}]
+        }],
+        cash_defense_checklist: [
+            {id: "c1", rule: "高位总龙头断板并出现直接跌停或恶性负反馈", status: dt.length ? "WARN" : "SAFE", triggered: dt.length > 0, detail: "跌停池 " + dt.length + " 只。"},
+            {id: "c2", rule: "全市场炸板率超过 30% 警报线", status: brokenRate > 30 ? "DANGER" : "SAFE", triggered: brokenRate > 30, detail: "炸板率 " + brokenRate + "%（" + br + "/" + (lu + br) + "）。"},
+            {id: "c3", rule: "连板晋级率跌破 35% 冰点阈值", status: "SAFE", triggered: false, detail: "实时接口未直接给晋级率，请结合连板高度观察。"},
+            {id: "c4", rule: "日内天地板或大幅回撤超10%股票数量 >= 3只", status: dt.length >= 3 ? "WARN" : "SAFE", triggered: dt.length >= 3, detail: "跌停 " + dt.length + " 只。"},
+            {id: "c5", rule: "大盘指数破位且两市成交量出现严重断崖式萎缩", status: "SAFE", triggered: false, detail: "沪指 " + (shBar ? shBar.close : "--") + "，两市成交约 " + totalTurnover + " 亿元。"},
+            {id: "c6", rule: "题材一日游轮动加剧，前日连板次日大幅低开计提", status: "SAFE", triggered: false, detail: "需对照前一交易日样本。"},
+            {id: "c7", rule: "处于情绪退潮期第二阶段（主跌杀中位与补跌）", status: phase === "退潮期" ? "DANGER" : "SAFE", triggered: phase === "退潮期", detail: "模型判定：" + phase + "。"}
+        ],
+        next_day_discipline: {
+            bidding_rules: ["竞价先看高度板 " + leader.name + " 封单与开板。", "炸板率偏高时，中位一字默认放弃。"],
+            trading_discipline: ["仓位按建议执行。", "只做涨停池里封成比高、开板次数少的前排。"],
+            risk_warnings: ["实时接口可能漏掉ST口径或北交所，与媒体家数不完全一致。"]
+        }
+    };
+}
+
+async function fetchLiveReview(dateStr) {
+    const ymd = ymdCompact(dateStr);
+    const ut = "7eea3edcaed734bea9cbfc244ea521cf";
+    const ztUrl = `https://push2ex.eastmoney.com/getTopicZTPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=200&sort=lbc:desc&date=${ymd}`;
+    const zbUrl = `https://push2ex.eastmoney.com/getTopicZBPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=200&date=${ymd}`;
+    const dtUrl = `https://push2ex.eastmoney.com/getTopicDTPool?ut=${ut}&dpt=wz.ztzt&Pageindex=0&pagesize=100&date=${ymd}`;
+    const kline = (secid) => `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=0&beg=${ymd}&end=${ymd}`;
+    const [ztRes, zbRes, dtRes, shRes, szRes, cyRes] = await Promise.all([
+        jsonp(ztUrl).catch(() => null),
+        jsonp(zbUrl).catch(() => null),
+        jsonp(dtUrl).catch(() => null),
+        jsonp(kline("1.000001")).catch(() => null),
+        jsonp(kline("0.399001")).catch(() => null),
+        jsonp(kline("0.399006")).catch(() => null)
+    ]);
+    const ztPool = ((ztRes || {}).data || {}).pool || [];
+    const zbPool = ((zbRes || {}).data || {}).pool || [];
+    const dtPool = ((dtRes || {}).data || {}).pool || [];
+    if (!ztPool.length && !parseKline(shRes)) {
+        throw new Error("公开接口未返回该日涨停池或指数K线");
+    }
+    return buildReportFromLive(dateStr, ztPool, zbPool, dtPool, parseKline(shRes), parseKline(szRes), parseKline(cyRes));
+}
+
+async function startReview(presetDate) {
+    const dateInput = document.getElementById("dateSelect");
+    if (presetDate) dateInput.value = presetDate;
+    const dateStr = dateInput.value;
+    if (!dateStr) {
+        showMissingDate("--", "请先选择日期，再点击「开始复盘」。");
+        return;
+    }
+    updateQuickButtons(dateStr);
+    const idleHint = document.getElementById("idleDateHint");
+    if (idleHint) idleHint.innerText = dateStr;
+    setReviewLoading(true, "正在调取 " + dateStr + " 行情…");
+    try {
+        await runReviewForDate(dateStr);
+    } finally {
+        setReviewLoading(false);
+    }
+}
+
+async function runReviewForDate(dateStr) {
+    document.getElementById("idleBanner").style.display = "none";
+
+    if (NON_TRADING_DAYS[dateStr]) {
+        renderClosedDay(NON_TRADING_DAYS[dateStr]);
+        return;
+    }
+    const parsedDate = new Date(dateStr + "T00:00:00");
+    const dayOfWeek = parsedDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        renderWeekend(dateStr);
+        return;
+    }
+    if (MARKET_DATABASE[dateStr]) {
+        renderTradingDay(MARKET_DATABASE[dateStr]);
+        return;
+    }
+    try {
+        const live = await fetchLiveReview(dateStr);
+        MARKET_DATABASE[dateStr] = live;
+        renderTradingDay(live);
+    } catch (err) {
+        showMissingDate(dateStr, "已点击「开始复盘」，但 " + dateStr + " 不在本地样本库，公开行情接口也没有返回可用数据（" + (err && err.message ? err.message : "网络或跨域限制") + "）。样本库已收录 2026-08-13、2026-08-14 等交易日，可先选这些日期再点复盘。");
+    }
+}
+
+function renderClosedDay(closedInfo) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "block";
+    document.getElementById("tradingContent").style.display = "none";
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = "休市中";
+    badge.className = "badge";
+    badge.style.background = "rgba(210, 153, 34, 0.15)";
+    badge.style.color = "#d29922";
+    badge.style.borderColor = "rgba(210, 153, 34, 0.4)";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${closedInfo.date_cn} | 交易所闭市中`;
+    document.getElementById("closedTitle").innerText = `休市公告：${closedInfo.holiday_name} (非交易日)`;
+    document.getElementById("closedDesc").innerText = closedInfo.reason + " " + closedInfo.guidance;
+    document.getElementById("closedType").innerText = closedInfo.holiday_name;
+    document.getElementById("closedPeriod").innerText = closedInfo.holiday_period;
+    document.getElementById("nextTradingDay").innerText = closedInfo.next_trading_day_cn;
+    setFooterDate(closedInfo.date);
+}
+
+function renderWeekend(dateStr) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "block";
+    document.getElementById("tradingContent").style.display = "none";
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = "周末休市";
+    badge.className = "badge";
+    badge.style.background = "rgba(210, 153, 34, 0.15)";
+    badge.style.color = "#d29922";
+    badge.style.borderColor = "rgba(210, 153, 34, 0.4)";
+    document.getElementById("dataTimestampHeader").innerText = `统计日期：${dateStr} (周末) | 证券交易所正常闭市维护`;
+    document.getElementById("closedTitle").innerText = "休市公告：周末常规休市 (非交易日)";
+    document.getElementById("closedDesc").innerText = "所选日期为周末休市时间，A股市场无行情撮合与资金交收。请改选交易日后再点击「开始复盘」。";
+    document.getElementById("closedType").innerText = "常规周末闭市";
+    document.getElementById("closedPeriod").innerText = "周六至周日";
+    document.getElementById("nextTradingDay").innerText = "下周一 09:30 正常开市";
+    setFooterDate(dateStr);
+}
+
+function renderTradingDay(data) {
+    document.getElementById("idleBanner").style.display = "none";
+    document.getElementById("closedBanner").style.display = "none";
+    document.getElementById("tradingContent").style.display = "block";
+    setFooterDate(data.date);
+    const badge = document.getElementById("tradingStatusBadge");
+    badge.innerText = data.live_fetched ? "实时调取已生成" : "交易日正常复盘";
+    badge.className = "badge";
+    badge.style.background = "rgba(248, 81, 73, 0.15)";
+    badge.style.color = "#f85149";
+    badge.style.borderColor = "rgba(248, 81, 73, 0.4)";
+    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : "";
+    document.getElementById("dataTimestampHeader").innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
+    const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);
+    renderMarketStats(data, dynamicEval);
+    renderSentimentCycle(data, dynamicEval);
+    renderAbsoluteHigh(data);
+    renderLadderMatrix(data);
+    renderSealingStrength(data);
+    renderCapitalFlow(data);
+    renderDragonTiger(data);
+    renderCashDefense(data, dynamicEval);
+    renderDiscipline(data);
+}
+
+function switchDate(targetDate) {
+    startReview(targetDate);
+}
+
+document.getElementById("dateSelect").addEventListener("change", function(e) {
+    const dateStr = e.target.value;
+    updateQuickButtons(dateStr);
+    // 改日期本身不生成报告，必须再点「开始复盘」
+    showIdle(dateStr);
+});
+
+document.getElementById("dateSelect").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        startReview();
+    }
 });
 
 /* === Dynamic Quantitative Sentiment & Defense Evaluation Engine === */
@@ -1549,83 +2017,8 @@ function evaluateMarketDynamically(rawSummary, brokenList, leaderData) {
 
 /* === Main Render Dispatcher === */
 function renderReviewPage(dateStr) {
-    const closedBanner = document.getElementById('closedBanner');
-    const tradingContent = document.getElementById('tradingContent');
-    const tradingStatusBadge = document.getElementById('tradingStatusBadge');
-    const dataTimestampHeader = document.getElementById('dataTimestampHeader');
-    const footerDateDisplay = document.getElementById('footerDateDisplay');
-
-    footerDateDisplay.innerText = dateStr;
-
-    // Check if it's a known non-trading day
-    if (NON_TRADING_DAYS[dateStr]) {
-        const closedInfo = NON_TRADING_DAYS[dateStr];
-        closedBanner.style.display = 'block';
-        tradingContent.style.display = 'none';
-
-        tradingStatusBadge.innerText = '休市中';
-        tradingStatusBadge.className = 'badge';
-        tradingStatusBadge.style.background = 'rgba(210, 153, 34, 0.15)';
-        tradingStatusBadge.style.color = '#d29922';
-        tradingStatusBadge.style.borderColor = 'rgba(210, 153, 34, 0.4)';
-
-        dataTimestampHeader.innerText = `统计日期：${closedInfo.date_cn} | 交易所闭市中`;
-        document.getElementById('closedTitle').innerText = `休市公告：${closedInfo.holiday_name} (非交易日)`;
-        document.getElementById('closedDesc').innerText = closedInfo.reason + " " + closedInfo.guidance;
-        document.getElementById('closedType').innerText = closedInfo.holiday_name;
-        document.getElementById('closedPeriod').innerText = closedInfo.holiday_period;
-        document.getElementById('nextTradingDay').innerText = closedInfo.next_trading_day_cn;
-        return;
-    }
-
-    // Check if it's a weekend (Saturday=6, Sunday=0) for arbitrary dates
-    const parsedDate = new Date(dateStr);
-    const dayOfWeek = parsedDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-        closedBanner.style.display = 'block';
-        tradingContent.style.display = 'none';
-
-        tradingStatusBadge.innerText = '周末休市';
-        tradingStatusBadge.className = 'badge';
-        tradingStatusBadge.style.background = 'rgba(210, 153, 34, 0.15)';
-        tradingStatusBadge.style.color = '#d29922';
-        tradingStatusBadge.style.borderColor = 'rgba(210, 153, 34, 0.4)';
-
-        dataTimestampHeader.innerText = `统计日期：${dateStr} (周末) | 证券交易所正常闭市维护`;
-        document.getElementById('closedTitle').innerText = `休市公告：周末常规休市 (非交易日)`;
-        document.getElementById('closedDesc').innerText = `所选日期为周末休市时间，A股市场无行情撮合与资金交收。建议梳理前一交易日复盘数据并做好下周策略推演。`;
-        document.getElementById('closedType').innerText = '常规周末闭市';
-        document.getElementById('closedPeriod').innerText = '周六至周日';
-        document.getElementById('nextTradingDay').innerText = '下周一 09:30 正常开市';
-        return;
-    }
-
-    // Active Trading Day
-    const data = MARKET_DATABASE[dateStr] || MARKET_DATABASE["2024-03-22"];
-    
-    closedBanner.style.display = 'none';
-    tradingContent.style.display = 'block';
-
-    tradingStatusBadge.innerText = '交易日正常复盘';
-    tradingStatusBadge.className = 'badge';
-    tradingStatusBadge.style.background = 'rgba(248, 81, 73, 0.15)';
-    tradingStatusBadge.style.color = '#f85149';
-    tradingStatusBadge.style.borderColor = 'rgba(248, 81, 73, 0.4)';
-
-    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : " | 无该日公开样本库，请改选已收录的交易日";
-    dataTimestampHeader.innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
-
-    const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);
-
-    renderMarketStats(data, dynamicEval);
-    renderSentimentCycle(data, dynamicEval);
-    renderAbsoluteHigh(data);
-    renderLadderMatrix(data);
-    renderSealingStrength(data);
-    renderCapitalFlow(data);
-    renderDragonTiger(data);
-    renderCashDefense(data, dynamicEval);
-    renderDiscipline(data);
+    setFooterDate(dateStr);
+    return runReviewForDate(dateStr);
 }
 
 /* === Render Helpers === */
@@ -2006,20 +2399,24 @@ function applyCustomParams() {
     } catch (e) {}
 
     closeParamModal();
-    const curDate = document.getElementById('dateSelect').value;
-    renderReviewPage(curDate);
+    const trading = document.getElementById('tradingContent');
+    if (trading && trading.style.display === 'block') {
+        const curDate = document.getElementById('dateSelect').value;
+        renderReviewPage(curDate);
+    }
 }
 
-// Initialize on page load
+// Initialize: named files / ?date= auto-run; index.html stays idle until 开始复盘
 window.addEventListener('DOMContentLoaded', () => {
-    // Check initial filename or date parameter
     const urlParams = new URLSearchParams(window.location.search);
     const dateParam = urlParams.get('date');
     if (dateParam) {
-        switchDate(dateParam);
+        startReview(dateParam);
+    } else if (AUTO_REVIEW_DATE) {
+        startReview(AUTO_REVIEW_DATE);
     } else {
-        // Default based on current file context
-        switchDate('2024-03-22');
+        const picker = document.getElementById('dateSelect');
+        showIdle(picker ? picker.value : '2026-08-13');
     }
 });
 </script>
@@ -2040,30 +2437,29 @@ def build():
     html_content = template.replace('__MARKET_DATABASE_JSON__', market_db_json)
     html_content = html_content.replace('__NON_TRADING_DAYS_JSON__', non_trading_json)
     
-    # Generate files for all sample dates requested
     target_dates = [
         "2024-03-22",
         "2024-03-25",
         "2024-04-18",
         "2024-09-30",
         "2024-10-08",
-        "2026-08-14"
+        "2026-08-13",
+        "2026-08-14",
     ]
-    
+
     for d in target_dates:
-        # Custom default active date for each specific file
-        file_content = html_content.replace("switchDate('2024-03-22');", f"switchDate('{d}');")
-        file_content = file_content.replace('value="2024-03-22"', f'value="{d}"')
-        
+        file_content = html_content.replace("__AUTO_REVIEW_DATE__", json.dumps(d), 1)
+        file_content = file_content.replace('value="2026-08-13"', f'value="{d}"', 1)
+        file_content = file_content.replace(">2026-08-13</strong>", f">{d}</strong>", 1)
         target_path = os.path.join("/workspace", f"{d}.html")
         with open(target_path, "w", encoding="utf-8") as f:
             f.write(file_content)
         print(f"Generated standalone HTML file: {target_path} (Size: {len(file_content)} bytes)")
 
-    # Also output index.html default
+    index_html = html_content.replace("__AUTO_REVIEW_DATE__", "null", 1)
     with open("/workspace/index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-    print("Generated default index.html")
+        f.write(index_html)
+    print("Generated default index.html (idle until 开始复盘)")
 
 if __name__ == '__main__':
     build()
