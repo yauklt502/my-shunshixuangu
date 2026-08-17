@@ -1049,11 +1049,11 @@ def get_html_template():
             </div>
 
             <div class="quick-dates">
-                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(高位分歧)</button>
-                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(退潮冰点)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(主线修复)</button>
-                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(放量狂潮)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿巨震)</button>
+                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(艾艾13板断)</button>
+                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(博信7板退潮)</button>
+                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(同为5板)</button>
+                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(2.59万亿)</button>
+                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿)</button>
                 <button class="quick-btn" onclick="switchDate('2026-08-14')">08-14(蓝盾光电5板)</button>
                 <button class="quick-btn" onclick="switchDate('2024-04-04')">04-04(清明休市)</button>
                 <button class="quick-btn" onclick="switchDate('2024-10-01')">10-01(国庆休市)</button>
@@ -1612,7 +1612,7 @@ function renderReviewPage(dateStr) {
     tradingStatusBadge.style.color = '#f85149';
     tradingStatusBadge.style.borderColor = 'rgba(248, 81, 73, 0.4)';
 
-    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : " (已包含全天收盘完整龙虎榜与主力资金统计)";
+    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : " | 无该日公开样本库，请改选已收录的交易日";
     dataTimestampHeader.innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
 
     const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);

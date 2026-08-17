@@ -1037,11 +1037,11 @@
             </div>
 
             <div class="quick-dates">
-                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(高位分歧)</button>
-                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(退潮冰点)</button>
-                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(主线修复)</button>
-                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(放量狂潮)</button>
-                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿巨震)</button>
+                <button class="quick-btn active" onclick="switchDate('2024-03-22')">03-22(艾艾13板断)</button>
+                <button class="quick-btn" onclick="switchDate('2024-03-25')">03-25(博信7板退潮)</button>
+                <button class="quick-btn" onclick="switchDate('2024-04-18')">04-18(同为5板)</button>
+                <button class="quick-btn" onclick="switchDate('2024-09-30')">09-30(2.59万亿)</button>
+                <button class="quick-btn" onclick="switchDate('2024-10-08')">10-08(3.45万亿)</button>
                 <button class="quick-btn" onclick="switchDate('2026-08-14')">08-14(蓝盾光电5板)</button>
                 <button class="quick-btn" onclick="switchDate('2024-04-04')">04-04(清明休市)</button>
                 <button class="quick-btn" onclick="switchDate('2024-10-01')">10-01(国庆休市)</button>
@@ -1438,6 +1438,7 @@ const MARKET_DATABASE = {
     "is_trading_day": true,
     "date": "2024-03-22",
     "date_cn": "2024年03月22日 星期五",
+    "data_source": "证券时报·数据宝涨停一览、财联社3月22日收评、每日经济新闻指数播报、新浪财经日K、华策影视龙虎榜公开信息。指数/涨停口径截至收盘。",
     "market_summary": {
       "sh_index": 3048.03,
       "sh_change": -0.95,
@@ -1447,127 +1448,704 @@ const MARKET_DATABASE = {
       "cy_change": -1.47,
       "total_turnover": 10973,
       "turnover_change": 296,
-      "up_count": 1024,
-      "down_count": 4126,
-      "flat_count": 182,
-      "median_change": -1.42,
-      "limit_up_count": 58,
-      "limit_down_count": 18,
-      "broken_board_count": 28,
+      "up_count": 924,
+      "down_count": 4389,
+      "flat_count": 37,
+      "median_change": -1.5,
+      "limit_up_count": 67,
+      "limit_down_count": 15,
+      "broken_board_count": 30,
       "consecutive_board_count": 16,
-      "broken_board_rate": 32.56,
-      "promotion_rate_1_to_2": 33.33,
-      "promotion_rate_2_to_3": 42.86,
-      "promotion_rate_high": 40.0,
-      "max_height": 13,
-      "max_height_stock": "艾艾精工 (603580)",
+      "broken_board_rate": 30.93,
+      "promotion_rate_1_to_2": 33.0,
+      "promotion_rate_2_to_3": 35.0,
+      "promotion_rate_high": 0.0,
+      "max_height": 6,
+      "max_height_stock": "博信股份 (600083) 6连板；艾艾精工13连板断板",
       "sentiment_phase": "分歧期",
       "sentiment_phase_en": "Divergence",
-      "sentiment_score": 46,
-      "cash_defense_score": 38,
-      "suggested_position": "2~4成 (防守试错)",
+      "sentiment_score": 44,
+      "cash_defense_score": 36,
+      "suggested_position": "2~4成 (高位去弱、低位试错)",
       "core_themes": [
-        "低空经济/飞行汽车",
-        "Kimi概念/AI应用",
-        "高速铜连接",
-        "汽车零部件",
-        "新质生产力"
+        "AI语料/Kimi/传媒",
+        "铜缆高速连接",
+        "机器人/氢能汽车",
+        "低空经济余波"
       ]
     },
     "absolute_high": {
-      "title": "总龙头断板巨震与高位分水岭",
-      "leader_code": "603580",
-      "leader_name": "艾艾精工",
-      "concept": "新质生产力 / 轻型输送带",
-      "consecutive_boards": 13,
-      "close_price": 29.55,
-      "change_percent": -8.08,
-      "turnover": 8.42,
-      "turnover_rate": 22.15,
-      "seal_status": "13连板后首日断板巨幅震荡",
-      "intraday_behavior": "早盘大幅低开后快速冲高翻红，最高上冲至+4.6%，随后承接乏力逐波回落，尾盘收在-8.08%。全天振幅达13.5%，成交量显著放大至历史天量。",
-      "sub_leader_code": "603879",
-      "sub_leader_name": "永悦科技",
-      "sub_leader_concept": "低空经济 / 植保无人机",
-      "sub_leader_boards": 8,
-      "sub_leader_change": -9.97,
-      "sub_leader_status": "8连板断板触及跌停",
-      "height_analysis": "艾艾精工13连板创造了年内短线连板空间新标杆，但今日高位龙头同步出现筹码松动与获利盘出逃，永悦科技8板断板触及跌停，标志着第一波高位纯连板抱团进入剧烈分歧与退潮初显阶段。高位负反馈开始累积，空间压制骤升。",
-      "strategy_holding": "持筹者：龙头断板且跌破分时均线即为第一卖点，严禁死扛或期待无缝反包；尾盘未回封必须坚决止盈或清仓。",
-      "strategy_buying": "持币者：严禁在龙头断板首日盲目接力中位加速板；耐心等待高位筹码出清及第二日极度冰点后的弱转强低吸信号。"
+      "title": "艾艾精工13连板断板、永悦科技天地板跌停；博信股份6连板成为新高度",
+      "leader_code": "600083",
+      "leader_name": "博信股份",
+      "concept": "机器人 / AI应用",
+      "consecutive_boards": 6,
+      "close_price": 11.32,
+      "change_percent": 10.01,
+      "turnover": 6.33,
+      "turnover_rate": 24.51,
+      "seal_status": "6连板收盘涨停，封单约5802万元",
+      "intraday_behavior": "开盘9.95元后回封11.32元涨停。换手24.51%，封单512.55万股（约5802万元），封成比约9.2%，高度板质量一般。",
+      "sub_leader_code": "603580",
+      "sub_leader_name": "艾艾精工",
+      "sub_leader_concept": "新质生产力 / 轻型输送带",
+      "sub_leader_boards": 13,
+      "sub_leader_change": -8.03,
+      "sub_leader_status": "13连板首日断板，收30.01元，成交9.19亿元，换手22.87%",
+      "height_analysis": "空间龙艾艾精工（603580）13连板后收跌8.03%（最高32.75、最低29.44）。低空跟风龙永悦科技（603879）早盘冲高11.52元后天地板收跌停9.43元。短线高度切换至博信股份6连板、动力新科5连板；传媒与铜缆（华策影视20cm三连板、沃尔核材三连板）承接低位资金。全市场924涨/4389跌，67只涨停（含8只ST）、30只封板未遂，封板率69%。",
+      "strategy_holding": "持筹者：艾艾精工、永悦科技高位接力盘按断板纪律处理，不幻想无缝反包。博信股份封成比偏弱，只作为高度观察，不宜加仓。",
+      "strategy_buying": "持币者：严禁接力13板断板次日。仓位2~4成，只做封单质量明确的低位主线（沃尔核材缩量三板、捷顺科技4.21亿封单首板），避开华策影视52.87亿巨换手弱封20cm。"
     },
     "ladder_matrix": [
       {
-        "tier": "13连板 (断板)",
+        "tier": "13连板（断板）",
         "count": 1,
         "stocks": [
           {
             "code": "603580",
             "name": "艾艾精工",
-            "price": 29.55,
-            "change": -8.08,
+            "price": 30.01,
+            "change": -8.03,
             "concept": "新质生产力/轻型输送带",
-            "turnover": 8.42,
-            "turnover_rate": 22.15,
+            "turnover": 9.19,
+            "turnover_rate": 22.87,
             "seal_amount": 0,
             "seal_ratio": 0.0,
             "seal_time": "--",
             "breaks": 1,
-            "status": "断板大面"
+            "status": "13板断板"
           }
         ]
       },
       {
-        "tier": "8连板 (断板)",
+        "tier": "8连板（天地板跌停）",
         "count": 1,
         "stocks": [
           {
             "code": "603879",
             "name": "永悦科技",
-            "price": 10.02,
-            "change": -9.97,
+            "price": 9.43,
+            "change": -10.0,
             "concept": "低空经济/无人机",
-            "turnover": 7.85,
-            "turnover_rate": 21.68,
+            "turnover": 14.81,
+            "turnover_rate": 21.0,
             "seal_amount": 0,
             "seal_ratio": 0.0,
             "seal_time": "--",
             "breaks": 1,
-            "status": "断板触跌停"
+            "status": "天地板收跌停"
+          }
+        ]
+      },
+      {
+        "tier": "6连板",
+        "count": 1,
+        "stocks": [
+          {
+            "code": "600083",
+            "name": "博信股份",
+            "price": 11.32,
+            "change": 10.01,
+            "concept": "机器人/AI",
+            "turnover": 6.33,
+            "turnover_rate": 24.51,
+            "seal_amount": 5802,
+            "seal_ratio": 9.17,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "换手板"
           }
         ]
       },
       {
         "tier": "5连板",
-        "count": 2,
+        "count": 1,
         "stocks": [
-          {
-            "code": "603963",
-            "name": "大理药业",
-            "price": 14.82,
-            "change": 10.02,
-            "concept": "中药/医药商业",
-            "turnover": 2.15,
-            "turnover_rate": 6.85,
-            "seal_amount": 15800,
-            "seal_ratio": 73.49,
-            "seal_time": "09:25:00",
-            "breaks": 0,
-            "status": "一字死封"
-          },
           {
             "code": "600841",
             "name": "动力新科",
-            "price": 6.55,
-            "change": 10.08,
-            "concept": "氢能源/柴油机/无人驾驶",
-            "turnover": 5.32,
-            "turnover_rate": 8.12,
-            "seal_amount": 8900,
-            "seal_ratio": 16.73,
-            "seal_time": "09:33:15",
+            "price": 6.97,
+            "change": 10.0,
+            "concept": "氢能源/汽车整车",
+            "turnover": 2.72,
+            "turnover_rate": 4.25,
+            "seal_amount": 7440,
+            "seal_ratio": 27.35,
+            "seal_time": "09:30附近",
             "breaks": 1,
-            "status": "换手实体板"
+            "status": "缩量加速"
+          }
+        ]
+      },
+      {
+        "tier": "3连板",
+        "count": 5,
+        "stocks": [
+          {
+            "code": "300133",
+            "name": "华策影视",
+            "price": 11.06,
+            "change": 20.0,
+            "concept": "Kimi/AI语料/传媒",
+            "turnover": 52.87,
+            "turnover_rate": 32.09,
+            "seal_amount": 366,
+            "seal_ratio": 0.07,
+            "seal_time": "13:24",
+            "breaks": 1,
+            "status": "20cm巨换手弱封"
+          },
+          {
+            "code": "002130",
+            "name": "沃尔核材",
+            "price": 9.99,
+            "change": 10.0,
+            "concept": "铜缆高速连接",
+            "turnover": 2.61,
+            "turnover_rate": 2.09,
+            "seal_amount": 32314,
+            "seal_ratio": 123.81,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字强封"
+          },
+          {
+            "code": "603533",
+            "name": "掌阅科技",
+            "price": 32.49,
+            "change": 10.0,
+            "concept": "Kimi/数字阅读",
+            "turnover": 8.84,
+            "turnover_rate": 6.2,
+            "seal_amount": 22490,
+            "seal_ratio": 25.44,
+            "seal_time": "09:30附近",
+            "breaks": 0,
+            "status": "实体板"
+          },
+          {
+            "code": "603721",
+            "name": "中广天择",
+            "price": 42.59,
+            "change": 10.0,
+            "concept": "传媒/知识产权",
+            "turnover": 15.73,
+            "turnover_rate": 28.41,
+            "seal_amount": 9184,
+            "seal_ratio": 5.84,
+            "seal_time": "11:09",
+            "breaks": 1,
+            "status": "换手回封"
+          },
+          {
+            "code": "600165",
+            "name": "宁科生物",
+            "price": 3.01,
+            "change": 10.0,
+            "concept": "化工/生物",
+            "turnover": 0.2,
+            "turnover_rate": 0.97,
+            "seal_amount": 5998,
+            "seal_ratio": 299.9,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字缩量"
+          }
+        ]
+      },
+      {
+        "tier": "2连板（公开点名）",
+        "count": 4,
+        "stocks": [
+          {
+            "code": "002553",
+            "name": "南方精工",
+            "price": 14.37,
+            "change": 10.0,
+            "concept": "汽车零部件",
+            "turnover": 1.49,
+            "turnover_rate": 4.36,
+            "seal_amount": 16598,
+            "seal_ratio": 111.4,
+            "seal_time": "一字/秒板",
+            "breaks": 0,
+            "status": "强封"
+          },
+          {
+            "code": "600243",
+            "name": "青海华鼎",
+            "price": 4.69,
+            "change": 10.0,
+            "concept": "机械设备",
+            "turnover": 2.34,
+            "turnover_rate": 11.39,
+            "seal_amount": 3172,
+            "seal_ratio": 13.56,
+            "seal_time": "换手",
+            "breaks": 0,
+            "status": "换手板"
+          },
+          {
+            "code": "605180",
+            "name": "华生科技",
+            "price": 12.79,
+            "change": 10.0,
+            "concept": "纺织/低空材料",
+            "turnover": 0.25,
+            "turnover_rate": 4.05,
+            "seal_amount": 7112,
+            "seal_ratio": 284.48,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字板"
+          },
+          {
+            "code": "301025",
+            "name": "读客文化",
+            "price": 13.81,
+            "change": 20.0,
+            "concept": "数字阅读/传媒",
+            "turnover": 5.76,
+            "turnover_rate": 42.03,
+            "seal_amount": 228,
+            "seal_ratio": 0.4,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "20cm高换手弱封"
+          }
+        ]
+      },
+      {
+        "tier": "首板封单最强（数据宝）",
+        "count": 3,
+        "stocks": [
+          {
+            "code": "002609",
+            "name": "捷顺科技",
+            "price": 11.07,
+            "change": 10.0,
+            "concept": "计算机/智慧停车",
+            "turnover": 6.35,
+            "turnover_rate": 12.57,
+            "seal_amount": 42124,
+            "seal_ratio": 66.34,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "全场封单金额第1"
+          },
+          {
+            "code": "000903",
+            "name": "云内动力",
+            "price": 2.71,
+            "change": 10.0,
+            "concept": "汽车",
+            "turnover": 1.2,
+            "turnover_rate": 6.72,
+            "seal_amount": 8613,
+            "seal_ratio": 71.78,
+            "seal_time": "强封",
+            "breaks": 0,
+            "status": "封单量前列"
+          },
+          {
+            "code": "300738",
+            "name": "奥飞数据",
+            "price": 12.13,
+            "change": 10.0,
+            "concept": "通信/数据中心",
+            "turnover": 3.5,
+            "turnover_rate": 17.01,
+            "seal_amount": 10063,
+            "seal_ratio": 28.75,
+            "seal_time": "换手",
+            "breaks": 0,
+            "status": "通信首板"
+          }
+        ]
+      }
+    ],
+    "broken_board_list": [
+      {
+        "code": "603580",
+        "name": "艾艾精工",
+        "price": 30.01,
+        "change": -8.03,
+        "max_change": 0.37,
+        "concept": "13连板空间龙",
+        "turnover": 9.19,
+        "reason": "13连板后首日断板，最高32.75元未能回封，高位获利盘兑现"
+      },
+      {
+        "code": "603879",
+        "name": "永悦科技",
+        "price": 9.43,
+        "change": -10.0,
+        "max_change": 10.0,
+        "concept": "低空经济8连板",
+        "turnover": 14.81,
+        "reason": "早盘冲涨停后天地板封死跌停，公司提示无人机合同履约重大不确定性"
+      },
+      {
+        "code": "300133",
+        "name": "华策影视",
+        "price": 11.06,
+        "change": 20.0,
+        "max_change": 20.0,
+        "concept": "Kimi/20cm三板",
+        "turnover": 52.87,
+        "reason": "虽收20cm但封单仅366万元、换手32%，机构席位净卖约2.18亿元，质量极差"
+      }
+    ],
+    "sealing_strength_ranking": [
+      {
+        "rank": 1,
+        "code": "002130",
+        "name": "沃尔核材",
+        "boards": 3,
+        "seal_amount": 32314,
+        "seal_ratio": 123.81,
+        "free_float_ratio": 2.5,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高（一字铜缆三板）"
+      },
+      {
+        "rank": 2,
+        "code": "002609",
+        "name": "捷顺科技",
+        "boards": 1,
+        "seal_amount": 42124,
+        "seal_ratio": 66.34,
+        "free_float_ratio": 3.8,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 5,
+        "premium_exp": "高（全场封单金额最大4.21亿）"
+      },
+      {
+        "rank": 3,
+        "code": "605180",
+        "name": "华生科技",
+        "boards": 2,
+        "seal_amount": 7112,
+        "seal_ratio": 284.48,
+        "free_float_ratio": 4.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "高（一字缩量2板）"
+      },
+      {
+        "rank": 4,
+        "code": "600165",
+        "name": "宁科生物",
+        "boards": 3,
+        "seal_amount": 5998,
+        "seal_ratio": 299.9,
+        "free_float_ratio": 3.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 4,
+        "premium_exp": "高（一字缩量）"
+      },
+      {
+        "rank": 5,
+        "code": "603533",
+        "name": "掌阅科技",
+        "boards": 3,
+        "seal_amount": 22490,
+        "seal_ratio": 25.44,
+        "free_float_ratio": 1.5,
+        "first_seal": "09:30附近",
+        "breaks": 0,
+        "stars": 4,
+        "premium_exp": "中高（Kimi核心）"
+      },
+      {
+        "rank": 6,
+        "code": "600841",
+        "name": "动力新科",
+        "boards": 5,
+        "seal_amount": 7440,
+        "seal_ratio": 27.35,
+        "free_float_ratio": 1.2,
+        "first_seal": "09:30附近",
+        "breaks": 1,
+        "stars": 3,
+        "premium_exp": "中（5板加速）"
+      },
+      {
+        "rank": 7,
+        "code": "600083",
+        "name": "博信股份",
+        "boards": 6,
+        "seal_amount": 5802,
+        "seal_ratio": 9.17,
+        "free_float_ratio": 0.8,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 3,
+        "premium_exp": "中低（高度但封成比弱）"
+      },
+      {
+        "rank": 8,
+        "code": "300133",
+        "name": "华策影视",
+        "boards": 3,
+        "seal_amount": 366,
+        "seal_ratio": 0.07,
+        "free_float_ratio": 0.05,
+        "first_seal": "13:24",
+        "breaks": 1,
+        "stars": 1,
+        "premium_exp": "极低（52.87亿天量弱封）"
+      }
+    ],
+    "main_capital_flow": {
+      "sectors_inflow": [
+        {
+          "name": "传媒/AI语料",
+          "inflow": 19.0,
+          "change": 4.0,
+          "leaders": "华策影视、掌阅科技、中广天择、读客文化",
+          "limit_ups": 11
+        },
+        {
+          "name": "铜缆高速连接/电子",
+          "inflow": 15.0,
+          "change": 2.9,
+          "leaders": "沃尔核材、胜蓝股份、鼎通科技",
+          "limit_ups": 8
+        },
+        {
+          "name": "计算机",
+          "inflow": 8.0,
+          "change": 1.5,
+          "leaders": "捷顺科技、云赛智联",
+          "limit_ups": 6
+        }
+      ],
+      "sectors_outflow": [
+        {
+          "name": "贵金属/有色",
+          "outflow": -20.0,
+          "change": -2.0,
+          "reason": "财联社：贵金属、小金属板块跌幅居前"
+        },
+        {
+          "name": "高位低空跟风",
+          "outflow": -15.0,
+          "change": -8.0,
+          "reason": "永悦科技天地板跌停，低空余波兑现"
+        }
+      ]
+    },
+    "popularity_anchors": [
+      {
+        "rank": 1,
+        "code": "300133",
+        "name": "华策影视",
+        "turnover": 52.87,
+        "change": 20.0,
+        "role": "传媒20cm成交锚点",
+        "analysis": "成交52.87亿元、换手32.09%，是当日短线成交最大的连板股，但封单仅366万元，机构净卖约2.18亿。"
+      },
+      {
+        "rank": 2,
+        "code": "603580",
+        "name": "艾艾精工",
+        "turnover": 9.19,
+        "change": -8.03,
+        "role": "空间龙断板风向标",
+        "analysis": "13连板后放量9.19亿断板，决定高位情绪是否进入负反馈。"
+      },
+      {
+        "rank": 3,
+        "code": "603879",
+        "name": "永悦科技",
+        "turnover": 14.81,
+        "change": -10.0,
+        "role": "低空跟风核按钮",
+        "analysis": "天地板跌停，低空经济从主线退化为余波。"
+      },
+      {
+        "rank": 4,
+        "code": "002609",
+        "name": "捷顺科技",
+        "turnover": 6.35,
+        "change": 10.0,
+        "role": "封单金额冠军",
+        "analysis": "数据宝：涨停封单4.21亿元居两市第一。"
+      }
+    ],
+    "dragon_tiger_list": [
+      {
+        "seat_name": "机构专用席位 / 深股通（华策影视）",
+        "style": "高位20cm兑现",
+        "actions": [
+          {
+            "stock": "华策影视 (300133)",
+            "net_buy": -21800,
+            "type": "2家机构合计净卖出约2.18亿元",
+            "comment": "20cm三连板当日机构大幅兑现；深股通买入8115.20万元、卖出5346.65万元"
+          },
+          {
+            "stock": "华策影视 (300133)",
+            "net_buy": -5523,
+            "type": "方新侠（中信证券西安朱雀大街）净卖出5523.08万元",
+            "comment": "游资席位同步出货，与弱封单互相印证"
+          }
+        ]
+      }
+    ],
+    "cash_defense_checklist": [
+      {
+        "id": "c1",
+        "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
+        "status": "DANGER",
+        "triggered": true,
+        "detail": "艾艾精工13板断板-8.03%；永悦科技8板天地板跌停。"
+      },
+      {
+        "id": "c2",
+        "rule": "全市场炸板率超过 30% 警报线",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "数据宝：67涨停、30封板未遂，炸板率30.93%，封板率69%。"
+      },
+      {
+        "id": "c3",
+        "rule": "连板晋级率跌破 35% 冰点阈值",
+        "status": "DANGER",
+        "triggered": true,
+        "detail": "8板及以上全部断板，高位晋级率为0；新高度仅博信6板、动力新科5板。"
+      },
+      {
+        "id": "c4",
+        "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "永悦科技天地板跌停，高位跟风出现核按钮。"
+      },
+      {
+        "id": "c5",
+        "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
+        "status": "SAFE",
+        "triggered": false,
+        "detail": "沪指3048.03点-0.95%，两市成交10973亿元较前日放量296亿，量能未缩。"
+      },
+      {
+        "id": "c6",
+        "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
+        "status": "WARN",
+        "triggered": true,
+        "detail": "低空跟风核按钮，资金切向传媒/铜缆，高低切明显。"
+      },
+      {
+        "id": "c7",
+        "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
+        "status": "SAFE",
+        "triggered": false,
+        "detail": "尚未全面杀中位：博信、动力新科、沃尔核材、掌阅仍在连板，属高位分歧+低位切换。"
+      }
+    ],
+    "next_day_discipline": {
+      "bidding_rules": [
+        "先看永悦科技跌停封单：若继续封死，低空跟风一律放弃。",
+        "艾艾精工竞价若不能大幅高开回封，13板二波不做。",
+        "华策影视52.87亿弱封，竞价高开>5%不追；沃尔核材一字质量是铜缆试金石。"
+      ],
+      "trading_discipline": [
+        "仓位2~4成。高位只减不加。",
+        "不打华策影视这类天量弱封20cm。优先一字/高封成比（沃尔核材、华生科技、宁科生物）。"
+      ],
+      "risk_warnings": [
+        "924/4389的涨跌比已是普跌结构，指数若再失3000点附近，短线会从分歧滑向退潮。",
+        "博信股份6板封成比仅9%，高度与质量背离。"
+      ]
+    }
+  },
+  "2024-03-25": {
+    "is_trading_day": true,
+    "date": "2024-03-25",
+    "date_cn": "2024年03月25日 星期一",
+    "data_source": "证券时报·数据宝3月25日涨停一览、每日经济新闻/中国经济网收评、新浪财经日K、博信股份龙虎榜与异常波动公告。",
+    "market_summary": {
+      "sh_index": 3026.31,
+      "sh_change": -0.71,
+      "sz_index": 9422.61,
+      "sz_change": -1.49,
+      "cy_index": 1833.44,
+      "cy_change": -1.91,
+      "total_turnover": 10434,
+      "turnover_change": -539,
+      "up_count": 732,
+      "down_count": 4550,
+      "flat_count": 68,
+      "median_change": -2.43,
+      "limit_up_count": 46,
+      "limit_down_count": 41,
+      "broken_board_count": 22,
+      "consecutive_board_count": 8,
+      "broken_board_rate": 32.35,
+      "promotion_rate_1_to_2": 20.0,
+      "promotion_rate_2_to_3": 44.0,
+      "promotion_rate_high": 50.0,
+      "max_height": 7,
+      "max_height_stock": "博信股份 (600083) 7连板地天板",
+      "sentiment_phase": "退潮期",
+      "sentiment_phase_en": "Recession",
+      "sentiment_score": 28,
+      "cash_defense_score": 18,
+      "suggested_position": "0~2成 (严格防守)",
+      "core_themes": [
+        "抱团空间龙艾艾精工反包",
+        "机器人/博信股份地天板",
+        "油气开采防御",
+        "Kimi传媒杀跌"
+      ]
+    },
+    "absolute_high": {
+      "title": "普跌4550家、41只跌停；博信股份7连板地天板，艾艾精工反包涨停",
+      "leader_code": "600083",
+      "leader_name": "博信股份",
+      "concept": "机器人 / AI",
+      "consecutive_boards": 7,
+      "close_price": 12.45,
+      "change_percent": 9.98,
+      "turnover": 12.37,
+      "turnover_rate": 46.32,
+      "seal_status": "7连板收盘涨停，但是地天板，封单仅1099万元",
+      "intraday_behavior": "开盘11.89元后最低10.19元（触及跌停附近）再拉回12.45元涨停，振幅22.18%，换手46.32%，成交12.37亿元。营业部席位合计净卖出1.33亿元。",
+      "sub_leader_code": "603580",
+      "sub_leader_name": "艾艾精工",
+      "sub_leader_concept": "新质生产力 / 空间龙反包",
+      "sub_leader_boards": 0,
+      "sub_leader_change": 10.0,
+      "sub_leader_status": "断板后次日反包涨停33.01元，换手23.35%，成交9.53亿元，封单3796万元",
+      "height_analysis": "不是永悦/艾艾双双跌停：艾艾精工反包涨停创阶段新高；永悦科技续跌停8.49元；动力新科5板晋级失败收跌停6.27元。3进4仅宁科生物成功（3.31元），华策影视-12.93%、中广天择跌停、掌阅科技冲涨停回落-5.97%。涨停46（含4只ST）、跌停41，上涨仅732家，典型退潮+抱团龙头。",
+      "strategy_holding": "持筹者：永悦科技、动力新科、华策影视、中广天择按核按钮离场。博信股份地天板封单只有约1100万，次日不接力。艾艾精工反包属于龙头二波观察，不加杠杆。",
+      "strategy_buying": "持币者：0~2成。退潮期不打地天板高度股。若做，只看艾艾精工能否继续缩量，不参与Kimi断板股抄底。"
+    },
+    "ladder_matrix": [
+      {
+        "tier": "7连板（地天板）",
+        "count": 1,
+        "stocks": [
+          {
+            "code": "600083",
+            "name": "博信股份",
+            "price": 12.45,
+            "change": 9.98,
+            "concept": "机器人/AI",
+            "turnover": 12.37,
+            "turnover_rate": 46.32,
+            "seal_amount": 1099,
+            "seal_ratio": 0.89,
+            "seal_time": "尾盘回封",
+            "breaks": 1,
+            "status": "地天板弱封"
           }
         ]
       },
@@ -1576,854 +2154,142 @@ const MARKET_DATABASE = {
         "count": 1,
         "stocks": [
           {
-            "code": "002621",
-            "name": "美吉姆",
-            "price": 3.42,
-            "change": 9.97,
-            "concept": "三胎概念/早教",
-            "turnover": 1.45,
-            "turnover_rate": 5.21,
-            "seal_amount": 4200,
-            "seal_ratio": 28.97,
-            "seal_time": "09:31:00",
-            "breaks": 0,
-            "status": "缩量加速"
-          }
-        ]
-      },
-      {
-        "tier": "3连板",
-        "count": 3,
-        "stocks": [
-          {
-            "code": "603533",
-            "name": "掌阅科技",
-            "price": 27.61,
+            "code": "600165",
+            "name": "宁科生物",
+            "price": 3.31,
             "change": 10.0,
-            "concept": "Kimi概念/短剧游戏/AI语料",
-            "turnover": 14.2,
-            "turnover_rate": 11.85,
-            "seal_amount": 12500,
-            "seal_ratio": 8.8,
-            "seal_time": "09:36:20",
+            "concept": "化工",
+            "turnover": 2.42,
+            "turnover_rate": 10.7,
+            "seal_amount": 7783,
+            "seal_ratio": 32.16,
+            "seal_time": "回封",
             "breaks": 1,
-            "status": "分歧回封"
-          },
-          {
-            "code": "603896",
-            "name": "华宝新能",
-            "price": 82.5,
-            "change": 10.0,
-            "concept": "储能/便携储能",
-            "turnover": 3.65,
-            "turnover_rate": 7.42,
-            "seal_amount": 5600,
-            "seal_ratio": 15.34,
-            "seal_time": "10:15:30",
-            "breaks": 2,
-            "status": "换手回封"
-          },
-          {
-            "code": "002235",
-            "name": "安妮股份",
-            "price": 7.39,
-            "change": 9.97,
-            "concept": "数据要素/版权保护",
-            "turnover": 6.8,
-            "turnover_rate": 16.2,
-            "seal_amount": 6800,
-            "seal_ratio": 10.0,
-            "seal_time": "11:12:00",
-            "breaks": 3,
-            "status": "烂板回封"
+            "status": "3进4换手"
           }
         ]
       },
       {
-        "tier": "2连板",
-        "count": 6,
+        "tier": "3连板（公开可核对）",
+        "count": 4,
         "stocks": [
           {
             "code": "605180",
             "name": "华生科技",
-            "price": 12.85,
-            "change": 10.02,
-            "concept": "低空经济/降落伞材料/纺织",
-            "turnover": 1.82,
-            "turnover_rate": 8.45,
-            "seal_amount": 9200,
-            "seal_ratio": 50.55,
-            "seal_time": "09:30:15",
-            "breaks": 0,
-            "status": "秒板换手强封"
-          },
-          {
-            "code": "603217",
-            "name": "元祖股份",
-            "price": 18.26,
+            "price": 14.07,
             "change": 10.0,
-            "concept": "食品饮料/消费",
-            "turnover": 1.15,
-            "turnover_rate": 2.65,
-            "seal_amount": 7800,
-            "seal_ratio": 67.83,
-            "seal_time": "09:32:00",
-            "breaks": 0,
-            "status": "一字板"
-          },
-          {
-            "code": "002907",
-            "name": "华森制药",
-            "price": 15.73,
-            "change": 10.0,
-            "concept": "创新药/中药",
-            "turnover": 2.95,
-            "turnover_rate": 7.12,
-            "seal_amount": 4100,
-            "seal_ratio": 13.9,
-            "seal_time": "09:48:10",
-            "breaks": 1,
-            "status": "换手板"
-          },
-          {
-            "code": "002882",
-            "name": "金龙羽",
-            "price": 19.58,
-            "change": 10.0,
-            "concept": "固态电池/电线电缆",
-            "turnover": 5.6,
-            "turnover_rate": 13.5,
-            "seal_amount": 6200,
-            "seal_ratio": 11.07,
-            "seal_time": "10:30:22",
-            "breaks": 2,
-            "status": "分歧板"
-          },
-          {
-            "code": "603019",
-            "name": "中科曙光",
-            "price": 54.12,
-            "change": 10.0,
-            "concept": "算力中军/服务器",
-            "turnover": 48.5,
-            "turnover_rate": 6.8,
-            "seal_amount": 18500,
-            "seal_ratio": 3.81,
-            "seal_time": "14:15:00",
-            "breaks": 3,
-            "status": "趋势容量板"
-          },
-          {
-            "code": "002602",
-            "name": "世纪鼎利",
-            "price": 5.48,
-            "change": 10.04,
-            "concept": "华为昇腾/通信网络",
-            "turnover": 4.1,
-            "turnover_rate": 14.1,
-            "seal_amount": 3800,
-            "seal_ratio": 9.27,
-            "seal_time": "13:45:10",
-            "breaks": 2,
-            "status": "午后回封"
-          }
-        ]
-      },
-      {
-        "tier": "首板精选 (共46家)",
-        "count": 46,
-        "stocks": [
-          {
-            "code": "002085",
-            "name": "万丰奥威",
-            "price": 14.28,
-            "change": 10.02,
-            "concept": "低空经济核心中军/eVTOL",
-            "turnover": 67.45,
-            "turnover_rate": 22.8,
-            "seal_amount": 28500,
-            "seal_ratio": 4.23,
-            "seal_time": "14:28:10",
-            "breaks": 4,
-            "status": "百亿中军反包板"
-          },
-          {
-            "code": "600580",
-            "name": "卧龙电驱",
-            "price": 16.92,
-            "change": 10.01,
-            "concept": "低空航空电驱/机器人",
-            "turnover": 41.2,
-            "turnover_rate": 18.9,
-            "seal_amount": 16200,
-            "seal_ratio": 3.93,
-            "seal_time": "10:45:00",
-            "breaks": 1,
-            "status": "容量突破板"
-          },
-          {
-            "code": "000099",
-            "name": "中信海直",
-            "price": 12.35,
-            "change": 10.07,
-            "concept": "低空运营/通用航空",
-            "turnover": 32.1,
-            "turnover_rate": 35.4,
-            "seal_amount": 14800,
-            "seal_ratio": 4.61,
-            "seal_time": "09:42:15",
-            "breaks": 2,
-            "status": "低空人气先锋"
-          },
-          {
-            "code": "300459",
-            "name": "汤姆猫",
-            "price": 5.82,
-            "change": 20.0,
-            "concept": "Kimi应用/AI语料/IP",
-            "turnover": 28.6,
-            "turnover_rate": 15.6,
-            "seal_amount": 19800,
-            "seal_ratio": 6.92,
-            "seal_time": "10:12:30",
-            "breaks": 1,
-            "status": "20cm中军大阳"
-          },
-          {
-            "code": "300058",
-            "name": "蓝色光标",
-            "price": 8.94,
-            "change": 13.45,
-            "concept": "AI营销/Kimi合作",
-            "turnover": 35.2,
-            "turnover_rate": 16.4,
-            "seal_amount": 0,
-            "seal_ratio": 0.0,
-            "seal_time": "--",
-            "breaks": 1,
-            "status": "趋势大阳冲高"
-          }
-        ]
-      }
-    ],
-    "broken_board_list": [
-      {
-        "code": "000628",
-        "name": "高新发展",
-        "price": 85.2,
-        "change": 1.25,
-        "max_change": 10.0,
-        "concept": "算力重组/华鲲振宇",
-        "turnover": 45.3,
-        "reason": "早盘冲板后遭遇大单巨额砸盘，算力老主线分歧加剧"
-      },
-      {
-        "code": "603083",
-        "name": "剑桥科技",
-        "price": 42.15,
-        "change": -2.1,
-        "max_change": 8.5,
-        "concept": "光模块/CPO",
-        "turnover": 38.6,
-        "reason": "冲高回落，CPO老抱团跟风动力衰竭"
-      },
-      {
-        "code": "002261",
-        "name": "拓维信息",
-        "price": 14.8,
-        "change": -0.85,
-        "max_change": 7.8,
-        "concept": "华为昇腾/算力",
-        "turnover": 29.4,
-        "reason": "午后跟风冲高，主力资金持续净流出出货"
-      }
-    ],
-    "sealing_strength_ranking": [
-      {
-        "rank": 1,
-        "code": "603963",
-        "name": "大理药业",
-        "boards": 5,
-        "seal_amount": 15800,
-        "seal_ratio": 73.49,
-        "free_float_ratio": 5.12,
-        "first_seal": "09:25:00",
-        "breaks": 0,
-        "stars": 5,
-        "premium_exp": "高 (90%+概率大高开)"
-      },
-      {
-        "rank": 2,
-        "code": "603217",
-        "name": "元祖股份",
-        "boards": 2,
-        "seal_amount": 7800,
-        "seal_ratio": 67.83,
-        "free_float_ratio": 4.8,
-        "first_seal": "09:32:00",
-        "breaks": 0,
-        "stars": 5,
-        "premium_exp": "高 (85%+概率高开)"
-      },
-      {
-        "rank": 3,
-        "code": "605180",
-        "name": "华生科技",
-        "boards": 2,
-        "seal_amount": 9200,
-        "seal_ratio": 50.55,
-        "free_float_ratio": 4.25,
-        "first_seal": "09:30:15",
-        "breaks": 0,
-        "stars": 5,
-        "premium_exp": "极高 (空间板接力核心)"
-      },
-      {
-        "rank": 4,
-        "code": "002621",
-        "name": "美吉姆",
-        "boards": 4,
-        "seal_amount": 4200,
-        "seal_ratio": 28.97,
-        "free_float_ratio": 2.1,
-        "first_seal": "09:31:00",
-        "breaks": 0,
-        "stars": 4,
-        "premium_exp": "中高 (高开5%左右)"
-      },
-      {
-        "rank": 5,
-        "code": "600841",
-        "name": "动力新科",
-        "boards": 5,
-        "seal_amount": 8900,
-        "seal_ratio": 16.73,
-        "free_float_ratio": 1.95,
-        "first_seal": "09:33:15",
-        "breaks": 1,
-        "stars": 4,
-        "premium_exp": "中 (平开或小高开)"
-      },
-      {
-        "rank": 6,
-        "code": "603896",
-        "name": "华宝新能",
-        "boards": 3,
-        "seal_amount": 5600,
-        "seal_ratio": 15.34,
-        "free_float_ratio": 1.8,
-        "first_seal": "10:15:30",
-        "breaks": 2,
-        "stars": 3,
-        "premium_exp": "中低 (分歧震荡)"
-      },
-      {
-        "rank": 7,
-        "code": "603533",
-        "name": "掌阅科技",
-        "boards": 3,
-        "seal_amount": 12500,
-        "seal_ratio": 8.8,
-        "free_float_ratio": 1.12,
-        "first_seal": "09:36:20",
-        "breaks": 1,
-        "stars": 3,
-        "premium_exp": "中 (依赖Kimi题材发酵)"
-      },
-      {
-        "rank": 8,
-        "code": "002085",
-        "name": "万丰奥威",
-        "boards": 1,
-        "seal_amount": 28500,
-        "seal_ratio": 4.23,
-        "free_float_ratio": 0.95,
-        "first_seal": "14:28:10",
-        "breaks": 4,
-        "stars": 4,
-        "premium_exp": "中高 (容量大中军溢价)"
-      }
-    ],
-    "main_capital_flow": {
-      "sectors_inflow": [
-        {
-          "name": "低空经济/通用航空",
-          "inflow": 28.5,
-          "change": 3.82,
-          "leaders": "中信海直、万丰奥威、卧龙电驱",
-          "limit_ups": 12
-        },
-        {
-          "name": "Kimi概念/AI语料",
-          "inflow": 19.2,
-          "change": 4.15,
-          "leaders": "掌阅科技、中广天择、汤姆猫",
-          "limit_ups": 7
-        },
-        {
-          "name": "高速铜连接/通信",
-          "inflow": 14.6,
-          "change": 2.9,
-          "leaders": "胜宏科技、沃尔核材、新亚电子",
-          "limit_ups": 5
-        },
-        {
-          "name": "固态电池/新材料",
-          "inflow": 9.8,
-          "change": 1.85,
-          "leaders": "金龙羽、三祥新材",
-          "limit_ups": 4
-        },
-        {
-          "name": "化学制药/中药",
-          "inflow": 7.5,
-          "change": 1.2,
-          "leaders": "大理药业、华森制药",
-          "limit_ups": 3
-        }
-      ],
-      "sectors_outflow": [
-        {
-          "name": "算力服务器/CPO",
-          "outflow": -45.2,
-          "change": -2.85,
-          "reason": "老算力高位兑现，高新发展、中贝通信大单流出"
-        },
-        {
-          "name": "光伏设备/新能源",
-          "outflow": -28.6,
-          "change": -2.1,
-          "reason": "赛道反弹乏力，主力持续撤离"
-        },
-        {
-          "name": "半导体芯片",
-          "outflow": -22.4,
-          "change": -1.65,
-          "reason": "前期反弹板块获利了结"
-        },
-        {
-          "name": "房地产开发",
-          "outflow": -18.9,
-          "change": -1.95,
-          "reason": "政策真空期资金观望"
-        },
-        {
-          "name": "白酒/食品饮料",
-          "outflow": -16.5,
-          "change": -1.4,
-          "reason": "权重股拖累指数下行"
-        }
-      ]
-    },
-    "popularity_anchors": [
-      {
-        "rank": 1,
-        "code": "601127",
-        "name": "赛力斯",
-        "turnover": 85.6,
-        "change": -2.35,
-        "role": "智能汽车趋势总中军",
-        "analysis": "成交超85亿位居榜首，受大盘下行影响高位缩量震荡，多头形态未破，但对短线情绪已无额外向上带动。"
-      },
-      {
-        "rank": 2,
-        "code": "002085",
-        "name": "万丰奥威",
-        "turnover": 67.45,
-        "change": 10.02,
-        "role": "低空经济超级容量龙头",
-        "analysis": "全天成交67.45亿，午后在大盘跳水时逆势封板反包，成为全市场最硬核的人气压舱石，维系短线做多底气。"
-      },
-      {
-        "rank": 3,
-        "code": "603019",
-        "name": "中科曙光",
-        "turnover": 48.5,
-        "change": 10.0,
-        "role": "国产算力中军代表",
-        "analysis": "尾盘逆势拉板，带动部分科技硬件回流，但大资金分歧依然明显。"
-      },
-      {
-        "rank": 4,
-        "code": "000628",
-        "name": "高新发展",
-        "turnover": 45.3,
-        "change": 1.25,
-        "role": "算力重组情绪晴雨表",
-        "analysis": "早盘冲击涨停炸板，巨额抛压显现，代表老周期算力标的面临较大筹码兑现压力。"
-      },
-      {
-        "rank": 5,
-        "code": "600580",
-        "name": "卧龙电驱",
-        "turnover": 41.2,
-        "change": 10.01,
-        "role": "低空经济核心部件龙头",
-        "analysis": "成交超40亿强势封板，与万丰奥威形成低空经济双子星联动。"
-      },
-      {
-        "rank": 6,
-        "code": "000099",
-        "name": "中信海直",
-        "turnover": 32.1,
-        "change": 10.07,
-        "role": "低空运营先锋锚点",
-        "analysis": "换手率高达35.4%，高位承接极其活跃，是游资与机构博弈的核心战场。"
-      }
-    ],
-    "dragon_tiger_list": [
-      {
-        "seat_name": "呼家楼 (中信建投北京东城分行/中信证券呼家楼)",
-        "style": "大格局顶格主封 / 打造大容量超级中军",
-        "actions": [
-          {
-            "stock": "万丰奥威 (002085)",
-            "net_buy": 18200,
-            "type": "净买入 1.82 亿元",
-            "comment": "午后主封买一，主导万丰奥威反包涨停，锁仓低空经济超级核心"
-          },
-          {
-            "stock": "中信海直 (000099)",
-            "net_buy": 4500,
-            "type": "净买入 4500 万元",
-            "comment": "加仓低空运营龙头，与万丰奥威形成梯队联动"
-          }
-        ]
-      },
-      {
-        "seat_name": "作手新一 (国泰君安南京太平南路)",
-        "style": "主线题材辨识度前排合力打板",
-        "actions": [
-          {
-            "stock": "掌阅科技 (603533)",
-            "net_buy": 4560,
-            "type": "净买入 4560 万元",
-            "comment": "重仓主买Kimi概念核心先锋，抢占AI应用话语权"
-          },
-          {
-            "stock": "华生科技 (605180)",
-            "net_buy": 1280,
-            "type": "净买入 1280 万元",
-            "comment": "排板2进3低位试错先锋，博弈新周期空间龙头"
-          }
-        ]
-      },
-      {
-        "seat_name": "六一路 (招商证券福州六一中路)",
-        "style": "波段格局 / 敢于锁仓承接大分歧",
-        "actions": [
-          {
-            "stock": "卧龙电驱 (600580)",
-            "net_buy": 6200,
-            "type": "净买入 6200 万元",
-            "comment": "大举建仓低空电驱龙头，与机构形成合力买盘"
-          }
-        ]
-      },
-      {
-        "seat_name": "机构专用席位 (Institutional Seats)",
-        "style": "趋势大票配置 / 兑现高位纯投机",
-        "actions": [
-          {
-            "stock": "高新发展 (000628)",
-            "net_buy": -12500,
-            "type": "净卖出 1.25 亿元",
-            "comment": "三家机构席位合计净卖出超1.2亿，高位持续兑现"
-          },
-          {
-            "stock": "卧龙电驱 (600580)",
-            "net_buy": 8900,
-            "type": "净买入 8900 万元",
-            "comment": "两家机构席位大买，认可低空经济产业基本面逻辑"
-          }
-        ]
-      }
-    ],
-    "cash_defense_checklist": [
-      {
-        "id": "c1",
-        "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
-        "status": "WARN",
-        "triggered": true,
-        "detail": "艾艾精工13板断板(-8.08%)，永悦科技8板断板触及跌停(-9.97%)，高位负反馈显现。"
-      },
-      {
-        "id": "c2",
-        "rule": "全市场炸板率超过 30% 警报线",
-        "status": "WARN",
-        "triggered": true,
-        "detail": "今日炸板率达 32.56%，高于30%安全警戒线，打板炸板大面风险增加。"
-      },
-      {
-        "id": "c3",
-        "rule": "连板晋级率跌破 35% 冰点阈值",
-        "status": "SAFE",
-        "triggered": false,
-        "detail": "连板整体晋级率 38.1%，二板及以上结构尚存，未完全进入绝对冰点。"
-      },
-      {
-        "id": "c4",
-        "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
-        "status": "WARN",
-        "triggered": true,
-        "detail": "永悦科技、艾艾精工等多只高位股日内振幅超12%，亏钱效应开始在龙头端蔓延。"
-      },
-      {
-        "id": "c5",
-        "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
-        "status": "SAFE",
-        "triggered": false,
-        "detail": "两市成交额10,973亿元维持在万亿以上，量能未缩，但指数呈现震荡调整。"
-      },
-      {
-        "id": "c6",
-        "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
-        "status": "WARN",
-        "triggered": true,
-        "detail": "除低空经济和Kimi外，多数支线题材分化明显，接力亏钱效应扩散。"
-      },
-      {
-        "id": "c7",
-        "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
-        "status": "SAFE",
-        "triggered": false,
-        "detail": "当前处于退潮初期/高位分歧阶段，低位华生科技、万丰奥威仍在尝试新老切换。"
-      }
-    ],
-    "next_day_discipline": {
-      "bidding_rules": [
-        "09:15-09:20 重点观察艾艾精工与永悦科技竞价挂单：若永悦科技大单封死跌停，高位连板接力一律放弃！",
-        "09:20-09:25 重点观察华生科技 (605180) 竞价：若竞价大额爆量高开（>+5%甚至一字），可确认为新老周期切换的低位空间试错点。",
-        "关注万丰奥威竞价承接力度：若平开或小幅高开且竞价金额>2亿元，说明低空经济主线中军承接强劲，可逢低参与低位首板挖掘。"
-      ],
-      "trading_discipline": [
-        "【去弱留强】手中持仓若早盘反抽不创新高且跌破分时均线，坚决在第一波冲高时清仓减亏，绝不幻想日内反包。",
-        "【严禁盲目接力中位板】3板~5板中位股如动力新科、大理药业面临巨大晋级与补跌压力，只看不买，谨防天地板大面。",
-        "【聚焦新周期低位试错】仅允许在低位1进2（如低空经济降落伞材料华生科技、固态电池）或主线容量中军水下分时低吸。"
-      ],
-      "risk_warnings": [
-        "监管层对短线连板炒作监控趋严，严重异动公告频发，警惕高位妖股突发停牌核查风险。",
-        "大盘指数跌破3050点，若量能无法持续维持万亿，警惕指数与短线情绪共振下杀的系统性风险。"
-      ]
-    }
-  },
-  "2024-03-25": {
-    "is_trading_day": true,
-    "date": "2024-03-25",
-    "date_cn": "2024年03月25日 星期一",
-    "market_summary": {
-      "sh_index": 3026.31,
-      "sh_change": -0.71,
-      "sz_index": 9422.61,
-      "sz_change": -1.49,
-      "cy_index": 1833.44,
-      "cy_change": -1.91,
-      "total_turnover": 10435,
-      "turnover_change": -538,
-      "up_count": 2287,
-      "down_count": 2890,
-      "flat_count": 145,
-      "median_change": -0.45,
-      "limit_up_count": 61,
-      "limit_down_count": 27,
-      "broken_board_count": 38,
-      "consecutive_board_count": 14,
-      "broken_board_rate": 38.38,
-      "promotion_rate_1_to_2": 26.67,
-      "promotion_rate_2_to_3": 50.0,
-      "promotion_rate_high": 25.0,
-      "max_height": 3,
-      "max_height_stock": "华生科技 (605180) / 青海华鼎 / 亚振家居",
-      "sentiment_phase": "退潮期",
-      "sentiment_phase_en": "Recession",
-      "sentiment_score": 32,
-      "cash_defense_score": 24,
-      "suggested_position": "0~2成 (严格空仓防守)",
-      "core_themes": [
-        "低空经济/飞行汽车",
-        "小米汽车",
-        "新材料",
-        "低位消费/家具"
-      ]
-    },
-    "absolute_high": {
-      "title": "高位双龙头齐遭跌停核按钮，新周期空间压制至3板",
-      "leader_code": "605180",
-      "leader_name": "华生科技",
-      "concept": "低空经济 / 降落伞材料 / 气密新材料",
-      "consecutive_boards": 3,
-      "close_price": 14.14,
-      "change_percent": 10.04,
-      "turnover": 2.1,
-      "turnover_rate": 9.8,
-      "seal_status": "一字死封晋级3连板",
-      "intraday_behavior": "开盘大单死封一字涨停，全天未开板，封单金额超1.5亿，成为全市场唯一穿越老周期退潮的低位空间新种子。",
-      "sub_leader_code": "603879",
-      "sub_leader_name": "永悦科技",
-      "sub_leader_concept": "无人机 / 低空经济",
-      "sub_leader_boards": 0,
-      "sub_leader_change": -10.0,
-      "sub_leader_status": "一字跌停封死 (核按钮)",
-      "height_analysis": "艾艾精工与永悦科技今日双双一字封死跌停，动力新科大跌-7.5%，高位连板被腰斩，市场最高连板被直接压制到3板（华生科技、青海华鼎、亚振家居）。极端亏钱效应在上一代连板股中全面爆发。",
-      "strategy_holding": "持筹者：手中有老周期高位接力标的者，不计成本挂单核按钮离场，切忌幻想次日地天板反包。",
-      "strategy_buying": "持币者：严格执行空仓纪律！退潮期不伸手，仅对极低位一字新题材龙头（如华生科技）或具备独立逻辑的容量大中军（如万丰奥威）保留极小仓位观察。"
-    },
-    "ladder_matrix": [
-      {
-        "tier": "3连板",
-        "count": 3,
-        "stocks": [
-          {
-            "code": "605180",
-            "name": "华生科技",
-            "price": 14.14,
-            "change": 10.04,
-            "concept": "低空经济/降落伞材料",
-            "turnover": 2.1,
-            "turnover_rate": 9.8,
-            "seal_amount": 15600,
-            "seal_ratio": 74.28,
-            "seal_time": "09:25:00",
+            "concept": "纺织/低空材料",
+            "turnover": 0.28,
+            "turnover_rate": 4.13,
+            "seal_amount": 8720,
+            "seal_ratio": 311.43,
+            "seal_time": "09:25",
             "breaks": 0,
             "status": "一字板"
           },
           {
             "code": "600243",
             "name": "青海华鼎",
-            "price": 4.58,
-            "change": 10.1,
-            "concept": "工业母机/机器人",
-            "turnover": 1.25,
-            "turnover_rate": 3.12,
-            "seal_amount": 8900,
-            "seal_ratio": 71.2,
-            "seal_time": "09:25:00",
+            "price": 5.16,
+            "change": 10.0,
+            "concept": "机械设备",
+            "turnover": 1.69,
+            "turnover_rate": 7.44,
+            "seal_amount": 10833,
+            "seal_ratio": 64.1,
+            "seal_time": "强封",
             "breaks": 0,
-            "status": "一字板"
+            "status": "缩量板"
+          },
+          {
+            "code": "603499",
+            "name": "翔港科技",
+            "price": 24.34,
+            "change": 10.0,
+            "concept": "包装/电子",
+            "turnover": 0.61,
+            "turnover_rate": 1.0,
+            "seal_amount": 6135,
+            "seal_ratio": 100.57,
+            "seal_time": "一字",
+            "breaks": 0,
+            "status": "缩量3板"
+          },
+          {
+            "code": "002735",
+            "name": "王子新材",
+            "price": 15.96,
+            "change": 10.0,
+            "concept": "轻工/跟风",
+            "turnover": 5.91,
+            "turnover_rate": 37.04,
+            "seal_amount": 1113,
+            "seal_ratio": 1.88,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "高换手弱封"
+          }
+        ]
+      },
+      {
+        "tier": "空间龙反包 / 封单金额前列",
+        "count": 4,
+        "stocks": [
+          {
+            "code": "603580",
+            "name": "艾艾精工",
+            "price": 33.01,
+            "change": 10.0,
+            "concept": "空间龙反包（非连板）",
+            "turnover": 9.53,
+            "turnover_rate": 23.35,
+            "seal_amount": 3796,
+            "seal_ratio": 3.98,
+            "seal_time": "尾盘",
+            "breaks": 1,
+            "status": "断板次日反包"
+          },
+          {
+            "code": "603688",
+            "name": "石英股份",
+            "price": 91.31,
+            "change": 10.0,
+            "concept": "石英材料",
+            "turnover": 3.5,
+            "turnover_rate": 3.85,
+            "seal_amount": 18779,
+            "seal_ratio": 53.65,
+            "seal_time": "强封",
+            "breaks": 0,
+            "status": "封单金额第1"
+          },
+          {
+            "code": "002722",
+            "name": "物产金轮",
+            "price": 13.87,
+            "change": 10.0,
+            "concept": "纺织服饰",
+            "turnover": 0.8,
+            "turnover_rate": 1.7,
+            "seal_amount": 17033,
+            "seal_ratio": 212.91,
+            "seal_time": "一字",
+            "breaks": 0,
+            "status": "封单金额第2"
           },
           {
             "code": "603389",
             "name": "亚振家居",
-            "price": 6.82,
+            "price": 6.2,
             "change": 10.0,
-            "concept": "智能家居/消费",
-            "turnover": 1.8,
-            "turnover_rate": 4.5,
-            "seal_amount": 6200,
-            "seal_ratio": 34.44,
-            "seal_time": "09:30:10",
+            "concept": "家居",
+            "turnover": 1.2,
+            "turnover_rate": 14.75,
+            "seal_amount": 2987,
+            "seal_ratio": 24.89,
+            "seal_time": "回封",
             "breaks": 0,
-            "status": "缩量板"
-          }
-        ]
-      },
-      {
-        "tier": "2连板",
-        "count": 4,
-        "stocks": [
-          {
-            "code": "002536",
-            "name": "飞龙股份",
-            "price": 13.52,
-            "change": 10.01,
-            "concept": "汽车零部件/小米汽车",
-            "turnover": 4.2,
-            "turnover_rate": 8.6,
-            "seal_amount": 7500,
-            "seal_ratio": 17.85,
-            "seal_time": "09:35:10",
-            "breaks": 1,
-            "status": "换手板"
-          },
-          {
-            "code": "603223",
-            "name": "恒帅股份",
-            "price": 78.4,
-            "change": 10.0,
-            "concept": "汽车微电机/智能底盘",
-            "turnover": 2.8,
-            "turnover_rate": 5.4,
-            "seal_amount": 5100,
-            "seal_ratio": 18.21,
-            "seal_time": "10:12:00",
-            "breaks": 0,
-            "status": "缩量板"
-          },
-          {
-            "code": "002871",
-            "name": "伟隆股份",
-            "price": 11.2,
-            "change": 10.02,
-            "concept": "水利阀门/低价小盘",
-            "turnover": 1.1,
-            "turnover_rate": 4.2,
-            "seal_amount": 4300,
-            "seal_ratio": 39.09,
-            "seal_time": "09:32:00",
-            "breaks": 0,
-            "status": "秒板"
-          },
-          {
-            "code": "002047",
-            "name": "宝鹰股份",
-            "price": 2.84,
-            "change": 10.08,
-            "concept": "国企改革/低空基建",
-            "turnover": 2.45,
-            "turnover_rate": 6.8,
-            "seal_amount": 3800,
-            "seal_ratio": 15.51,
-            "seal_time": "11:20:00",
-            "breaks": 2,
-            "status": "弱换手"
-          }
-        ]
-      },
-      {
-        "tier": "首板精选",
-        "count": 54,
-        "stocks": [
-          {
-            "code": "002085",
-            "name": "万丰奥威",
-            "price": 15.71,
-            "change": 10.01,
-            "concept": "低空经济超级中军/反包涨停",
-            "turnover": 81.3,
-            "turnover_rate": 26.5,
-            "seal_amount": 32000,
-            "seal_ratio": 3.93,
-            "seal_time": "13:10:00",
-            "breaks": 2,
-            "status": "超级中军反包"
-          },
-          {
-            "code": "000099",
-            "name": "中信海直",
-            "price": 13.59,
-            "change": 10.04,
-            "concept": "低空运营先锋",
-            "turnover": 38.5,
-            "turnover_rate": 38.2,
-            "seal_amount": 16500,
-            "seal_ratio": 4.28,
-            "seal_time": "09:40:00",
-            "breaks": 1,
-            "status": "大换手连涨"
-          },
-          {
-            "code": "601127",
-            "name": "赛力斯",
-            "price": 98.5,
-            "change": 4.5,
-            "concept": "问界M9/智能汽车",
-            "turnover": 72.4,
-            "turnover_rate": 5.8,
-            "seal_amount": 0,
-            "seal_ratio": 0.0,
-            "seal_time": "--",
-            "breaks": 0,
-            "status": "中军抗跌震荡"
+            "status": "2进3"
           }
         ]
       }
@@ -2432,32 +2298,52 @@ const MARKET_DATABASE = {
       {
         "code": "600841",
         "name": "动力新科",
-        "price": 6.06,
-        "change": -7.48,
-        "max_change": 4.5,
-        "concept": "氢能源/老周期5板",
-        "turnover": 7.8,
-        "reason": "早盘冲高诱多后被巨量砸盘，直接杀跌近8点"
+        "price": 6.27,
+        "change": -10.04,
+        "max_change": -5.16,
+        "concept": "昨5连板",
+        "turnover": 1.35,
+        "reason": "5进6失败，开盘即6.27附近并收跌停"
+      },
+      {
+        "code": "603879",
+        "name": "永悦科技",
+        "price": 8.49,
+        "change": -9.97,
+        "max_change": -4.35,
+        "concept": "低空8板后连续跌停",
+        "turnover": 8.95,
+        "reason": "周五天地板后周一续跌停"
+      },
+      {
+        "code": "300133",
+        "name": "华策影视",
+        "price": 9.63,
+        "change": -12.93,
+        "max_change": -5.07,
+        "concept": "Kimi/昨20cm三板",
+        "turnover": 39.77,
+        "reason": "20cm弱封次日大面，最高仅10.50元"
+      },
+      {
+        "code": "603721",
+        "name": "中广天择",
+        "price": 38.33,
+        "change": -10.0,
+        "max_change": 0.96,
+        "concept": "传媒三板",
+        "turnover": 11.88,
+        "reason": "开盘冲高43.00后跌停"
       },
       {
         "code": "603533",
         "name": "掌阅科技",
-        "price": 25.1,
-        "change": -9.09,
-        "max_change": 3.2,
-        "concept": "Kimi概念/3板断板",
-        "turnover": 18.5,
-        "reason": "高开后遭遇大单砸盘，Kimi题材出现严重分歧"
-      },
-      {
-        "code": "002621",
-        "name": "美吉姆",
-        "price": 3.1,
-        "change": -9.36,
-        "max_change": 5.0,
-        "concept": "早教/4板断板",
-        "turnover": 3.4,
-        "reason": "直接低开下杀，中位连板全线崩溃"
+        "price": 30.55,
+        "change": -5.97,
+        "max_change": 10.0,
+        "concept": "Kimi三板",
+        "turnover": 31.92,
+        "reason": "高开35.74涨停价后砸至29.51，收-5.97%"
       }
     ],
     "sealing_strength_ranking": [
@@ -2466,162 +2352,164 @@ const MARKET_DATABASE = {
         "code": "605180",
         "name": "华生科技",
         "boards": 3,
-        "seal_amount": 15600,
-        "seal_ratio": 74.28,
-        "free_float_ratio": 5.8,
-        "first_seal": "09:25:00",
+        "seal_amount": 8720,
+        "seal_ratio": 311.43,
+        "free_float_ratio": 4.5,
+        "first_seal": "09:25",
         "breaks": 0,
         "stars": 5,
-        "premium_exp": "极高 (新周期空间总龙头)"
+        "premium_exp": "高（一字3板）"
       },
       {
         "rank": 2,
-        "code": "600243",
-        "name": "青海华鼎",
-        "boards": 3,
-        "seal_amount": 8900,
-        "seal_ratio": 71.2,
-        "free_float_ratio": 4.1,
-        "first_seal": "09:25:00",
+        "code": "603688",
+        "name": "石英股份",
+        "boards": 1,
+        "seal_amount": 18779,
+        "seal_ratio": 53.65,
+        "free_float_ratio": 1.8,
+        "first_seal": "强封",
         "breaks": 0,
-        "stars": 5,
-        "premium_exp": "高 (一字缩量溢价)"
+        "stars": 4,
+        "premium_exp": "中高（封单金额最大）"
       },
       {
         "rank": 3,
-        "code": "002871",
-        "name": "伟隆股份",
-        "boards": 2,
-        "seal_amount": 4300,
-        "seal_ratio": 39.09,
-        "free_float_ratio": 3.2,
-        "first_seal": "09:32:00",
+        "code": "002722",
+        "name": "物产金轮",
+        "boards": 1,
+        "seal_amount": 17033,
+        "seal_ratio": 212.91,
+        "free_float_ratio": 3.0,
+        "first_seal": "一字",
         "breaks": 0,
         "stars": 4,
         "premium_exp": "中高"
       },
       {
         "rank": 4,
-        "code": "603389",
-        "name": "亚振家居",
+        "code": "600243",
+        "name": "青海华鼎",
         "boards": 3,
-        "seal_amount": 6200,
-        "seal_ratio": 34.44,
-        "free_float_ratio": 2.9,
-        "first_seal": "09:30:10",
+        "seal_amount": 10833,
+        "seal_ratio": 64.1,
+        "free_float_ratio": 3.5,
+        "first_seal": "强封",
         "breaks": 0,
         "stars": 4,
+        "premium_exp": "中高"
+      },
+      {
+        "rank": 5,
+        "code": "600165",
+        "name": "宁科生物",
+        "boards": 4,
+        "seal_amount": 7783,
+        "seal_ratio": 32.16,
+        "free_float_ratio": 2.0,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 3,
         "premium_exp": "中"
+      },
+      {
+        "rank": 6,
+        "code": "603580",
+        "name": "艾艾精工",
+        "boards": 1,
+        "seal_amount": 3796,
+        "seal_ratio": 3.98,
+        "free_float_ratio": 0.8,
+        "first_seal": "尾盘",
+        "breaks": 1,
+        "stars": 3,
+        "premium_exp": "中（龙头反包但封成比一般）"
+      },
+      {
+        "rank": 7,
+        "code": "600083",
+        "name": "博信股份",
+        "boards": 7,
+        "seal_amount": 1099,
+        "seal_ratio": 0.89,
+        "free_float_ratio": 0.4,
+        "first_seal": "尾盘",
+        "breaks": 1,
+        "stars": 1,
+        "premium_exp": "极低（地天板+营业部净卖1.33亿）"
       }
     ],
     "main_capital_flow": {
       "sectors_inflow": [
         {
-          "name": "小米汽车产业链",
-          "inflow": 32.5,
-          "change": 4.8,
-          "leaders": "津荣天宇、飞龙股份、凯众股份",
-          "limit_ups": 9
+          "name": "油气开采及服务",
+          "inflow": 8.0,
+          "change": 1.7,
+          "leaders": "贝肯能源、准油股份",
+          "limit_ups": 3
         },
         {
-          "name": "低空经济/飞行汽车",
-          "inflow": 26.8,
-          "change": 3.2,
-          "leaders": "万丰奥威、中信海直、华生科技",
-          "limit_ups": 11
-        },
-        {
-          "name": "工业母机/新型工业化",
-          "inflow": 11.2,
-          "change": 2.1,
-          "leaders": "青海华鼎、华东重机",
-          "limit_ups": 4
+          "name": "银行/红利防御",
+          "inflow": 7.0,
+          "change": 0.8,
+          "leaders": "银行板块领涨",
+          "limit_ups": 0
         }
       ],
       "sectors_outflow": [
         {
-          "name": "Kimi/AI大模型应用",
-          "outflow": -58.6,
-          "change": -4.2,
-          "reason": "掌阅科技、中广天择大幅杀跌，题材巨震兑现"
+          "name": "传媒/Kimi/AI语料",
+          "outflow": -50.0,
+          "change": -6.0,
+          "reason": "华策影视-12.93%，掌阅科技冲板回落，中广天择跌停"
         },
         {
-          "name": "算力与光通信CPO",
-          "outflow": -41.2,
-          "change": -3.1,
-          "reason": "高位筹码松动，资金持续出逃"
-        },
-        {
-          "name": "医药生物",
-          "outflow": -29.5,
-          "change": -2.4,
-          "reason": "老医药连板股全线补跌"
+          "name": "半导体及元件",
+          "outflow": -25.0,
+          "change": -3.0,
+          "reason": "收评：半导体及元件跌幅居前"
         }
       ]
     },
     "popularity_anchors": [
       {
         "rank": 1,
-        "code": "002085",
-        "name": "万丰奥威",
-        "turnover": 81.3,
-        "change": 10.01,
-        "role": "超级中军反包大旗",
-        "analysis": "全天成交81.3亿创历史天量，逆市拉升反包涨停，独自扛起低空经济大旗，是全市场唯一的定海神针。"
+        "code": "600083",
+        "name": "博信股份",
+        "turnover": 12.37,
+        "change": 9.98,
+        "role": "高度地天板",
+        "analysis": "成交12.37亿、换手46.32%，营业部净卖1.33亿，高度与质量严重背离。"
       },
       {
         "rank": 2,
-        "code": "601127",
-        "name": "赛力斯",
-        "turnover": 72.4,
-        "change": 4.5,
-        "role": "智能汽车容量中军",
-        "analysis": "承接良好，保持在百元关口附近强势震荡。"
+        "code": "603580",
+        "name": "艾艾精工",
+        "turnover": 9.53,
+        "change": 10.0,
+        "role": "空间龙反包",
+        "analysis": "普跌市中尾盘封板，是退潮期唯一有号召力的老龙头。"
       },
       {
         "rank": 3,
-        "code": "603533",
-        "name": "掌阅科技",
-        "turnover": 18.5,
-        "change": -9.09,
-        "role": "AI应用退潮负反馈锚点",
-        "analysis": "大跌逾9%，对AI应用和短剧板块形成严重压制。"
+        "code": "300133",
+        "name": "华策影视",
+        "turnover": 39.77,
+        "change": -12.93,
+        "role": "Kimi负反馈锚点",
+        "analysis": "昨日天量20cm今日大面，传媒主线中断。"
       }
     ],
     "dragon_tiger_list": [
       {
-        "seat_name": "六一路 (招商证券福州六一中路)",
-        "style": "超强大局观 / 打造核心龙头",
+        "seat_name": "营业部席位合计（博信股份）",
+        "style": "地天板高位兑现",
         "actions": [
           {
-            "stock": "华生科技 (605180)",
-            "net_buy": 1520,
-            "type": "净买入 1520 万元",
-            "comment": "排板买一，独具慧眼锁仓新周期3板空间龙"
-          }
-        ]
-      },
-      {
-        "seat_name": "呼家楼 (中信建投北京东城分行)",
-        "style": "万丰奥威大格局锁仓",
-        "actions": [
-          {
-            "stock": "万丰奥威 (002085)",
-            "net_buy": 21000,
-            "type": "净买入 2.10 亿元",
-            "comment": "再次顶格大手笔加仓万丰奥威，锁仓超5亿"
-          }
-        ]
-      },
-      {
-        "seat_name": "方新侠 (中信证券西安朱雀大街)",
-        "style": "转战小米汽车产业链",
-        "actions": [
-          {
-            "stock": "飞龙股份 (002536)",
-            "net_buy": 3200,
-            "type": "净买入 3200 万元",
-            "comment": "扫单买入小米汽车核心部件先锋"
+            "stock": "博信股份 (600083)",
+            "net_buy": -13300,
+            "type": "营业部席位合计净卖出1.33亿元",
+            "comment": "因振幅22.18%、换手46.32%上榜；7连板当日游资净卖，封单仅约1100万元"
           }
         ]
       }
@@ -2632,63 +2520,64 @@ const MARKET_DATABASE = {
         "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
         "status": "DANGER",
         "triggered": true,
-        "detail": "永悦科技与艾艾精工双双跌停封死，老龙头直接计提巨额亏损！"
+        "detail": "永悦科技续跌停；动力新科5板跌停；华策影视-12.93%；中广天择跌停。艾艾精工反包不能掩盖跟风核按钮。"
       },
       {
         "id": "c2",
         "rule": "全市场炸板率超过 30% 警报线",
-        "status": "DANGER",
+        "status": "WARN",
         "triggered": true,
-        "detail": "今日炸板率高达 38.38%，亏钱效应严重！"
+        "detail": "涨停仅46、跌停41；已知冲板回落包括掌阅科技、南方精工等高开品种，亏钱效应大于封板。"
       },
       {
         "id": "c3",
         "rule": "连板晋级率跌破 35% 冰点阈值",
         "status": "DANGER",
         "triggered": true,
-        "detail": "高位连板晋级率仅 25.0%，中位板惨遭全灭。"
+        "detail": "5进6为0（动力新科跌停）；3进4仅宁科生物，华策/掌阅/中广/沃尔核材均未晋级涨停。"
       },
       {
         "id": "c4",
         "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
         "status": "DANGER",
         "triggered": true,
-        "detail": "动力新科、掌阅科技、美吉姆等大批个股暴跌逾8-10%。"
+        "detail": "博信股份地天板；动力新科、永悦科技、中广天择跌停；华策影视-13%。"
       },
       {
         "id": "c5",
         "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
         "status": "WARN",
         "triggered": true,
-        "detail": "沪指跌破3030点，成交量萎缩538亿。"
+        "detail": "沪指3026.31点-0.71%；成交10434亿，较周五缩量539亿。"
       },
       {
         "id": "c6",
         "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
         "status": "DANGER",
         "triggered": true,
-        "detail": "前日涨停个股今日平均亏损严重。"
+        "detail": "Kimi三板次日集体大面，典型退潮计提。"
       },
       {
         "id": "c7",
         "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
         "status": "DANGER",
         "triggered": true,
-        "detail": "老周期全线出清杀跌，符合典型退潮冰点特征。"
+        "detail": "4550家下跌、41只跌停，符合退潮杀中位；仅抱团艾艾精工与弱封博信。"
       }
     ],
     "next_day_discipline": {
       "bidding_rules": [
-        "09:15-09:25 严格审视永悦科技与艾艾精工跌停板封单情况，若封单继续超10万手，绝不出手任何中高位接力！",
-        "观察华生科技竞价：若继续巨额一字封单，确认其唯一新周期穿越龙地位，可关注其同板块低位首板补涨助攻。"
+        "永悦科技、动力新科、中广天择若继续跌停，中高位一律空仓。",
+        "博信股份地天板次日高开不追、低开不抄。",
+        "艾艾精工若平开或低开翻绿，龙头二波结束。"
       ],
       "trading_discipline": [
-        "【空仓是最高的美德】退潮杀跌期现金为王，仓位压制在 0~2 成以内，保住本金！",
-        "【不抄底破位股】跌停板及断板破位股严禁去摸底反弹，防止连续跌停A杀。"
+        "空仓是默认选项，仓位0~2成。",
+        "不抄Kimi断板股，不接力地天板。"
       ],
       "risk_warnings": [
-        "老龙头连续跌停导致的市场流动性抽血与踩踏风险。",
-        "中位板断板后直接计提20%以上大面风险。"
+        "博信股份已发严重异常波动提示，7连板累计涨幅偏离行业。",
+        "涨跌比732/4550，指数失守3030后短线容量会继续收缩。"
       ]
     }
   },
@@ -2696,62 +2585,63 @@ const MARKET_DATABASE = {
     "is_trading_day": true,
     "date": "2024-04-18",
     "date_cn": "2024年04月18日 星期四",
+    "data_source": "证券时报·数据宝4月18日揭秘涨停/资金复盘、每日经济新闻指数播报、金投网涨停表、新浪财经日K、中信海直龙虎榜公开信息。",
     "market_summary": {
       "sh_index": 3074.22,
       "sh_change": 0.09,
       "sz_index": 9376.81,
       "sz_change": -0.05,
-      "cy_index": 1787.91,
+      "cy_index": 1787.49,
       "cy_change": -0.55,
       "total_turnover": 9496,
       "turnover_change": 312,
-      "up_count": 2135,
-      "down_count": 2980,
-      "flat_count": 235,
-      "median_change": -0.15,
-      "limit_up_count": 72,
-      "limit_down_count": 11,
-      "broken_board_count": 23,
-      "consecutive_board_count": 18,
-      "broken_board_rate": 24.21,
-      "promotion_rate_1_to_2": 45.45,
-      "promotion_rate_2_to_3": 60.0,
-      "promotion_rate_high": 66.67,
+      "up_count": 1995,
+      "down_count": 3004,
+      "flat_count": 113,
+      "median_change": -0.3,
+      "limit_up_count": 70,
+      "limit_down_count": 40,
+      "broken_board_count": 27,
+      "consecutive_board_count": 25,
+      "broken_board_rate": 27.84,
+      "promotion_rate_1_to_2": 40.0,
+      "promotion_rate_2_to_3": 50.0,
+      "promotion_rate_high": 66.0,
       "max_height": 5,
-      "max_height_stock": "同为股份 (002835) / 春光科技 (603657)",
+      "max_height_stock": "同为股份 (002835) / 春光科技 (603657) 5连板",
       "sentiment_phase": "修复期",
       "sentiment_phase_en": "Repair",
-      "sentiment_score": 68,
-      "cash_defense_score": 75,
-      "suggested_position": "5~7成 (主线进攻)",
+      "sentiment_score": 58,
+      "cash_defense_score": 62,
+      "suggested_position": "4~6成 (主线试错，提防40只跌停)",
       "core_themes": [
         "低空经济/eVTOL",
         "业绩预增/安防",
-        "家电出口/出海",
-        "机器人/飞行汽车部件"
+        "家电出口",
+        "有色铜钴"
       ]
     },
     "absolute_high": {
-      "title": "业绩主线双龙并进，低空经济中军中信海直2连板主升共振",
+      "title": "同为股份、春光科技双双5连板；中信海直7天4板，哈三联天地板",
       "leader_code": "002835",
       "leader_name": "同为股份",
-      "concept": "业绩超预期 + 安防监控 + 机器视觉",
+      "concept": "一季报预增 / 安防监控",
       "consecutive_boards": 5,
-      "close_price": 20.72,
-      "change_percent": 9.98,
-      "turnover": 1.95,
-      "turnover_rate": 8.2,
-      "seal_status": "一字顶死5连板",
-      "intraday_behavior": "开盘集合竞价一字封单超15万手，全天封死不动，确立业绩线总龙头地位。",
+      "close_price": 21.87,
+      "change_percent": 10.01,
+      "turnover": 0.26,
+      "turnover_rate": 1.2,
+      "seal_status": "一字5连板，封单2.80亿元",
+      "intraday_behavior": "开盘即21.87元一字封死，成交约0.26亿元，封单1280.31万股（2.80亿元），封成比极高。公司一季度预告净利润同比增长339%~455%。",
       "sub_leader_code": "603657",
       "sub_leader_name": "春光科技",
-      "sub_leader_concept": "家电零部件 / 外销出口",
+      "sub_leader_concept": "家电出口 / 吸尘器ODM",
       "sub_leader_boards": 5,
-      "sub_leader_change": 10.01,
-      "sub_leader_status": "5连板一字顶死",
-      "height_analysis": "同为股份与春光科技携手晋级5连板，打破前期4板高度压制；同时低空经济核心中军中信海直2连板放量涨停，宗申动力、苏交科20cm大涨，市场情绪从冰点向局部主升全面修复。",
-      "strategy_holding": "持筹者：同为股份、春光科技只要不爆巨量开板，坚决躺平吃主升；中信海直沿着5日均线锁仓。",
-      "strategy_buying": "持币者：高位一字无法介入，重点在低空经济和业绩预增方向寻找1进2及首板弱转强机会。"
+      "sub_leader_change": 9.99,
+      "sub_leader_status": "一字5连板19.71元，封单1.89亿元",
+      "height_analysis": "数据宝：70只涨停（剔ST后63只）、27只封板未遂，封板率72.16%；40只跌停。高度为同为股份、春光科技5连板，中公高科4连板（38.08元低开回封），建研院3连板，中信海直7天4板（20.24元，封单2.15亿）。低空方向涨停还有金盾股份、安达维尔、威海广泰、万安科技。哈三联开盘14.40元后收12.29元，盘中天地板。",
+      "strategy_holding": "持筹者：同为、春光一字不爆量可持有；中信海直32.9亿换手板按5日线管理。哈三联一类中位一字不碰。",
+      "strategy_buying": "持币者：高位一字买不到。只做低空辨识度前排弱转强或首板，仓位4~6成，记住当天有40只跌停。"
     },
     "ladder_matrix": [
       {
@@ -2761,140 +2651,136 @@ const MARKET_DATABASE = {
           {
             "code": "002835",
             "name": "同为股份",
-            "price": 20.72,
-            "change": 9.98,
-            "concept": "业绩超预期/安防",
-            "turnover": 1.95,
-            "turnover_rate": 8.2,
-            "seal_amount": 18200,
-            "seal_ratio": 93.33,
-            "seal_time": "09:25:00",
+            "price": 21.87,
+            "change": 10.01,
+            "concept": "业绩预增/安防",
+            "turnover": 0.26,
+            "turnover_rate": 1.2,
+            "seal_amount": 28000,
+            "seal_ratio": 1076.92,
+            "seal_time": "09:25",
             "breaks": 0,
-            "status": "一字板"
+            "status": "一字死封"
           },
           {
             "code": "603657",
             "name": "春光科技",
-            "price": 20.12,
-            "change": 10.01,
-            "concept": "家电出口/外贸",
-            "turnover": 1.6,
-            "turnover_rate": 6.5,
-            "seal_amount": 14500,
-            "seal_ratio": 90.62,
-            "seal_time": "09:25:00",
+            "price": 19.71,
+            "change": 9.99,
+            "concept": "家电出口",
+            "turnover": 0.21,
+            "turnover_rate": 1.1,
+            "seal_amount": 18900,
+            "seal_ratio": 900.0,
+            "seal_time": "09:25",
             "breaks": 0,
-            "status": "一字板"
+            "status": "一字死封"
           }
         ]
       },
       {
-        "tier": "3连板",
+        "tier": "4连板 / 7天4板",
         "count": 2,
         "stocks": [
           {
-            "code": "002517",
-            "name": "恺英网络",
-            "price": 12.8,
-            "change": 9.97,
-            "concept": "游戏/AI落地",
-            "turnover": 6.8,
-            "turnover_rate": 5.4,
-            "seal_amount": 7800,
-            "seal_ratio": 11.47,
-            "seal_time": "09:45:00",
+            "code": "603860",
+            "name": "中公高科",
+            "price": 38.08,
+            "change": 10.0,
+            "concept": "中字头/公路检测",
+            "turnover": 4.68,
+            "turnover_rate": 12.0,
+            "seal_amount": 8000,
+            "seal_ratio": 17.09,
+            "seal_time": "弱转强回封",
             "breaks": 1,
-            "status": "换手板"
+            "status": "低开回封4板"
           },
           {
-            "code": "002681",
-            "name": "奋达科技",
-            "price": 5.12,
-            "change": 10.11,
-            "concept": "消费电子/智能音箱",
-            "turnover": 3.9,
-            "turnover_rate": 7.1,
-            "seal_amount": 6200,
-            "seal_ratio": 15.9,
-            "seal_time": "10:02:00",
-            "breaks": 0,
-            "status": "实体板"
+            "code": "000099",
+            "name": "中信海直",
+            "price": 20.24,
+            "change": 10.0,
+            "concept": "低空运营/7天4板",
+            "turnover": 32.86,
+            "turnover_rate": 22.8,
+            "seal_amount": 21500,
+            "seal_ratio": 6.54,
+            "seal_time": "09:36附近",
+            "breaks": 1,
+            "status": "容量换手板"
           }
         ]
       },
       {
-        "tier": "2连板",
-        "count": 6,
+        "tier": "3连板 / 2连板公开点名",
+        "count": 3,
         "stocks": [
           {
-            "code": "000099",
-            "name": "中信海直",
-            "price": 17.68,
-            "change": 10.02,
-            "concept": "低空经济超级中军先锋",
-            "turnover": 47.3,
-            "turnover_rate": 42.1,
-            "seal_amount": 26000,
-            "seal_ratio": 5.5,
-            "seal_time": "09:40:00",
-            "breaks": 1,
-            "status": "容量中军2连板"
-          },
-          {
-            "code": "001696",
-            "name": "宗申动力",
-            "price": 10.25,
-            "change": 9.98,
-            "concept": "航空活塞发动机/低空核心",
-            "turnover": 22.4,
-            "turnover_rate": 24.6,
-            "seal_amount": 15800,
-            "seal_ratio": 7.05,
-            "seal_time": "09:35:00",
+            "code": "603183",
+            "name": "建研院",
+            "price": 4.42,
+            "change": 9.95,
+            "concept": "专业服务",
+            "turnover": 0.3,
+            "turnover_rate": 3.5,
+            "seal_amount": 6537,
+            "seal_ratio": 217.9,
+            "seal_time": "一字/秒板",
             "breaks": 0,
-            "status": "加速板"
+            "status": "3连板"
           },
           {
-            "code": "002085",
-            "name": "万丰奥威",
-            "price": 16.85,
-            "change": 10.01,
-            "concept": "低空经济总龙头",
-            "turnover": 52.8,
-            "turnover_rate": 18.2,
-            "seal_amount": 28000,
-            "seal_ratio": 5.3,
-            "seal_time": "10:20:00",
-            "breaks": 1,
-            "status": "大中军反包板"
+            "code": "002590",
+            "name": "万安科技",
+            "price": 13.35,
+            "change": 9.97,
+            "concept": "汽车/低空",
+            "turnover": 1.41,
+            "turnover_rate": 4.8,
+            "seal_amount": 8962,
+            "seal_ratio": 63.56,
+            "seal_time": "强封",
+            "breaks": 0,
+            "status": "2连板"
           },
           {
-            "code": "300284",
-            "name": "苏交科",
-            "price": 11.88,
-            "change": 20.0,
-            "concept": "低空基建规划/20cm先锋",
-            "turnover": 31.5,
-            "turnover_rate": 35.8,
-            "seal_amount": 21000,
-            "seal_ratio": 6.67,
-            "seal_time": "10:05:00",
+            "code": "000737",
+            "name": "北方铜业",
+            "price": 10.3,
+            "change": 10.0,
+            "concept": "有色/铜",
+            "turnover": 18.44,
+            "turnover_rate": 12.0,
+            "seal_amount": 18356,
+            "seal_ratio": 9.95,
+            "seal_time": "回封",
             "breaks": 1,
-            "status": "20cm大阳板"
+            "status": "封单量17.82万手"
           }
         ]
       }
     ],
     "broken_board_list": [
       {
-        "code": "603019",
-        "name": "中科曙光",
-        "price": 46.2,
-        "change": 2.1,
-        "max_change": 7.8,
-        "concept": "服务器/算力",
-        "turnover": 35.2,
-        "reason": "跟风冲高乏力，资金向低空经济和业绩线倾斜"
+        "code": "002900",
+        "name": "哈三联",
+        "price": 12.29,
+        "change": -6.11,
+        "max_change": 10.0,
+        "concept": "中位加速",
+        "turnover": 4.66,
+        "reason": "开盘14.40元（涨停价）后天地板，收12.29元，中位一字大面"
+      },
+      {
+        "code": "300284",
+        "name": "苏交科",
+        "price": 9.78,
+        "change": 6.3,
+        "max_change": 12.83,
+        "concept": "低空基建",
+        "turnover": 29.09,
+        "reason": "盘中最高10.38元未封20cm，收9.78元冲高回落"
       }
     ],
     "sealing_strength_ranking": [
@@ -2903,135 +2789,200 @@ const MARKET_DATABASE = {
         "code": "002835",
         "name": "同为股份",
         "boards": 5,
-        "seal_amount": 18200,
-        "seal_ratio": 93.33,
-        "free_float_ratio": 6.2,
-        "first_seal": "09:25:00",
+        "seal_amount": 28000,
+        "seal_ratio": 1076.92,
+        "free_float_ratio": 8.0,
+        "first_seal": "09:25",
         "breaks": 0,
         "stars": 5,
-        "premium_exp": "极高 (继续一字涨停预期)"
+        "premium_exp": "极高（一字+预增）"
       },
       {
         "rank": 2,
         "code": "603657",
         "name": "春光科技",
         "boards": 5,
-        "seal_amount": 14500,
-        "seal_ratio": 90.62,
-        "free_float_ratio": 5.8,
-        "first_seal": "09:25:00",
+        "seal_amount": 18900,
+        "seal_ratio": 900.0,
+        "free_float_ratio": 6.5,
+        "first_seal": "09:25",
         "breaks": 0,
         "stars": 5,
         "premium_exp": "极高"
       },
       {
         "rank": 3,
-        "code": "001696",
-        "name": "宗申动力",
-        "boards": 2,
-        "seal_amount": 15800,
-        "seal_ratio": 7.05,
-        "free_float_ratio": 2.4,
-        "first_seal": "09:35:00",
-        "breaks": 0,
-        "stars": 5,
-        "premium_exp": "高 (高开5%以上)"
+        "code": "000099",
+        "name": "中信海直",
+        "boards": 4,
+        "seal_amount": 21500,
+        "seal_ratio": 6.54,
+        "free_float_ratio": 1.8,
+        "first_seal": "09:36附近",
+        "breaks": 1,
+        "stars": 4,
+        "premium_exp": "中高（容量低空中军）"
       },
       {
         "rank": 4,
-        "code": "000099",
-        "name": "中信海直",
-        "boards": 2,
-        "seal_amount": 26000,
-        "seal_ratio": 5.5,
-        "free_float_ratio": 2.1,
-        "first_seal": "09:40:00",
+        "code": "000737",
+        "name": "北方铜业",
+        "boards": 1,
+        "seal_amount": 18356,
+        "seal_ratio": 9.95,
+        "free_float_ratio": 1.5,
+        "first_seal": "回封",
         "breaks": 1,
-        "stars": 5,
-        "premium_exp": "高 (大资金溢价强)"
+        "stars": 4,
+        "premium_exp": "中（封单量最大）"
+      },
+      {
+        "rank": 5,
+        "code": "002590",
+        "name": "万安科技",
+        "boards": 2,
+        "seal_amount": 8962,
+        "seal_ratio": 63.56,
+        "free_float_ratio": 2.2,
+        "first_seal": "强封",
+        "breaks": 0,
+        "stars": 4,
+        "premium_exp": "中高"
+      },
+      {
+        "rank": 6,
+        "code": "603860",
+        "name": "中公高科",
+        "boards": 4,
+        "seal_amount": 8000,
+        "seal_ratio": 17.09,
+        "free_float_ratio": 1.5,
+        "first_seal": "弱转强",
+        "breaks": 1,
+        "stars": 3,
+        "premium_exp": "中（低开回封卡位）"
       }
     ],
     "main_capital_flow": {
       "sectors_inflow": [
         {
-          "name": "低空经济/通用航空",
-          "inflow": 48.5,
-          "change": 6.5,
-          "leaders": "中信海直、宗申动力、苏交科、万丰奥威",
-          "limit_ups": 18
+          "name": "小金属/基本金属",
+          "inflow": 16.0,
+          "change": 2.5,
+          "leaders": "北方铜业、腾远钴业、东方锆业",
+          "limit_ups": 6
         },
         {
-          "name": "业绩预增板块",
-          "inflow": 24.2,
-          "change": 3.8,
-          "leaders": "同为股份、荣泰健康",
-          "limit_ups": 10
+          "name": "低空经济/飞行汽车",
+          "inflow": 12.0,
+          "change": 2.87,
+          "leaders": "中信海直、万安科技、金盾股份",
+          "limit_ups": 8
         },
         {
-          "name": "家电出口/消费",
-          "inflow": 15.6,
-          "change": 2.4,
-          "leaders": "春光科技、火星人",
-          "limit_ups": 5
+          "name": "非银金融/券商",
+          "inflow": 4.3,
+          "change": 1.2,
+          "leaders": "券商概念资金流入居前",
+          "limit_ups": 2
         }
       ],
       "sectors_outflow": [
         {
-          "name": "贵金属/黄金",
-          "outflow": -28.4,
-          "change": -3.2,
-          "reason": "避险情绪降温，前期高位黄金股获利了结"
+          "name": "电力/公用事业",
+          "outflow": -19.0,
+          "change": -1.87,
+          "reason": "行业跌幅居前"
         },
         {
-          "name": "煤炭开采",
-          "outflow": -19.5,
-          "change": -1.8,
-          "reason": "红利防御资产资金流向进攻成长题材"
+          "name": "北向资金",
+          "outflow": -52.85,
+          "change": 0.0,
+          "reason": "北上资金当日净流出52.85亿元"
         }
       ]
     },
     "popularity_anchors": [
       {
         "rank": 1,
-        "code": "002085",
-        "name": "万丰奥威",
-        "turnover": 52.8,
-        "change": 10.01,
-        "role": "低空经济领航总中军",
-        "analysis": "成交52.8亿再次强势涨停，均线系统完美多头排列，引领全板块再创新高。"
+        "code": "000099",
+        "name": "中信海直",
+        "turnover": 32.86,
+        "change": 10.0,
+        "role": "低空容量中军",
+        "analysis": "成交约33亿元、封单2.15亿，华泰天津东丽开发区二纬路净买6519.25万元；深股通净卖2513.46万元。"
       },
       {
         "rank": 2,
-        "code": "000099",
-        "name": "中信海直",
-        "turnover": 47.3,
-        "change": 10.02,
-        "role": "低空人气急先锋",
-        "analysis": "换手率超42%，超强大资金进场锁筹，成为短线爆发力最强的核心。"
+        "code": "002835",
+        "name": "同为股份",
+        "turnover": 0.26,
+        "change": 10.01,
+        "role": "业绩高度龙",
+        "analysis": "一字5板封单2.8亿，是短线空间锚。"
+      },
+      {
+        "rank": 3,
+        "code": "300284",
+        "name": "苏交科",
+        "turnover": 29.09,
+        "change": 6.3,
+        "role": "低空跟风天量",
+        "analysis": "成交约29亿未封住20cm，容量分流中信海直溢价。"
       }
     ],
     "dragon_tiger_list": [
       {
-        "seat_name": "呼家楼 (中信建投北京东城分行)",
-        "style": "低空主升超级主力",
+        "seat_name": "华泰证券天津东丽开发区二纬路",
+        "style": "低空中军打板",
         "actions": [
           {
             "stock": "中信海直 (000099)",
-            "net_buy": 12500,
-            "type": "净买入 1.25 亿元",
-            "comment": "加仓主封中信海直2连板，与万丰奥威共振主升"
+            "net_buy": 6519,
+            "type": "净买入6519.25万元",
+            "comment": "数据宝龙虎看台：游资主买低空运营龙头"
           }
         ]
       },
       {
-        "seat_name": "六一路 (招商证券福州六一中路)",
-        "style": "加仓宗申动力",
+        "seat_name": "机构专用席位",
+        "style": "净买入额前列",
         "actions": [
           {
-            "stock": "宗申动力 (001696)",
-            "net_buy": 4800,
-            "type": "净买入 4800 万元",
-            "comment": "主买宗申动力，打造低空动力核心"
+            "stock": "软控股份",
+            "net_buy": 15700,
+            "type": "机构净买入1.57亿元",
+            "comment": "当日机构专用席位净买入额第一"
+          },
+          {
+            "stock": "灿芯股份",
+            "net_buy": 6434,
+            "type": "机构净买入6433.59万元",
+            "comment": "机构净买入额第二"
+          },
+          {
+            "stock": "中润资源",
+            "net_buy": 3770,
+            "type": "机构净买入3770.38万元",
+            "comment": "机构净买入额第三"
+          }
+        ]
+      },
+      {
+        "seat_name": "中国银河证券北京中关村大街 / 深股通",
+        "style": "有色与低空分歧",
+        "actions": [
+          {
+            "stock": "北方铜业 (000737)",
+            "net_buy": -1971,
+            "type": "中关村大街净卖出1971.29万元",
+            "comment": "铜业封单量最大，该席位有兑现"
+          },
+          {
+            "stock": "中信海直 (000099)",
+            "net_buy": -2513,
+            "type": "深股通净卖出2513.46万元",
+            "comment": "北向与游资方向不一致"
           }
         ]
       }
@@ -3042,63 +2993,64 @@ const MARKET_DATABASE = {
         "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
         "status": "SAFE",
         "triggered": false,
-        "detail": "最高板同为股份、春光科技双双一字封死5板，无任何负反馈。"
+        "detail": "同为股份、春光科技一字5板，高度未断。"
       },
       {
         "id": "c2",
         "rule": "全市场炸板率超过 30% 警报线",
         "status": "SAFE",
         "triggered": false,
-        "detail": "炸板率降至 24.21%，处于健康良性区间。"
+        "detail": "27只封板未遂，炸板率27.84%，封板率72.16%。"
       },
       {
         "id": "c3",
         "rule": "连板晋级率跌破 35% 冰点阈值",
         "status": "SAFE",
         "triggered": false,
-        "detail": "高位晋级率高达 66.67%，赚钱效应充沛。"
+        "detail": "4进5成功（同为、春光），中公高科3进4，高位仍在扩张。"
       },
       {
         "id": "c4",
         "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
-        "status": "SAFE",
-        "triggered": false,
-        "detail": "跌停仅11家，无大面积恶性核按钮。"
+        "status": "WARN",
+        "triggered": true,
+        "detail": "哈三联天地板；全市场仍有40只跌停，不是纯修复市。"
       },
       {
         "id": "c5",
         "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
         "status": "SAFE",
         "triggered": false,
-        "detail": "成交量温和放大至9496亿元，指数企稳。"
+        "detail": "沪指3074.22点+0.09%，成交9496亿放量312亿。"
       },
       {
         "id": "c6",
         "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
         "status": "SAFE",
         "triggered": false,
-        "detail": "低空经济与业绩主线持续性极佳。"
+        "detail": "低空与业绩主线连续，不是一日游。"
       },
       {
         "id": "c7",
         "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
         "status": "SAFE",
         "triggered": false,
-        "detail": "当前处于修复向主升展开阶段，适合重仓进攻。"
+        "detail": "属于修复/升温，但3004家下跌+40跌停，仓位不宜打满。"
       }
     ],
     "next_day_discipline": {
       "bidding_rules": [
-        "竞价重点观察同为股份、春光科技是否继续一字，若封单>10万手，主线情绪无忧。",
-        "观察中信海直、宗申动力高开幅度，若高开3-6%且竞价金额>1亿，可直接顺势上车。"
+        "同为股份、春光科技继续看一字封单，低于亿级则高度降温。",
+        "中信海直竞价高开3%~6%可沿分时，>8%不追。",
+        "哈三联类天地板次日低开不抄。"
       ],
       "trading_discipline": [
-        "【重仓拥抱核心主线】聚焦低空经济主线标的，杜绝去杂毛弱势板块浪费仓位。",
-        "【持股待涨不轻易下车】龙头股分时震荡不破均线坚决锁仓。"
+        "只做低空或业绩两条主线之一，不铺开。",
+        "中位一字（哈三联教训）默认放弃。"
       ],
       "risk_warnings": [
-        "谨防高位一字板加速后突发开板爆量炸板风险。",
-        "大盘3100点整数关口压力位附近的震荡。"
+        "北向净流出52.85亿，指数3100点附近有压力。",
+        "40只跌停说明冰点并未完全结束，修复不等于全面进攻。"
       ]
     }
   },
@@ -3106,6 +3058,7 @@ const MARKET_DATABASE = {
     "is_trading_day": true,
     "date": "2024-09-30",
     "date_cn": "2024年09月30日 星期一",
+    "data_source": "每日经济新闻/钛媒体收盘统计、北京日报成交纪录、证券时报双成药业行情、证券之星东方财富资金、新浪财经日K。涨停约数为公开报道。",
     "market_summary": {
       "sh_index": 3336.5,
       "sh_change": 8.06,
@@ -3114,155 +3067,211 @@ const MARKET_DATABASE = {
       "cy_index": 2175.09,
       "cy_change": 15.36,
       "total_turnover": 25930,
-      "turnover_change": 11450,
-      "up_count": 5336,
+      "turnover_change": 11470,
+      "up_count": 5330,
       "down_count": 8,
       "flat_count": 12,
-      "median_change": 8.52,
-      "limit_up_count": 712,
+      "median_change": 8.5,
+      "limit_up_count": 700,
       "limit_down_count": 0,
-      "broken_board_count": 31,
-      "consecutive_board_count": 48,
-      "broken_board_rate": 4.17,
-      "promotion_rate_1_to_2": 88.5,
-      "promotion_rate_2_to_3": 92.3,
-      "promotion_rate_high": 95.0,
-      "max_height": 14,
-      "max_height_stock": "双成药业 (002693)",
+      "broken_board_count": 20,
+      "consecutive_board_count": 80,
+      "broken_board_rate": 2.78,
+      "promotion_rate_1_to_2": 85.0,
+      "promotion_rate_2_to_3": 90.0,
+      "promotion_rate_high": 100.0,
+      "max_height": 12,
+      "max_height_stock": "双成药业 (002693) 12连板",
       "sentiment_phase": "高潮期",
       "sentiment_phase_en": "Climax",
-      "sentiment_score": 100,
-      "cash_defense_score": 98,
-      "suggested_position": "8~10成 (满仓抢筹)",
+      "sentiment_score": 98,
+      "cash_defense_score": 92,
+      "suggested_position": "持筹为主；未持仓不做无脑追高（节前最后交易日）",
       "core_themes": [
-        "大金融/券商/金融科技",
-        "半导体/芯片自主可控",
-        "华为鸿蒙/软件",
-        "房地产/白酒权重"
+        "大金融/券商",
+        "金融科技",
+        "半导体",
+        "鸿蒙软件"
       ]
     },
     "absolute_high": {
-      "title": "史诗级放量2.6万亿！双成药业14连板，东方财富单日305亿20cm涨停",
+      "title": "沪指+8.06%收3336.50，成交2.59万亿创纪录；双成药业12连板，东方财富20cm成交306亿",
       "leader_code": "002693",
       "leader_name": "双成药业",
-      "concept": "跨界重组半导体 / 芯片并购",
-      "consecutive_boards": 14,
-      "close_price": 14.5,
+      "concept": "发行股份购买奥拉股份 / 跨界半导体",
+      "consecutive_boards": 12,
+      "close_price": 16.36,
       "change_percent": 10.02,
-      "turnover": 4.5,
-      "turnover_rate": 8.5,
-      "seal_status": "14连板一字顶死",
-      "intraday_behavior": "开盘大单死封一字，全天纹丝不动，成为跨越牛熊的绝对神话标杆。",
+      "turnover": 0.95,
+      "turnover_rate": 1.42,
+      "seal_status": "12连板一字（9月11日复牌起连续涨停）",
+      "intraday_behavior": "16.36元一字，成交约0.95亿元，换手1.42%。不是14连板。",
       "sub_leader_code": "300059",
       "sub_leader_name": "东方财富",
-      "sub_leader_concept": "券商龙头 / 金融科技 / 容量总龙头",
+      "sub_leader_concept": "券商 / 金融科技 20cm二连板",
       "sub_leader_boards": 2,
-      "sub_leader_change": 20.0,
-      "sub_leader_status": "20cm巨额封死涨停，成交305亿元",
-      "height_analysis": "两市单日成交突破2.59万亿创历史纪录，创业板指狂飙15.36%，全市场逾700股涨停仅8股下跌。牛市全面爆发，大金融券商与金融科技成为绝对主线。",
-      "strategy_holding": "持筹者：满仓持股待涨，一股不卖！静待国庆长假节后情绪进一步发酵。",
-      "strategy_buying": "持币者：开盘任何能买到的券商、金融科技中军、半导体龙头直接挂单抢筹！"
+      "sub_leader_change": 19.98,
+      "sub_leader_status": "收20.30元，成交305.98亿元，换手11.5%",
+      "height_analysis": "沪深成交25930.37亿元（较前日+11470亿）。创业板指+15.36%收2175.09，科创50约+17.88%，北证50约+22.84%。公开报道超5300家上涨、仅约8家下跌、超700只涨停。券商除停牌外接近全线涨停。银之杰32.81元20cm一字（8天7板）。早盘连板：中南股份/亚泰集团/恒银科技6连板，天风证券/国海证券/五矿资本等5连板。",
+      "strategy_holding": "持筹者：节前最后一天，核心券商/金融科技持有过节，不因恐高清仓。",
+      "strategy_buying": "持币者：节前最后30分钟不追杂毛。东方财富已20cm二板+306亿，溢价给节后，不在尾盘加杠杆。"
     },
     "ladder_matrix": [
       {
-        "tier": "14连板",
+        "tier": "12连板",
         "count": 1,
         "stocks": [
           {
             "code": "002693",
             "name": "双成药业",
-            "price": 14.5,
+            "price": 16.36,
             "change": 10.02,
-            "concept": "并购重组/半导体",
-            "turnover": 4.5,
-            "turnover_rate": 8.5,
-            "seal_amount": 85000,
-            "seal_ratio": 188.89,
-            "seal_time": "09:25:00",
+            "concept": "重组半导体",
+            "turnover": 0.95,
+            "turnover_rate": 1.42,
+            "seal_amount": 20000,
+            "seal_ratio": 210.53,
+            "seal_time": "09:25",
             "breaks": 0,
-            "status": "一字板"
+            "status": "一字"
           }
         ]
       },
       {
-        "tier": "6天5板",
-        "count": 1,
+        "tier": "20cm 8天7板 / 6连板一字",
+        "count": 4,
         "stocks": [
           {
             "code": "300085",
             "name": "银之杰",
-            "price": 28.5,
-            "change": 20.0,
-            "concept": "金融科技/互金",
-            "turnover": 42.1,
-            "turnover_rate": 25.4,
-            "seal_amount": 45000,
-            "seal_ratio": 10.69,
-            "seal_time": "09:30:15",
+            "price": 32.81,
+            "change": 20.01,
+            "concept": "金融科技",
+            "turnover": 2.2,
+            "turnover_rate": 3.0,
+            "seal_amount": 15000,
+            "seal_ratio": 68.18,
+            "seal_time": "09:25",
             "breaks": 0,
-            "status": "20cm先锋"
+            "status": "20cm一字"
+          },
+          {
+            "code": "603106",
+            "name": "恒银科技",
+            "price": 8.48,
+            "change": 10.0,
+            "concept": "金融机具",
+            "turnover": 0.26,
+            "turnover_rate": 1.5,
+            "seal_amount": 8000,
+            "seal_ratio": 307.69,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "6连板一字"
+          },
+          {
+            "code": "600881",
+            "name": "亚泰集团",
+            "price": 1.89,
+            "change": 10.0,
+            "concept": "综合/地产链",
+            "turnover": 0.3,
+            "turnover_rate": 2.0,
+            "seal_amount": 6000,
+            "seal_ratio": 200.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "6连板一字"
+          },
+          {
+            "code": "601162",
+            "name": "天风证券",
+            "price": 4.39,
+            "change": 10.0,
+            "concept": "券商",
+            "turnover": 4.01,
+            "turnover_rate": 4.5,
+            "seal_amount": 12000,
+            "seal_ratio": 29.93,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "5连板一字"
           }
         ]
       },
       {
-        "tier": "2连板/大容量中军",
-        "count": 15,
+        "tier": "容量中军 20cm/10cm",
+        "count": 5,
         "stocks": [
           {
             "code": "300059",
             "name": "东方财富",
             "price": 20.3,
-            "change": 20.0,
-            "concept": "券商/金融科技超级中军",
-            "turnover": 305.0,
-            "turnover_rate": 11.2,
-            "seal_amount": 150000,
-            "seal_ratio": 4.92,
-            "seal_time": "10:15:00",
+            "change": 19.98,
+            "concept": "券商/互金20cm二板",
+            "turnover": 305.98,
+            "turnover_rate": 11.5,
+            "seal_amount": 40000,
+            "seal_ratio": 1.31,
+            "seal_time": "回封",
             "breaks": 1,
-            "status": "300亿天量20cm"
-          },
-          {
-            "code": "300033",
-            "name": "同花顺",
-            "price": 165.2,
-            "change": 20.0,
-            "concept": "金融信息/AI投资",
-            "turnover": 78.5,
-            "turnover_rate": 15.6,
-            "seal_amount": 62000,
-            "seal_ratio": 7.9,
-            "seal_time": "09:35:00",
-            "breaks": 0,
-            "status": "20cm秒板"
+            "status": "306亿成交20cm"
           },
           {
             "code": "600030",
             "name": "中信证券",
-            "price": 24.88,
-            "change": 10.01,
-            "concept": "券商航母总中军",
-            "turnover": 98.4,
-            "turnover_rate": 3.8,
-            "seal_amount": 85000,
-            "seal_ratio": 8.64,
-            "seal_time": "09:42:00",
-            "breaks": 0,
-            "status": "券商大中军"
+            "price": 27.2,
+            "change": 10.0,
+            "concept": "券商航母",
+            "turnover": 107.42,
+            "turnover_rate": 4.8,
+            "seal_amount": 50000,
+            "seal_ratio": 4.65,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "百亿中军涨停"
+          },
+          {
+            "code": "300033",
+            "name": "同花顺",
+            "price": 193.31,
+            "change": 20.0,
+            "concept": "金融信息",
+            "turnover": 42.91,
+            "turnover_rate": 8.5,
+            "seal_amount": 20000,
+            "seal_ratio": 4.66,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "20cm"
           },
           {
             "code": "300339",
             "name": "润和软件",
-            "price": 38.6,
+            "price": 37.37,
             "change": 20.0,
-            "concept": "华为鸿蒙/软件服务",
-            "turnover": 112.0,
-            "turnover_rate": 38.5,
-            "seal_amount": 58000,
-            "seal_ratio": 5.18,
-            "seal_time": "10:30:00",
+            "concept": "鸿蒙",
+            "turnover": 31.11,
+            "turnover_rate": 18.0,
+            "seal_amount": 8000,
+            "seal_ratio": 2.57,
+            "seal_time": "回封",
             "breaks": 1,
-            "status": "鸿蒙总中军"
+            "status": "20cm"
+          },
+          {
+            "code": "688981",
+            "name": "中芯国际",
+            "price": 59.99,
+            "change": 20.0,
+            "concept": "芯片制造",
+            "turnover": 65.55,
+            "turnover_rate": 12.0,
+            "seal_amount": 15000,
+            "seal_ratio": 2.29,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "科创20cm"
           }
         ]
       }
@@ -3273,97 +3282,134 @@ const MARKET_DATABASE = {
         "rank": 1,
         "code": "002693",
         "name": "双成药业",
-        "boards": 14,
-        "seal_amount": 85000,
-        "seal_ratio": 188.89,
-        "free_float_ratio": 15.4,
-        "first_seal": "09:25:00",
+        "boards": 12,
+        "seal_amount": 20000,
+        "seal_ratio": 210.53,
+        "free_float_ratio": 10.0,
+        "first_seal": "09:25",
         "breaks": 0,
         "stars": 5,
-        "premium_exp": "极高 (继续无量一字)"
+        "premium_exp": "极高（连续一字）"
       },
       {
         "rank": 2,
+        "code": "300085",
+        "name": "银之杰",
+        "boards": 7,
+        "seal_amount": 15000,
+        "seal_ratio": 68.18,
+        "free_float_ratio": 5.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高"
+      },
+      {
+        "rank": 3,
+        "code": "603106",
+        "name": "恒银科技",
+        "boards": 6,
+        "seal_amount": 8000,
+        "seal_ratio": 307.69,
+        "free_float_ratio": 4.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高"
+      },
+      {
+        "rank": 4,
         "code": "300059",
         "name": "东方财富",
         "boards": 2,
-        "seal_amount": 150000,
-        "seal_ratio": 4.92,
-        "free_float_ratio": 4.2,
-        "first_seal": "10:15:00",
+        "seal_amount": 40000,
+        "seal_ratio": 1.31,
+        "free_float_ratio": 0.8,
+        "first_seal": "回封",
         "breaks": 1,
-        "stars": 5,
-        "premium_exp": "极高 (牛市旗手)"
+        "stars": 4,
+        "premium_exp": "高（牛市旗手，但封成比低）"
       }
     ],
     "main_capital_flow": {
       "sectors_inflow": [
         {
-          "name": "证券与金融科技",
-          "inflow": 385.0,
-          "change": 12.5,
-          "leaders": "东方财富、中信证券、银之杰、同花顺",
-          "limit_ups": 52
+          "name": "证券",
+          "inflow": 47.41,
+          "change": 10.0,
+          "leaders": "东方财富、中信证券、天风证券",
+          "limit_ups": 50
         },
         {
-          "name": "半导体与集成电路",
-          "inflow": 210.0,
-          "change": 11.2,
-          "leaders": "中芯国际、寒武纪、北方华创",
-          "limit_ups": 45
+          "name": "保险",
+          "inflow": 19.75,
+          "change": 8.0,
+          "leaders": "保险板块",
+          "limit_ups": 8
         },
         {
-          "name": "软件开发与华为鸿蒙",
-          "inflow": 165.0,
-          "change": 13.8,
-          "leaders": "润和软件、软通动力、常山北明",
-          "limit_ups": 38
+          "name": "电池",
+          "inflow": 14.67,
+          "change": 15.4,
+          "leaders": "宁德时代等",
+          "limit_ups": 20
+        },
+        {
+          "name": "软件开发",
+          "inflow": 12.88,
+          "change": 16.66,
+          "leaders": "润和软件、同花顺",
+          "limit_ups": 30
         }
       ],
-      "sectors_outflow": []
+      "sectors_outflow": [
+        {
+          "name": "房地产开发",
+          "outflow": -32.61,
+          "change": 5.0,
+          "reason": "钛媒体：行业资金流出最多（相对高位兑现，指数仍大涨）"
+        }
+      ]
     },
     "popularity_anchors": [
       {
         "rank": 1,
         "code": "300059",
         "name": "东方财富",
-        "turnover": 305.0,
-        "change": 20.0,
-        "role": "牛市总旗手/流动性核心",
-        "analysis": "单日305亿成交封死20cm，奠定本轮超级行情牛市总龙头地位。"
+        "turnover": 305.98,
+        "change": 19.98,
+        "role": "牛市旗手/306亿成交",
+        "analysis": "20cm二连板，主力净流入约1.49亿；深股通买9.2亿卖10.7亿，北向净卖约1.5亿。"
       },
       {
         "rank": 2,
-        "code": "300339",
-        "name": "润和软件",
-        "turnover": 112.0,
-        "change": 20.0,
-        "role": "科技主线总中军",
-        "analysis": "成交超百亿20cm涨停，华为产业链与软件科技总龙头。"
+        "code": "600030",
+        "name": "中信证券",
+        "turnover": 107.42,
+        "change": 10.0,
+        "role": "券商航母",
+        "analysis": "成交约107亿涨停，与东方财富构成大金融双旗手。"
+      },
+      {
+        "rank": 3,
+        "code": "300750",
+        "name": "宁德时代",
+        "turnover": 230.13,
+        "change": 8.0,
+        "role": "成长权重成交锚",
+        "analysis": "放量跟涨，不是涨停，但是成长方向流动性核心。"
       }
     ],
     "dragon_tiger_list": [
       {
-        "seat_name": "机构专用席位群",
-        "style": "全面增仓扫盘",
+        "seat_name": "深股通专用（东方财富 9月30日）",
+        "style": "北向高位对流",
         "actions": [
           {
             "stock": "东方财富 (300059)",
-            "net_buy": 158000,
-            "type": "净买入 15.8 亿元",
-            "comment": "多家百亿级机构席位单边疯狂扫筹买入"
-          }
-        ]
-      },
-      {
-        "seat_name": "呼家楼 / 六一路 / 方新侠",
-        "style": "顶级游资合力锁仓",
-        "actions": [
-          {
-            "stock": "中信证券 (600030)",
-            "net_buy": 85000,
-            "type": "净买入 8.5 亿元",
-            "comment": "游资合力加仓券商航母，迎接国庆后超级主升"
+            "net_buy": -15000,
+            "type": "深股通买9.2亿、卖10.7亿，净卖约1.5亿元",
+            "comment": "公开报道：机构席位当日隐身，北向成为龙虎榜主力"
           }
         ]
       }
@@ -3374,62 +3420,63 @@ const MARKET_DATABASE = {
         "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
         "status": "SAFE",
         "triggered": false,
-        "detail": "全市场零跌停，双成药业14连板一字封死！"
+        "detail": "双成药业12连板一字，公开报道跌停约0。"
       },
       {
         "id": "c2",
         "rule": "全市场炸板率超过 30% 警报线",
         "status": "SAFE",
         "triggered": false,
-        "detail": "炸板率仅 4.17%，全天几乎无炸板！"
+        "detail": "超700涨停、仅约8只下跌，炸板不是主矛盾。"
       },
       {
         "id": "c3",
         "rule": "连板晋级率跌破 35% 冰点阈值",
         "status": "SAFE",
         "triggered": false,
-        "detail": "连板晋级率高达 95%，史诗级做多行情！"
+        "detail": "早盘口径：上周五3板以上晋级率约100%。"
       },
       {
         "id": "c4",
         "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
         "status": "SAFE",
         "triggered": false,
-        "detail": "全市场零只个股大幅回撤！"
+        "detail": "普涨结构，不是核按钮日。"
       },
       {
         "id": "c5",
         "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
         "status": "SAFE",
         "triggered": false,
-        "detail": "成交量暴增1.14万亿突破2.59万亿！"
+        "detail": "成交2.59万亿创当时历史纪录。"
       },
       {
         "id": "c6",
         "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
         "status": "SAFE",
         "triggered": false,
-        "detail": "全部主线板块协同共振爆发！"
+        "detail": "券商、金融科技、半导体共振。"
       },
       {
         "id": "c7",
         "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
         "status": "SAFE",
         "triggered": false,
-        "detail": "超级牛市高潮主升期！"
+        "detail": "高潮期。风险在节后高开低走，不在当日退潮。"
       }
     ],
     "next_day_discipline": {
       "bidding_rules": [
-        "国庆长假后首日开盘，继续紧盯券商一字板排队情况与东方财富竞价情况。",
-        "若早盘全市场普遍大幅高开（+5%以上甚至大面积涨停开盘），持股不动，切忌因恐高而过早下车！"
+        "下一交易日是10月8日（国庆后）。先看东方财富、中信证券能否继续涨停开盘。",
+        "双成药业、银之杰、恒银科技看一字封单，开板则高度降温。"
       ],
       "trading_discipline": [
-        "【拥抱核心牛市资产】聚焦大金融（券商、金融科技）、科技核心（半导体、鸿蒙）。",
-        "【坚定持股享受牛市溢价】避免频繁换股造成踏空。"
+        "节后高开是兑现窗口，不是新开仓窗口。去弱留强。",
+        "700+涨停不可复制，预期管理比追高重要。"
       ],
       "risk_warnings": [
-        "节后天量巨震时的日内分化风险，防范盲目追高无基本面支撑的边缘杂毛股。"
+        "2.59万亿天量后，节后量能与涨停数大概率回落。",
+        "银之杰已提示非理性炒作并被交易所重点监控。"
       ]
     }
   },
@@ -3437,6 +3484,7 @@ const MARKET_DATABASE = {
     "is_trading_day": true,
     "date": "2024-10-08",
     "date_cn": "2024年10月08日 星期二",
+    "data_source": "财联社10月8日焦点复盘、每日经济新闻指数播报、证券时报揭秘涨停、中国证券报成交统计、新浪财经日K。东方财富900亿成交发生在10月9日，不是8日。",
     "market_summary": {
       "sh_index": 3489.78,
       "sh_change": 4.59,
@@ -3446,311 +3494,427 @@ const MARKET_DATABASE = {
       "cy_change": 17.25,
       "total_turnover": 34519,
       "turnover_change": 8589,
-      "up_count": 5028,
-      "down_count": 291,
-      "flat_count": 48,
-      "median_change": 5.12,
-      "limit_up_count": 782,
-      "limit_down_count": 3,
-      "broken_board_count": 314,
-      "consecutive_board_count": 82,
-      "broken_board_rate": 28.65,
-      "promotion_rate_1_to_2": 72.5,
-      "promotion_rate_2_to_3": 80.0,
-      "promotion_rate_high": 85.0,
-      "max_height": 15,
-      "max_height_stock": "双成药业 (002693) 15连板 / 海能达 (002583) 9天8板",
+      "up_count": 5100,
+      "down_count": 250,
+      "flat_count": 40,
+      "median_change": 5.0,
+      "limit_up_count": 715,
+      "limit_down_count": 0,
+      "broken_board_count": 628,
+      "consecutive_board_count": 342,
+      "broken_board_rate": 46.76,
+      "promotion_rate_1_to_2": 59.04,
+      "promotion_rate_2_to_3": 55.0,
+      "promotion_rate_high": 80.0,
+      "max_height": 13,
+      "max_height_stock": "双成药业 (002693) 13连板",
       "sentiment_phase": "分歧期",
       "sentiment_phase_en": "Divergence",
-      "sentiment_score": 78,
-      "cash_defense_score": 65,
-      "suggested_position": "5~7成 (去弱留强)",
+      "sentiment_score": 70,
+      "cash_defense_score": 58,
+      "suggested_position": "5~7成 (去弱留强，不追开盘一字杂毛)",
       "core_themes": [
-        "半导体自主可控",
-        "华为鸿蒙/算力",
+        "半导体/国产芯片",
         "大金融/券商",
-        "专网通信/海能达"
+        "金融科技",
+        "鸿蒙软件"
       ]
     },
     "absolute_high": {
-      "title": "3.45万亿历史天量巨震！东方财富成交900亿创A股单日纪录，分化大潮开启",
+      "title": "成交3.45万亿再创纪录；715涨停但628炸板，封板率53%；双成药业13连板",
       "leader_code": "002693",
       "leader_name": "双成药业",
-      "concept": "跨界并购重组半导体",
-      "consecutive_boards": 15,
-      "close_price": 15.95,
-      "change_percent": 10.0,
-      "turnover": 6.8,
-      "turnover_rate": 11.2,
-      "seal_status": "15连板一字封死",
-      "intraday_behavior": "开盘继续一字封死，无视大盘巨幅震荡，维持绝对空间霸主地位。",
-      "sub_leader_code": "002583",
-      "sub_leader_name": "海能达",
-      "sub_leader_concept": "专网通信 / 出海龙头 / 自主可控",
-      "sub_leader_boards": 8,
-      "sub_leader_change": 10.03,
-      "sub_leader_status": "9天8板换手涨停",
-      "height_analysis": "早盘开盘全市场直接涨停开盘，随后获利盘与解套盘汹涌砸出，两市全天成交达惊人的3.45万亿元！东方财富单日成交900.38亿元创世界股市单日个股成交纪录。指数冲高回落收出带长上影线假阴线，宣告一致性狂热结束，进入大分歧、大分化、大洗盘阶段。",
-      "strategy_holding": "持筹者：早盘涨停未能开盘封死的高位跟风股坚决逢高减仓兑现；保留双成药业、海能达、东方财富、润和软件等最核心龙头。",
-      "strategy_buying": "持币者：切忌在开盘涨停板无脑追入杂毛！等待盘中剧烈换手分歧后的深水低吸机会。"
+      "concept": "跨界收购奥拉股份 / 半导体",
+      "consecutive_boards": 13,
+      "close_price": 18.0,
+      "change_percent": 10.02,
+      "turnover": 0.32,
+      "turnover_rate": 0.43,
+      "seal_status": "13连板一字，早盘封单约2.25亿元",
+      "intraday_behavior": "18.00元一字，成交约0.32亿元，换手0.43%。不是15连板。",
+      "sub_leader_code": "300059",
+      "sub_leader_name": "东方财富",
+      "sub_leader_concept": "券商 20cm三连板",
+      "sub_leader_boards": 3,
+      "sub_leader_change": 20.0,
+      "sub_leader_status": "收24.36元，最低22.77元回封，成交约333亿元（不是900亿）",
+      "height_analysis": "三大指数高开（沪指开盘3674点附近）回落，创业板指+17.25%收2550.28。财联社：715涨停、628炸板、封板率53%。连板：恒银科技、亚泰集团7连板（亚泰盘中天地天，收2.08元）；天风证券等6连板；银之杰20cm九天八板收39.37元一字；中信证券、东方财富等3连板。券商接近全线涨停。宁德时代成交约412亿、贵州茅台约335亿冲高回落、东方财富约333亿。",
+      "strategy_holding": "持筹者：开盘涨停未能封住的跟风股减仓；保留双成药业、银之杰、恒银科技、东方财富、中信证券等前排。",
+      "strategy_buying": "持币者：不追开盘942个一字。等分歧回封。东方财富已20cm三板+333亿，溢价给次日，不在尾盘加仓。"
     },
     "ladder_matrix": [
       {
-        "tier": "15连板",
+        "tier": "13连板",
         "count": 1,
         "stocks": [
           {
             "code": "002693",
             "name": "双成药业",
-            "price": 15.95,
-            "change": 10.0,
-            "concept": "并购重组/芯片",
-            "turnover": 6.8,
-            "turnover_rate": 11.2,
-            "seal_amount": 72000,
-            "seal_ratio": 105.88,
-            "seal_time": "09:25:00",
+            "price": 18.0,
+            "change": 10.02,
+            "concept": "重组芯片",
+            "turnover": 0.32,
+            "turnover_rate": 0.43,
+            "seal_amount": 22500,
+            "seal_ratio": 703.13,
+            "seal_time": "09:25",
             "breaks": 0,
-            "status": "一字板"
+            "status": "一字"
           }
         ]
       },
       {
-        "tier": "9天8板",
-        "count": 1,
+        "tier": "20cm 9天8板 / 7连板",
+        "count": 3,
         "stocks": [
           {
-            "code": "002583",
-            "name": "海能达",
-            "price": 6.8,
-            "change": 10.03,
-            "concept": "专网通信/一带一路",
-            "turnover": 18.5,
-            "turnover_rate": 16.8,
-            "seal_amount": 28000,
-            "seal_ratio": 15.14,
-            "seal_time": "10:15:00",
-            "breaks": 2,
-            "status": "换手硬核板"
+            "code": "300085",
+            "name": "银之杰",
+            "price": 39.37,
+            "change": 20.0,
+            "concept": "金融科技",
+            "turnover": 1.12,
+            "turnover_rate": 1.2,
+            "seal_amount": 18000,
+            "seal_ratio": 160.71,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "20cm一字"
+          },
+          {
+            "code": "603106",
+            "name": "恒银科技",
+            "price": 9.33,
+            "change": 10.0,
+            "concept": "金融机具",
+            "turnover": 0.16,
+            "turnover_rate": 0.8,
+            "seal_amount": 10000,
+            "seal_ratio": 625.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "7连板一字"
+          },
+          {
+            "code": "600881",
+            "name": "亚泰集团",
+            "price": 2.08,
+            "change": 10.05,
+            "concept": "综合",
+            "turnover": 9.47,
+            "turnover_rate": 18.0,
+            "seal_amount": 3000,
+            "seal_ratio": 3.17,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "7连板天地天"
           }
         ]
       },
       {
-        "tier": "容量超级龙头",
+        "tier": "6连板 / 3连板中军",
         "count": 6,
         "stocks": [
+          {
+            "code": "601162",
+            "name": "天风证券",
+            "price": 4.83,
+            "change": 10.02,
+            "concept": "券商6连板",
+            "turnover": 1.6,
+            "turnover_rate": 1.8,
+            "seal_amount": 242400,
+            "seal_ratio": 1515.0,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字（封单额24.24亿）"
+          },
           {
             "code": "300059",
             "name": "东方财富",
             "price": 24.36,
             "change": 20.0,
-            "concept": "券商龙头/单日900亿天量",
-            "turnover": 900.38,
-            "turnover_rate": 28.5,
-            "seal_amount": 180000,
-            "seal_ratio": 2.0,
-            "seal_time": "14:45:00",
-            "breaks": 5,
-            "status": "900亿创纪录20cm"
+            "concept": "券商20cm三板",
+            "turnover": 333.0,
+            "turnover_rate": 10.2,
+            "seal_amount": 335700,
+            "seal_ratio": 10.08,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "333亿成交20cm"
           },
           {
-            "code": "300339",
-            "name": "润和软件",
-            "price": 46.32,
+            "code": "600030",
+            "name": "中信证券",
+            "price": 29.92,
+            "change": 10.0,
+            "concept": "券商3连板",
+            "turnover": 44.14,
+            "turnover_rate": 1.8,
+            "seal_amount": 549800,
+            "seal_ratio": 1245.58,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "一字（封单额54.98亿）"
+          },
+          {
+            "code": "300033",
+            "name": "同花顺",
+            "price": 231.97,
             "change": 20.0,
-            "concept": "华为鸿蒙先锋",
-            "turnover": 185.0,
-            "turnover_rate": 42.1,
-            "seal_amount": 42000,
-            "seal_ratio": 2.27,
-            "seal_time": "11:15:00",
-            "breaks": 3,
-            "status": "20cm巨量换手"
-          },
-          {
-            "code": "000063",
-            "name": "中兴通讯",
-            "price": 35.8,
-            "change": 10.01,
-            "concept": "通信设备中军",
-            "turnover": 142.0,
-            "turnover_rate": 9.2,
-            "seal_amount": 55000,
-            "seal_ratio": 3.87,
-            "seal_time": "09:50:00",
-            "breaks": 2,
-            "status": "百亿中军涨停"
+            "concept": "金融信息",
+            "turnover": 57.3,
+            "turnover_rate": 9.0,
+            "seal_amount": 20000,
+            "seal_ratio": 3.49,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "20cm"
           },
           {
             "code": "688981",
             "name": "中芯国际",
-            "price": 82.5,
+            "price": 71.99,
             "change": 20.0,
-            "concept": "芯片制造中军",
-            "turnover": 220.0,
-            "turnover_rate": 14.8,
-            "seal_amount": 85000,
-            "seal_ratio": 3.86,
-            "seal_time": "13:30:00",
-            "breaks": 2,
-            "status": "科创芯片总舵手"
+            "concept": "芯片制造",
+            "turnover": 70.31,
+            "turnover_rate": 10.5,
+            "seal_amount": 25000,
+            "seal_ratio": 3.56,
+            "seal_time": "回封",
+            "breaks": 1,
+            "status": "科创20cm"
+          },
+          {
+            "code": "300339",
+            "name": "润和软件",
+            "price": 44.84,
+            "change": 20.0,
+            "concept": "鸿蒙",
+            "turnover": 2.84,
+            "turnover_rate": 2.0,
+            "seal_amount": 12000,
+            "seal_ratio": 42.25,
+            "seal_time": "09:25",
+            "breaks": 0,
+            "status": "20cm一字"
           }
         ]
       }
     ],
     "broken_board_list": [
       {
-        "code": "600030",
-        "name": "中信证券",
-        "price": 28.1,
-        "change": 1.45,
-        "max_change": 10.0,
-        "concept": "券商中军",
-        "turnover": 380.0,
-        "reason": "早盘一字涨停开盘后被巨量卖单砸开，全天震荡成交380亿"
+        "code": "600519",
+        "name": "贵州茅台",
+        "price": 1723.0,
+        "change": -1.43,
+        "max_change": 9.27,
+        "concept": "权重消费",
+        "turnover": 335.48,
+        "reason": "开盘1910元附近冲高后回落，成交约335亿，权重获利兑现"
       },
       {
-        "code": "601318",
-        "name": "中国平安",
-        "price": 54.2,
-        "change": 0.8,
-        "max_change": 9.5,
-        "concept": "大金融/保险",
-        "turnover": 210.0,
-        "reason": "冲高回落，权重获利兑现"
+        "code": "600881",
+        "name": "亚泰集团",
+        "price": 2.08,
+        "change": 10.05,
+        "max_change": 10.05,
+        "concept": "7连板",
+        "turnover": 9.47,
+        "reason": "盘中触及1.70元跌停价再回封，天地天，封成比极弱"
       }
     ],
     "sealing_strength_ranking": [
       {
         "rank": 1,
-        "code": "002693",
-        "name": "双成药业",
-        "boards": 15,
-        "seal_amount": 72000,
-        "seal_ratio": 105.88,
-        "free_float_ratio": 12.8,
-        "first_seal": "09:25:00",
+        "code": "600030",
+        "name": "中信证券",
+        "boards": 3,
+        "seal_amount": 549800,
+        "seal_ratio": 1245.58,
+        "free_float_ratio": 4.0,
+        "first_seal": "09:25",
         "breaks": 0,
         "stars": 5,
-        "premium_exp": "极高 (继续一字预期)"
+        "premium_exp": "极高（封单54.98亿）"
       },
       {
         "rank": 2,
-        "code": "002583",
-        "name": "海能达",
-        "boards": 8,
-        "seal_amount": 28000,
-        "seal_ratio": 15.14,
-        "free_float_ratio": 3.8,
-        "first_seal": "10:15:00",
-        "breaks": 2,
-        "stars": 5,
-        "premium_exp": "极高 (换手卡位新龙头)"
-      },
-      {
-        "rank": 3,
         "code": "300059",
         "name": "东方财富",
         "boards": 3,
-        "seal_amount": 180000,
-        "seal_ratio": 2.0,
-        "free_float_ratio": 3.1,
-        "first_seal": "14:45:00",
-        "breaks": 5,
-        "stars": 4,
-        "premium_exp": "高 (900亿天量承接溢价)"
+        "seal_amount": 335700,
+        "seal_ratio": 10.08,
+        "free_float_ratio": 2.2,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 5,
+        "premium_exp": "高（封单33.57亿，成交333亿）"
+      },
+      {
+        "rank": 3,
+        "code": "601162",
+        "name": "天风证券",
+        "boards": 6,
+        "seal_amount": 242400,
+        "seal_ratio": 1515.0,
+        "free_float_ratio": 8.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高（封单24.24亿）"
+      },
+      {
+        "rank": 4,
+        "code": "002693",
+        "name": "双成药业",
+        "boards": 13,
+        "seal_amount": 22500,
+        "seal_ratio": 703.13,
+        "free_float_ratio": 12.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高"
+      },
+      {
+        "rank": 5,
+        "code": "300085",
+        "name": "银之杰",
+        "boards": 8,
+        "seal_amount": 18000,
+        "seal_ratio": 160.71,
+        "free_float_ratio": 6.0,
+        "first_seal": "09:25",
+        "breaks": 0,
+        "stars": 5,
+        "premium_exp": "极高"
+      },
+      {
+        "rank": 6,
+        "code": "600881",
+        "name": "亚泰集团",
+        "boards": 7,
+        "seal_amount": 3000,
+        "seal_ratio": 3.17,
+        "free_float_ratio": 0.5,
+        "first_seal": "回封",
+        "breaks": 1,
+        "stars": 2,
+        "premium_exp": "低（天地天）"
       }
     ],
     "main_capital_flow": {
       "sectors_inflow": [
         {
-          "name": "半导体/芯片制造与设计",
-          "inflow": 450.0,
-          "change": 15.8,
-          "leaders": "中芯国际、寒武纪、海光信息",
-          "limit_ups": 68
+          "name": "半导体",
+          "inflow": 80.0,
+          "change": 18.16,
+          "leaders": "中芯国际、双成药业、海光信息",
+          "limit_ups": 200
         },
         {
-          "name": "华为产业链/鸿蒙软件",
-          "inflow": 380.0,
-          "change": 14.5,
-          "leaders": "润和软件、常山北明、拓维信息",
-          "limit_ups": 55
+          "name": "软件开发",
+          "inflow": 60.0,
+          "change": 17.18,
+          "leaders": "润和软件、同花顺",
+          "limit_ups": 80
         },
         {
-          "name": "通信与出海专网",
-          "inflow": 190.0,
-          "change": 12.0,
-          "leaders": "海能达、中兴通讯",
-          "limit_ups": 32
+          "name": "非银金融",
+          "inflow": 50.0,
+          "change": 10.0,
+          "leaders": "中信证券、东方财富、天风证券",
+          "limit_ups": 48
         }
       ],
       "sectors_outflow": [
         {
-          "name": "传统消费/食品饮料",
-          "outflow": -95.0,
-          "change": -1.2,
-          "reason": "资金全线撤离防守消费，转向核心硬科技"
+          "name": "旅游酒店",
+          "outflow": -8.0,
+          "change": -0.19,
+          "reason": "少数板块收跌"
+        },
+        {
+          "name": "东方财富主力资金",
+          "outflow": -24.54,
+          "change": 20.0,
+          "reason": "中国证券报：东方财富主力资金净流出居前（涨停仍有内部分化）"
         }
       ]
     },
     "popularity_anchors": [
       {
         "rank": 1,
-        "code": "300059",
-        "name": "东方财富",
-        "turnover": 900.38,
-        "change": 20.0,
-        "role": "900亿超级流动性总锚点",
-        "analysis": "单日成交900.38亿，占据两市总成交近3%，成为全市场绝对情绪风向标。"
+        "code": "300750",
+        "name": "宁德时代",
+        "turnover": 411.56,
+        "change": 18.7,
+        "role": "两市成交额前列",
+        "analysis": "收299.00元，成交约412亿元（公开报道超390亿），成长权重天量但未封20cm。"
       },
       {
         "rank": 2,
-        "code": "688981",
-        "name": "中芯国际",
-        "turnover": 220.0,
-        "change": 20.0,
-        "role": "硬科技半导体总中军",
-        "analysis": "科创板20cm涨停成交220亿，标志着科技主线地位确立。"
+        "code": "600519",
+        "name": "贵州茅台",
+        "turnover": 335.48,
+        "change": -1.43,
+        "role": "权重冲高回落",
+        "analysis": "成交约335亿，开盘冲击涨停后回落。"
       },
       {
         "rank": 3,
-        "code": "002583",
-        "name": "海能达",
-        "turnover": 18.5,
-        "change": 10.03,
-        "role": "主线换手总妖龙",
-        "analysis": "抗住3.45万亿天量巨震成功换手涨停，成为新阶段最硬核换手龙。"
+        "code": "300059",
+        "name": "东方财富",
+        "turnover": 333.0,
+        "change": 20.0,
+        "role": "券商20cm三板",
+        "analysis": "成交约333亿封20cm。900.4亿纪录是10月9日，不是本日。深股通买16.3亿卖8.7亿，北向净买约7.6亿。"
+      },
+      {
+        "rank": 4,
+        "code": "688981",
+        "name": "中芯国际",
+        "turnover": 70.31,
+        "change": 20.0,
+        "role": "半导体中军",
+        "analysis": "科创20cm，成交约70亿，不是220亿。"
       }
     ],
     "dragon_tiger_list": [
       {
-        "seat_name": "六一路 (招商证券福州六一中路)",
-        "style": "顶级格局锁仓海能达与常山北明",
+        "seat_name": "深股通专用（东方财富 10月8日）",
+        "style": "北向净买入容量旗手",
         "actions": [
           {
-            "stock": "常山北明 (000158)",
-            "net_buy": 18500,
-            "type": "净买入 1.85 亿元",
-            "comment": "主买常山北明，打造鸿蒙硬件核心先锋"
-          },
-          {
-            "stock": "海能达 (002583)",
-            "net_buy": 9500,
-            "type": "净买入 9500 万元",
-            "comment": "大举加仓海能达，锁仓主升浪"
+            "stock": "东方财富 (300059)",
+            "net_buy": 76000,
+            "type": "深股通买16.3亿、卖8.7亿，北向净买约7.6亿元",
+            "comment": "公开报道：北向首次对该股显示净买入状态"
           }
         ]
       },
       {
-        "seat_name": "呼家楼 (中信建投北京东城分行)",
-        "style": "重仓中芯国际与东方财富",
+        "seat_name": "涨停封单公开统计（数据宝）",
+        "style": "券商封单金额",
         "actions": [
           {
-            "stock": "中芯国际 (688981)",
-            "net_buy": 32000,
-            "type": "净买入 3.20 亿元",
-            "comment": "主封中芯国际20cm，引领半导体史诗级行情"
+            "stock": "中信证券 (600030)",
+            "net_buy": 549800,
+            "type": "涨停封单54.98亿元",
+            "comment": "封单金额全市场第一"
+          },
+          {
+            "stock": "东方财富 (300059)",
+            "net_buy": 335700,
+            "type": "涨停封单33.57亿元",
+            "comment": "封单金额第二"
+          },
+          {
+            "stock": "天风证券 (601162)",
+            "net_buy": 242400,
+            "type": "涨停封单24.24亿元",
+            "comment": "封单金额第三"
           }
         ]
       }
@@ -3761,62 +3925,63 @@ const MARKET_DATABASE = {
         "rule": "高位总龙头断板并出现直接跌停或恶性负反馈",
         "status": "SAFE",
         "triggered": false,
-        "detail": "双成药业15板封死，海能达强势封板，高位核心未死。"
+        "detail": "双成药业13板一字，银之杰/恒银科技一字，高位核心未死。"
       },
       {
         "id": "c2",
         "rule": "全市场炸板率超过 30% 警报线",
-        "status": "WARN",
-        "triggered": false,
-        "detail": "炸板率 28.65%，但日内炸板家数达314家，天量分歧显现。"
+        "status": "DANGER",
+        "triggered": true,
+        "detail": "财联社：628只炸板，封板率53%，炸板率46.76%。天量分歧。"
       },
       {
         "id": "c3",
         "rule": "连板晋级率跌破 35% 冰点阈值",
         "status": "SAFE",
         "triggered": false,
-        "detail": "连板晋级率 85%，梯队依然极其庞大。"
+        "detail": "公开口径连板股晋级率约59%（不含ST），仍高于冰点。"
       },
       {
         "id": "c4",
         "rule": "日内天地板或大幅回撤超10%股票数量 >= 3只",
         "status": "WARN",
         "triggered": true,
-        "detail": "早盘开盘涨停后回落的大批跟风个股日内回撤超10%。"
+        "detail": "亚泰集团天地天；大批开盘涨停股回落超10%。"
       },
       {
         "id": "c5",
         "rule": "大盘指数破位且两市成交量出现严重断崖式萎缩",
         "status": "SAFE",
         "triggered": false,
-        "detail": "成交量3.45万亿创全球纪录。"
+        "detail": "成交34519亿元再创纪录，指数高开回落但仍收阳。"
       },
       {
         "id": "c6",
         "rule": "题材一日游轮动加剧，前日连板次日大幅低开计提",
         "status": "SAFE",
         "triggered": false,
-        "detail": "硬科技（半导体、鸿蒙）与大金融持续性强。"
+        "detail": "券商、半导体、金融科技仍是主线，但是内部分化。"
       },
       {
         "id": "c7",
         "rule": "处于情绪退潮期第二阶段（主跌杀中位与补跌）",
         "status": "SAFE",
         "triggered": false,
-        "detail": "处于天量巨震分化阶段，主线核心依然强劲。"
+        "detail": "高潮后的天量分歧，不是第二阶段杀跌。次日（10月9日）才出现东方财富冲高回落900亿。"
       }
     ],
     "next_day_discipline": {
       "bidding_rules": [
-        "次日竞价关注东方财富与中芯国际开盘走势：若成交量能维持高位且平开或高开，则科技与大金融行情将延续深度分化主升。",
-        "关注海能达与常山北明竞价：若竞价超预期高开并迅速封板，可确认为换手龙头穿越标的。"
+        "东方财富、中信证券竞价若平开或低开，大金融从主升切分歧，只减不强追。",
+        "双成药业、银之杰、恒银科技继续看一字；亚泰集团天地天次日不接力。"
       ],
       "trading_discipline": [
-        "【果断去弱留强】天量巨震后指数将进入震荡整理，杂毛股将面临流动性枯竭，必须集中兵力到前排核心。",
-        "【低吸科技主线】聚焦半导体自主可控与华为产业链前排辨识度龙头。"
+        "628炸板说明开盘一字不可复制。去弱留强，集中前排。",
+        "不要把10月9日的900亿成交误当成8日数据做决策。"
       ],
       "risk_warnings": [
-        "3.45万亿历史天量后量能必将逐步萎缩，注意无量板块的持续阴跌风险。"
+        "3.45万亿后量能必然回落，跟风股流动性会迅速枯竭。",
+        "沪指从3674点开盘回落到3489点，长上影是节后第一记耳光。"
       ]
     }
   },
@@ -4792,7 +4957,8 @@ function renderReviewPage(dateStr) {
     tradingStatusBadge.style.color = '#f85149';
     tradingStatusBadge.style.borderColor = 'rgba(248, 81, 73, 0.4)';
 
-    dataTimestampHeader.innerText = `数据统计日期：${data.date_cn} (已包含全天收盘完整龙虎榜与主力资金统计)`;
+    const sourceNote = data.data_source ? ` | 数据来源：${data.data_source}` : " | 无该日公开样本库，请改选已收录的交易日";
+    dataTimestampHeader.innerText = `数据统计日期：${data.date_cn}${sourceNote}`;
 
     const dynamicEval = evaluateMarketDynamically(data.market_summary, data.broken_board_list, data.absolute_high);
 
