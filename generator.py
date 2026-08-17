@@ -914,9 +914,115 @@ def get_html_template():
 
         /* Print friendly styles */
         @media print {
-            body { background: #fff; color: #000; padding: 0; }
-            .section-card { border: 1px solid #ccc; box-shadow: none; page-break-inside: avoid; }
-            .controls-group, .modal-overlay { display: none !important; }
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 12mm 10mm;
+            }
+            body {
+                background: #ffffff !important;
+                color: #111111 !important;
+                padding: 0 !important;
+                font-size: 11pt;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            header {
+                background: #f6f8fa !important;
+                border: 1px solid #d0d7de !important;
+                color: #111111 !important;
+                box-shadow: none !important;
+                padding: 12px 16px !important;
+                margin-bottom: 16px !important;
+            }
+            header::before {
+                background: #cf222e !important;
+            }
+            .brand-title h1 {
+                color: #111111 !important;
+                font-size: 18pt !important;
+            }
+            .brand-subtitle {
+                color: #57606a !important;
+            }
+            .controls-group, .modal-overlay, .quick-dates {
+                display: none !important;
+            }
+            .stat-card {
+                background: #f6f8fa !important;
+                border: 1px solid #d0d7de !important;
+                box-shadow: none !important;
+                padding: 10px 12px !important;
+                page-break-inside: avoid;
+            }
+            .stat-label {
+                color: #57606a !important;
+            }
+            .stat-value {
+                color: #111111 !important;
+            }
+            .section-card {
+                background: #ffffff !important;
+                border: 1px solid #d0d7de !important;
+                box-shadow: none !important;
+                padding: 14px 16px !important;
+                margin-bottom: 14px !important;
+                page-break-inside: avoid;
+            }
+            .section-header {
+                border-bottom: 1px solid #d0d7de !important;
+            }
+            .section-title {
+                color: #111111 !important;
+            }
+            .gauge-container, .ladder-tier, .lhb-card, .check-item, .discipline-box {
+                background: #f6f8fa !important;
+                border: 1px solid #d0d7de !important;
+                color: #111111 !important;
+                page-break-inside: avoid;
+            }
+            .stock-table th {
+                background: #eaeef2 !important;
+                color: #24292f !important;
+                border-bottom: 1px solid #d0d7de !important;
+            }
+            .stock-table td {
+                color: #24292f !important;
+                border-bottom: 1px solid #eaeef2 !important;
+            }
+            .stock-name {
+                color: #0969da !important;
+            }
+            .up-red {
+                color: #cf222e !important;
+                font-weight: bold;
+            }
+            .down-green {
+                color: #1a7f37 !important;
+                font-weight: bold;
+            }
+            .neutral-gold {
+                color: #9a6700 !important;
+                font-weight: bold;
+            }
+            .blue-highlight {
+                color: #0969da !important;
+                font-weight: bold;
+            }
+            .purple-highlight {
+                color: #8250df !important;
+                font-weight: bold;
+            }
+            footer {
+                border-top: 1px solid #d0d7de !important;
+                color: #57606a !important;
+                margin-top: 16px !important;
+                padding: 8px 0 !important;
+            }
         }
     </style>
 </head>
