@@ -1,0 +1,6 @@
+{
+  "output_dir": "E:/Cursor/reports",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "auto_open_browser": true
+}

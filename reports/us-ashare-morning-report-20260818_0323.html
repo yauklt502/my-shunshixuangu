@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美股 × A股 盘前晨报 | 2026-08-18</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --card-bg: #161b22;
+            --card-border: #30363d;
+            --card-hover: #21262d;
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --text-dim: #6e7681;
+            --red-bull: #f85149;
+            --red-bull-bg: rgba(248, 81, 73, 0.15);
+            --red-bull-border: rgba(248, 81, 73, 0.4);
+            --green-bear: #3fb950;
+            --green-bear-bg: rgba(63, 185, 80, 0.15);
+            --green-bear-border: rgba(63, 185, 80, 0.4);
+            --gold-accent: #f0883e;
+            --gold-bg: rgba(240, 136, 62, 0.15);
+            --blue-accent: #58a6ff;
+            --blue-bg: rgba(88, 166, 255, 0.15);
+            --purple-accent: #bc8cff;
+            --purple-bg: rgba(188, 140, 255, 0.15);
+            --orange-tag: #d29922;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            line-height: 1.65;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1280px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #1f242c 0%, #161b22 100%);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #f85149, #f0883e, #58a6ff, #bc8cff);
+        }
+        .brand { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .brand-logo {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, #58a6ff, #238636);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 900; color: #fff;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.35);
+        }
+        .brand-title h1 { font-size: 22px; font-weight: 700; }
+        .brand-subtitle { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+        .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .badge {
+            font-size: 11px; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px; border: 1px solid;
+        }
+        .badge-red { background: var(--red-bull-bg); color: var(--red-bull); border-color: var(--red-bull-border); }
+        .badge-blue { background: var(--blue-bg); color: var(--blue-accent); border-color: rgba(88,166,255,0.4); }
+        .badge-gold { background: var(--gold-bg); color: var(--gold-accent); border-color: rgba(240,136,62,0.4); }
+        .badge-green { background: var(--green-bear-bg); color: var(--green-bear); border-color: var(--green-bear-border); }
+        .summary-box {
+            background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(240,136,62,0.06));
+            border: 1px solid rgba(88,166,255,0.25);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+        .summary-box h2 { font-size: 15px; color: var(--blue-accent); margin-bottom: 10px; }
+        .summary-box p { font-size: 14px; color: var(--text-main); }
+        .summary-box .highlight { color: var(--gold-accent); font-weight: 600; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+        @media (max-width: 960px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+        }
+        .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; }
+        .stat-value { font-size: 22px; font-weight: 700; }
+        .stat-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+        .up-red { color: var(--red-bull); }
+        .down-green { color: var(--green-bear); }
+        .neutral-gold { color: var(--gold-accent); }
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+        .section-card.border-red { border-left: 3px solid var(--red-bull); }
+        .section-card.border-blue { border-left: 3px solid var(--blue-accent); }
+        .section-card.border-gold { border-left: 3px solid var(--gold-accent); }
+        .section-card.border-purple { border-left: 3px solid var(--purple-accent); }
+        .section-card.border-green { border-left: 3px solid var(--green-bear); }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+        }
+        .section-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .section-tag {
+            font-size: 11px; padding: 2px 8px; border-radius: 12px;
+            background: var(--bg-dark); color: var(--text-sub); border: 1px solid var(--card-border);
+        }
+        .priority-tag {
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+        }
+        .p1 { background: var(--red-bull-bg); color: var(--red-bull); }
+        .p2 { background: var(--gold-bg); color: var(--gold-accent); }
+        .p3 { background: var(--blue-bg); color: var(--blue-accent); }
+        .p4 { background: var(--purple-bg); color: var(--purple-accent); }
+        .stock-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .stock-table th {
+            text-align: left; padding: 10px 8px;
+            color: var(--text-sub); font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            background: var(--bg-dark);
+        }
+        .stock-table td { padding: 10px 8px; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: top; }
+        .stock-table tr:hover td { background: var(--card-hover); }
+        .stock-name { font-weight: 700; color: var(--text-main); }
+        .stock-code { font-size: 10px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .logic-cell { color: var(--text-sub); font-size: 11px; line-height: 1.5; max-width: 280px; }
+        .risk-cell { color: var(--orange-tag); font-size: 11px; }
+        .tag-pill {
+            display: inline-block; font-size: 10px; padding: 2px 6px;
+            border-radius: 4px; margin-right: 4px; margin-bottom: 2px;
+            background: var(--bg-dark); border: 1px solid var(--card-border); color: var(--text-sub);
+        }
+        .news-list { list-style: none; }
+        .news-list li {
+            padding: 10px 0; border-bottom: 1px dashed rgba(48,54,61,0.6);
+            font-size: 13px; color: var(--text-main);
+        }
+        .news-list li:last-child { border-bottom: none; }
+        .news-time { font-size: 11px; color: var(--text-dim); margin-right: 8px; }
+        .news-impact { font-size: 11px; font-weight: 600; margin-left: 6px; }
+        .impact-pos { color: var(--red-bull); }
+        .impact-neg { color: var(--green-bear); }
+        .impact-neu { color: var(--gold-accent); }
+        .checklist { display: flex; flex-direction: column; gap: 8px; }
+        .check-item {
+            display: flex; gap: 12px; padding: 10px 12px;
+            background: var(--bg-dark); border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm); font-size: 12px;
+        }
+        .check-item.warn { border-color: rgba(240,136,62,0.4); background: rgba(240,136,62,0.06); }
+        .check-item.danger { border-color: var(--red-bull-border); background: var(--red-bull-bg); }
+        .avoid-list li { font-size: 13px; color: var(--text-sub); padding: 6px 0; }
+        .avoid-list li::marker { color: var(--green-bear); }
+        footer {
+            text-align: center; font-size: 11px; color: var(--text-dim);
+            padding: 24px 0 12px; border-top: 1px solid var(--card-border); margin-top: 8px;
+        }
+        .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .toc a {
+            font-size: 12px; color: var(--blue-accent); text-decoration: none;
+            padding: 6px 12px; border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm); background: var(--card-bg);
+        }
+        .toc a:hover { background: var(--card-hover); }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <div class="brand">
+            <div class="brand-logo">晨</div>
+            <div>
+                <div class="brand-title">
+                    <h1>美股 × A股 盘前晨报</h1>
+                </div>
+                <div class="brand-subtitle">
+                    报告日期：2026年8月18日（周二）&nbsp;|&nbsp;生成时间：03:23 CST&nbsp;|&nbsp;数据来源：公开财经资讯
+                </div>
+                <div class="badge-row">
+                    <span class="badge badge-blue">盘前策略</span>
+                    <span class="badge badge-red">科技主线</span>
+                    <span class="badge badge-gold">4000点攻坚</span>
+                    <span class="badge badge-green">地缘溢价</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="toc">
+        <a href="#summary">一句话结论</a>
+        <a href="#us">昨夜美股</a>
+        <a href="#ashare-yday">昨日A股</a>
+        <a href="#macro">宏观联动</a>
+        <a href="#sectors">板块机会</a>
+        <a href="#avoid">回避方向</a>
+        <a href="#risk">风险提示</a>
+    </nav>
+
+    <section class="summary-box" id="summary">
+        <h2>📌 一句话结论</h2>
+        <p>
+            今日更可能是 <span class="highlight">指数高开震荡、结构继续做多科技 + 补涨油气/机器人</span>，而非全面普涨。
+            昨夜美股指数小跌，但 <span class="highlight">存储芯片、油价、黄金</span> 三条线索偏强，与昨日 A 股主线高度同向。
+            沪指已收 <span class="highlight">3982.65</span> 逼近 4000 点，机会在主线内部高低切换，以及昨夜新催化的油气、航运、机器人。
+        </p>
+    </section>
+
+    <div class="grid-4">
+        <div class="stat-card">
+            <div class="stat-label">上证指数（昨收）</div>
+            <div class="stat-value">3982.65</div>
+            <div class="stat-sub up-red">+1.41% · 距4000点一步之遥</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">创业板指（昨收）</div>
+            <div class="stat-value">3740.16</div>
+            <div class="stat-sub up-red">+3.14% · 创阶段新高</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">全市场成交额</div>
+            <div class="stat-value">2.40<span style="font-size:14px;color:var(--text-sub)">万亿</span></div>
+            <div class="stat-sub">较前一交易日放量 2459 亿</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">今日策略信号</div>
+            <div class="stat-value neutral-gold" style="font-size:18px;">进攻偏积极</div>
+            <div class="stat-sub">仓位建议 5~7 成 · 科技+能源双主线</div>
+        </div>
+    </div>
+
+    <!-- 昨夜美股 -->
+    <section class="section-card border-blue" id="us">
+        <div class="section-header">
+            <div class="section-title">🌙 昨夜美股（8月17日）</div>
+            <span class="section-tag">美东收盘 · 2026-08-17</span>
+        </div>
+        <div class="grid-3" style="margin-bottom:14px;">
+            <div class="stat-card">
+                <div class="stat-label">道琼斯</div>
+                <div class="stat-value" style="font-size:18px;">53459.78</div>
+                <div class="stat-sub down-green">-272.63 · -0.51%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">标普500</div>
+                <div class="stat-value" style="font-size:18px;">7745.06</div>
+                <div class="stat-sub down-green">-40.70 · -0.52%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">纳斯达克</div>
+                <div class="stat-value" style="font-size:18px;">26644.91</div>
+                <div class="stat-sub down-green">-84.25 · -0.32%</div>
+            </div>
+        </div>
+        <ul class="news-list">
+            <li>
+                <span class="news-time">地缘</span>
+                美伊 60 天谅解备忘录到期未续，霍尔木兹海峡通航近乎停滞（周末仅 5 艘/0 艘），伊朗扣押阿联酋油轮
+                <span class="news-impact impact-pos">→ 利好油气/航运/黄金</span>
+            </li>
+            <li>
+                <span class="news-time">能源</span>
+                WTI 原油 +3.14% 至 84.09 美元/桶；布伦特 +2.92% 至 91.74 美元/桶
+                <span class="news-impact impact-pos">→ A股油气映射</span>
+            </li>
+            <li>
+                <span class="news-time">存储</span>
+                美光 +4%，SK海力士 +3%，闪迪 +8.8%；美方不支持美企采购中国存储芯片
+                <span class="news-impact impact-pos">→ A股存储链延续</span>
+            </li>
+            <li>
+                <span class="news-time">利率</span>
+                美国 30 年期国债收益率升至 5.31%，创约 19 年新高
+                <span class="news-impact impact-neg">→ 压制全球估值</span>
+            </li>
+            <li>
+                <span class="news-time">AI</span>
+                英伟达：OpenAI 承诺 2030 年前大规模部署英伟达 AI 基础设施，对应约 6000 亿美元计算业务
+                <span class="news-impact impact-pos">→ 算力资本开支叙事延续</span>
+            </li>
+            <li>
+                <span class="news-time">黄金</span>
+                现货金 +0.92% 收 4416.75 美元/盎司；白银 +1.67%
+                <span class="news-impact impact-neu">→ 避险底仓逻辑</span>
+            </li>
+        </ul>
+    </section>
+
+    <!-- 昨日A股 -->
+    <section class="section-card border-red" id="ashare-yday">
+        <div class="section-header">
+            <div class="section-title">📈 昨日 A 股（8月17日）</div>
+            <span class="section-tag">收盘复盘 · 4300+ 股上涨</span>
+        </div>
+        <div class="grid-3" style="margin-bottom:14px;">
+            <div class="stat-card">
+                <div class="stat-label">深证成指</div>
+                <div class="stat-value" style="font-size:18px;">14704.27</div>
+                <div class="stat-sub up-red">+2.44%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">科创50</div>
+                <div class="stat-value" style="font-size:18px;">1788.85</div>
+                <div class="stat-sub up-red">+4.14%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">涨停/情绪</div>
+                <div class="stat-value" style="font-size:18px;">100+<span style="font-size:13px;color:var(--text-sub)"> 涨停</span></div>
+                <div class="stat-sub">科技普涨 · 白酒影视领跌</div>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--red-bull);margin-bottom:8px;">🔺 领涨板块</div>
+                <div>
+                    <span class="tag-pill">半导体</span>
+                    <span class="tag-pill">存储芯片</span>
+                    <span class="tag-pill">先进封装</span>
+                    <span class="tag-pill">CPO/光模块</span>
+                    <span class="tag-pill">培育钻石</span>
+                    <span class="tag-pill">种业/粮食</span>
+                    <span class="tag-pill">BC电池</span>
+                    <span class="tag-pill">工程机械</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--green-bear);margin-bottom:8px;">🔻 领跌板块</div>
+                <div>
+                    <span class="tag-pill">白酒</span>
+                    <span class="tag-pill">影视院线</span>
+                    <span class="tag-pill">游戏</span>
+                    <span class="tag-pill">传媒</span>
+                    <span class="tag-pill">银行</span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:var(--text-sub);">
+            <strong style="color:var(--gold-accent);">资金焦点：</strong>
+            电子行业主力净流入 549 亿 · 半导体产业 302 亿 ·
+            通富微电(+22.8亿)、中际旭创(+21.4亿)、长鑫科技(+30亿+) 合计吸金超 90 亿
+        </div>
+    </section>
+
+    <!-- 宏观联动 -->
+    <section class="section-card border-gold" id="macro">
+        <div class="section-header">
+            <div class="section-title">🌍 宏观联动 & 今日已知消息</div>
+            <span class="section-tag">盘前 03:23 CST 已知公开信息</span>
+        </div>
+        <ul class="news-list">
+            <li>
+                <span class="news-time">政策</span>
+                发改委、国家能源局印发《石油天然气发展"十五五"规划》
+                <span class="news-impact impact-pos">→ 油气板块新催化</span>
+            </li>
+            <li>
+                <span class="news-time">IPO</span>
+                宇树科技将于 8 月 19 日科创板上市，发行价 150.80 元，发行市值约 610 亿
+                <span class="news-impact impact-pos">→ 机器人供应链预热</span>
+            </li>
+            <li>
+                <span class="news-time">存储</span>
+                长鑫科技市值突破 4 万亿；长江存储 Q2 NAND 出货份额 14% 全球第三
+                <span class="news-impact impact-pos">→ 国产存储重估</span>
+            </li>
+            <li>
+                <span class="news-time">数据</span>
+                1-7 月社零 +1.2%；房地产开发投资 -19.2%
+                <span class="news-impact impact-neg">→ 消费/白酒承压</span>
+            </li>
+            <li>
+                <span class="news-time">期货</span>
+                夜盘：燃油 +1.59%、LPG +1.83%、乙二醇 +2.96%；沪金 +0.41%、沪银 +0.82%
+                <span class="news-impact impact-neu">→ 能化偏强</span>
+            </li>
+            <li>
+                <span class="news-time">港股</span>
+                恒指 +1.34%，半导体/光通信 H 股大涨（澜起 +9%、兆易 +8%、中际旭创 +8%）
+                <span class="news-impact impact-pos">→ A 股科技溢价</span>
+            </li>
+            <li>
+                <span class="news-time">事件</span>
+                今晚：小米、百度财报电话会；本周美联储会议纪要
+                <span class="news-impact impact-neu">→ 盘中波动因子</span>
+            </li>
+        </ul>
+    </section>
+
+    <!-- 板块机会 -->
+    <section id="sectors">
+        <div style="font-size:18px;font-weight:700;margin-bottom:14px;color:var(--text-main);">
+            🎯 今日板块机会 & 个股方向
+        </div>
+
+        <!-- P1 存储 -->
+        <div class="section-card border-red">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p1">P1</span>
+                    存储芯片 · 最强外盘映射
+                </div>
+                <span class="section-tag">主线延续 · 链内高低切换</span>
+            </div>
+            <p style="font-size:13px;color:var(--text-sub);margin-bottom:10px;">
+                美光/海力士/闪迪昨夜集体大涨，DRAM/NAND 涨价逻辑再确认。今日不宜追长鑫科技溢价，更看链上模组、接口、设备材料补涨。
+            </p>
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th>层次</th><th>标的</th><th>代码</th><th>核心逻辑</th><th>今日看点</th><th>风险</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tag-pill">定价锚</span></td>
+                        <td><span class="stock-name">长鑫科技</span></td>
+                        <td><span class="stock-code">—</span></td>
+                        <td class="logic-cell">大陆唯一大规模 DRAM IDM；H1 净利预告 500-570 亿；市值 4.13 万亿</td>
+                        <td class="logic-cell">风向标而非弹性票；看能否继续带节奏或分流到链上</td>
+                        <td class="risk-cell">市值过大；美方限制采购中国存储</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill">业绩弹性</span></td>
+                        <td><span class="stock-name">江波龙</span></td>
+                        <td><span class="stock-code">301308</span></td>
+                        <td class="logic-cell">H1 净利 105.77 亿（+715倍）；企业级存储 +208%；自研主控 2.8 亿颗</td>
+                        <td class="logic-cell">涨价周期模组厂利润弹性大；相对长鑫补涨空间</td>
+                        <td class="risk-cell">存货 258 亿；经营现金流为负</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill">接口芯片</span></td>
+                        <td><span class="stock-name">澜起科技</span></td>
+                        <td><span class="stock-code">688008</span></td>
+                        <td class="logic-cell">DDR5 RCD + MRCD/MDB、PCIe Retimer；H1 净利预增 64%-81%</td>
+                        <td class="logic-cell">港股昨 +9%；A 股溢价收敛/补涨</td>
+                        <td class="risk-cell">估值不便宜</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill">存储+MCU</span></td>
+                        <td><span class="stock-name">兆易创新</span></td>
+                        <td><span class="stock-code">603986</span></td>
+                        <td class="logic-cell">昨获 20 亿+净流入；H1 业绩高增；8/19 披露中报</td>
+                        <td class="logic-cell">没长鑫贵的存储映射；中报前博弈</td>
+                        <td class="risk-cell">实控人减持预期；长鑫虹吸</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag-pill">设备材料</span></td>
+                        <td><span class="stock-name">有研新材</span></td>
+                        <td><span class="stock-code">600206</span></td>
+                        <td class="logic-cell">昨涨停；长鑫/长存扩产 → 材料订单</td>
+                        <td class="logic-cell">材料端已启动；看能否延续</td>
+                        <td class="risk-cell">设备常滞后 1-2 日</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- P1 封测 -->
+        <div class="section-card border-red">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p1">P1</span>
+                    先进封装 / 封测 · 昨日资金最真
+                </div>
+                <span class="section-tag">通富微电净流入 A 股第一</span>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr><th>标的</th><th>代码</th><th>昨表现</th><th>核心逻辑</th><th>今日策略</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="stock-name">通富微电</span></td>
+                        <td><span class="stock-code">002156</span></td>
+                        <td class="up-red">涨停 · +22.8亿</td>
+                        <td class="logic-cell">AMD 等先进封装产能直接映射；AI 芯片/存储/国产算力必经环节</td>
+                        <td class="logic-cell">高开看能否承接；适合回踩不宜追板</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">长电科技</span></td>
+                        <td><span class="stock-code">600584</span></td>
+                        <td class="up-red">+9.07% · +15.4亿</td>
+                        <td class="logic-cell">封测龙头；涨幅小于通富，补涨更干净</td>
+                        <td class="logic-cell">优先关注未涨停标的</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">华天科技</span></td>
+                        <td><span class="stock-code">002185</span></td>
+                        <td class="logic-cell">—</td>
+                        <td class="logic-cell">封测扩散日弹性标的</td>
+                        <td class="logic-cell">板块强时跟涨</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">兴森科技</span></td>
+                        <td><span class="stock-code">002436</span></td>
+                        <td class="up-red">接近涨停</td>
+                        <td class="logic-cell">PCB + 封装载板；连着算力 PCB 逻辑</td>
+                        <td class="logic-cell">算力硬件扩散</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- P2 算力 -->
+        <div class="section-card border-blue">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p2">P2</span>
+                    CPO / 光模块 / 算力硬件
+                </div>
+                <span class="section-tag">趋势在 · 防高位分流</span>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr><th>类型</th><th>标的</th><th>代码</th><th>昨表现</th><th>今日角色</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>业绩龙</td>
+                        <td><span class="stock-name">中际旭创</span></td>
+                        <td><span class="stock-code">300308</span></td>
+                        <td class="up-red">+6.15% · +21.4亿</td>
+                        <td class="logic-cell">订单能见度最高；机构买入型；高开不多时最稳</td>
+                    </tr>
+                    <tr>
+                        <td>业绩龙</td>
+                        <td><span class="stock-name">新易盛</span></td>
+                        <td><span class="stock-code">300502</span></td>
+                        <td class="logic-cell">—</td>
+                        <td class="logic-cell">光模块双雄；跟旭创联动</td>
+                    </tr>
+                    <tr>
+                        <td>业绩龙</td>
+                        <td><span class="stock-name">天孚通信</span></td>
+                        <td><span class="stock-code">300394</span></td>
+                        <td class="up-red">+7.04%</td>
+                        <td class="logic-cell">光器件核心；回踩优于追高</td>
+                    </tr>
+                    <tr>
+                        <td>弹性龙</td>
+                        <td><span class="stock-name">太辰光</span></td>
+                        <td><span class="stock-code">300570</span></td>
+                        <td class="up-red">20CM 涨停</td>
+                        <td class="logic-cell">连板情绪票；今日大概率剧烈震荡</td>
+                    </tr>
+                    <tr>
+                        <td>题材龙</td>
+                        <td><span class="stock-name">共进股份</span></td>
+                        <td><span class="stock-code">603118</span></td>
+                        <td class="up-red">3 连板</td>
+                        <td class="logic-cell">胜率下降；更像兑现工具</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- P2 油气 -->
+        <div class="section-card border-gold">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p2">P2</span>
+                    油气开采 / 油服 · 今日最干净新催化
+                </div>
+                <span class="section-tag">十五五规划 + 油价大涨</span>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr><th>标的</th><th>代码</th><th>逻辑</th><th>弹性</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="stock-name">中国海油</span></td>
+                        <td><span class="stock-code">600938</span></td>
+                        <td class="logic-cell">油价弹性最大的一体化上游</td>
+                        <td>稳 · 机构配置</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">中海油服</span></td>
+                        <td><span class="stock-code">601808</span></td>
+                        <td class="logic-cell">油服订单；油价中枢上移时先炒油服</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">中曼石油</span></td>
+                        <td><span class="stock-code">603619</span></td>
+                        <td class="logic-cell">民营油服；弹性大于三桶油</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td><span class="stock-name">海油工程</span></td>
+                        <td><span class="stock-code">600583</span></td>
+                        <td class="logic-cell">海上工程；十五五规划受益</td>
+                        <td>中</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- P3 机器人 -->
+        <div class="section-card border-purple">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p3">P3</span>
+                    人形机器人 · 宇树上市前一日
+                </div>
+                <span class="section-tag">8/19 上市 · 688836</span>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr><th>产业链</th><th>标的</th><th>代码</th><th>关注理由</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>丝杠/减速器</td>
+                        <td><span class="stock-name">五洲新春</span></td>
+                        <td><span class="stock-code">603667</span></td>
+                        <td class="logic-cell">机器人核心零部件；上市前情绪映射</td>
+                    </tr>
+                    <tr>
+                        <td>丝杠/减速器</td>
+                        <td><span class="stock-name">绿的谐波</span></td>
+                        <td><span class="stock-code">688017</span></td>
+                        <td class="logic-cell">谐波减速器龙头</td>
+                    </tr>
+                    <tr>
+                        <td>电机</td>
+                        <td><span class="stock-name">鸣志电器</span></td>
+                        <td><span class="stock-code">603728</span></td>
+                        <td class="logic-cell">空心杯电机；人形机器人关节</td>
+                    </tr>
+                    <tr>
+                        <td>传感器</td>
+                        <td><span class="stock-name">柯力传感</span></td>
+                        <td><span class="stock-code">603662</span></td>
+                        <td class="logic-cell">力矩传感器；具身智能感知</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size:11px;color:var(--orange-tag);margin-top:10px;">
+                ⚠️ 新股上市日（8/19）常出现"预期兑现、供应链高开低走"，今日若已集体大涨则防倒车。
+            </p>
+        </div>
+
+        <!-- P4 航运黄金 -->
+        <div class="section-card border-green">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="priority-tag p4">P4</span>
+                    航运 / 黄金 / 军工 · 事件驱动
+                </div>
+                <span class="section-tag">地缘溢价 · 脉冲型</span>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr><th>方向</th><th>标的</th><th>代码</th><th>逻辑</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>油运</td>
+                        <td><span class="stock-name">招商轮船</span></td>
+                        <td><span class="stock-code">601872</span></td>
+                        <td class="logic-cell">霍尔木兹通航下降 → 运价/保费溢价</td>
+                    </tr>
+                    <tr>
+                        <td>油运</td>
+                        <td><span class="stock-name">中远海能</span></td>
+                        <td><span class="stock-code">600026</span></td>
+                        <td class="logic-cell">油运最直接映射</td>
+                    </tr>
+                    <tr>
+                        <td>黄金</td>
+                        <td><span class="stock-name">山东黄金</span></td>
+                        <td><span class="stock-code">600547</span></td>
+                        <td class="logic-cell">外盘金 4416 美元；避险底仓</td>
+                    </tr>
+                    <tr>
+                        <td>军工</td>
+                        <td><span class="stock-name">中航沈飞</span></td>
+                        <td><span class="stock-code">600760</span></td>
+                        <td class="logic-cell">中东升温情绪溢价；脉冲型</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 回避 -->
+    <section class="section-card" id="avoid" style="border-left:3px solid var(--green-bear);">
+        <div class="section-header">
+            <div class="section-title">🚫 今日回避方向</div>
+            <span class="section-tag">不做主攻</span>
+        </div>
+        <ul class="avoid-list">
+            <li><strong>白酒及传统消费</strong> — 茅台失守 1300，社零/地产数据弱，最多超跌反弹</li>
+            <li><strong>影视、游戏、院线</strong> — 资金从应用端流向硬件端，北京文化昨跌停</li>
+            <li><strong>银行</strong> — 美债长端新高 + 昨日已走弱</li>
+            <li><strong>高位连板</strong> — 共进 3 连板、一鸣 6天5板、誉衡 7天5板，情绪高潮后胜率差</li>
+            <li><strong>种业/粮食</strong> — 昨日脉冲，政策标题驱动，高开不宜追</li>
+        </ul>
+    </section>
+
+    <!-- 盘中验证 -->
+    <section class="section-card border-blue">
+        <div class="section-header">
+            <div class="section-title">🔍 盘中四大验证点</div>
+            <span class="section-tag">用来确认而非预测</span>
+        </div>
+        <div class="checklist">
+            <div class="check-item">
+                <span>①</span>
+                <span>长鑫科技是继续带节奏，还是高开分流到链上？<strong style="color:var(--green-bear)">后者更健康</strong></span>
+            </div>
+            <div class="check-item">
+                <span>②</span>
+                <span>通富微电打开后能否被资金接住？<strong style="color:var(--red-bull)">接住则封装主线还在</strong></span>
+            </div>
+            <div class="check-item warn">
+                <span>③</span>
+                <span>三桶油/油服是否<strong>开盘就有量</strong>？有量才是新主线，尾盘偷袭不算</span>
+            </div>
+            <div class="check-item warn">
+                <span>④</span>
+                <span>沪指碰 4000 时成交能否维持 <strong>2 万亿以上</strong>？缩量冲关科技易先回调</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 风险 -->
+    <section class="section-card border-red" id="risk">
+        <div class="section-header">
+            <div class="section-title">⚠️ 风险提示</div>
+            <span class="section-tag">必读</span>
+        </div>
+        <div class="checklist">
+            <div class="check-item danger">
+                <span>!</span>
+                <span><strong>4000 点心理关口 + 连续大涨获利盘</strong> — ETF 连续流入后出现净流出，攻坚前资金有分歧</span>
+            </div>
+            <div class="check-item danger">
+                <span>!</span>
+                <span><strong>美伊标题风险</strong> — 油气/航运/黄金一天内可反向；谈判缓和标题即回吐</span>
+            </div>
+            <div class="check-item warn">
+                <span>!</span>
+                <span><strong>美国长端利率 5.31%</strong> — 压制全球估值；今夜美股若因利率再跌，A 股科技明日收敛</span>
+            </div>
+            <div class="check-item warn">
+                <span>!</span>
+                <span><strong>长鑫科技政策风险</strong> — 美方不支持采购中国存储 vs 苹果测试长鑫，消息证伪时带动整条链</span>
+            </div>
+            <div class="check-item">
+                <span>!</span>
+                <span><strong>中报窗口</strong> — 科技已提前涨，业绩对不上的会被迅速抛弃</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>本报告基于公开财经资讯整理，仅供研究参考，<strong>不构成任何投资建议或买卖推荐</strong>。</p>
+        <p style="margin-top:6px;">Generated · 2026-08-18 03:23 CST · us-ashare-morning-report</p>
+    </footer>
+
+</div>
+</body>
+</html>
