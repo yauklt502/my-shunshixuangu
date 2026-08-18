@@ -24,6 +24,7 @@ def main() -> int:
     parser.add_argument("--host", help="Bind host")
     parser.add_argument("--port", type=int, help="Bind port")
     parser.add_argument("--serve-only", action="store_true", help="Skip generation")
+    parser.add_argument("--generate-only", action="store_true", help="Generate files and exit")
     parser.add_argument("--no-browser", action="store_true", help="Do not open browser")
     args = parser.parse_args()
 
@@ -40,6 +41,16 @@ def main() -> int:
             return 1
         report_path = generate_report(output_dir, template_path)
         print(f"✓ Report written: {report_path}")
+        print(f"✓ Latest copy:  {output_dir / 'latest.html'}")
+        print(f"✓ Index:        {output_dir / 'index.html'}")
+
+    if args.generate_only:
+        return 0
+
+    if not (output_dir / "latest.html").exists():
+        print(f"Error: {output_dir / 'latest.html'} not found.", file=sys.stderr)
+        print("Run without --serve-only to generate first.", file=sys.stderr)
+        return 1
 
     server, url = start_server(
         output_dir,

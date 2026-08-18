@@ -6,15 +6,28 @@
 
 ### 一键启动（Windows）
 
-双击：
+**第一次使用（推荐）：** 只生成文件到 `E:\Cursor\reports`，并自动打开浏览器
+
+```text
+scripts\generate-report-to-e-cursor.bat
+```
+
+**生成 + HTTP 服务（Cursor Simple Browser 预览用）：**
 
 ```text
 scripts\start-morning-report.bat
 ```
 
-浏览器自动打开：`http://127.0.0.1:8765/latest.html`
+浏览器打开：`http://127.0.0.1:8765/latest.html`
 
-在 Cursor 右侧 Simple Browser 中粘贴同一 URL 即可预览。
+> **重要：** 报告不会自动出现在 `E:\Cursor\reports`。必须在本机 Windows 上运行上述 `.bat`，脚本才会创建 `latest.html`。
+
+### 目录是空的？
+
+1. 确认已 `git pull` 拉取含 `scripts/morning_report/` 的代码
+2. 双击 `scripts\generate-report-to-e-cursor.bat`（不要只打开空文件夹等待）
+3. 若提示找不到 Python：安装 [python.org](https://www.python.org/downloads/) 并勾选 **Add to PATH**
+4. 仍失败：手动新建 `E:\Cursor\reports`，再运行 bat
 
 ### 手动命令
 
