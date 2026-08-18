@@ -15,8 +15,15 @@ REPORT_PREFIX = "us-ashare-morning-report"
 
 
 def load_config(config_path: Path) -> dict:
+    import platform
+
+    if platform.system() == "Windows":
+        default_output = "E:/Cursor/reports"
+    else:
+        default_output = str(Path.home() / "Cursor" / "reports")
+
     defaults = {
-        "output_dir": "E:/Cursor/reports",
+        "output_dir": default_output,
         "host": "127.0.0.1",
         "port": 8765,
         "auto_open_browser": True,
