@@ -46,3 +46,11 @@ miniQMT checklist:
 - Keep miniQMT running in background
 - Set `QMT_PATH` to `...\userdata_mini`
 - Set `PYTHONPATH` to `...\bin.x64\Lib\site-packages`
+
+## Akshare only (no Tushare token)
+
+```powershell
+.\scripts\setup-akshare-only-windows.ps1
+```
+
+Or copy `.cursor/mcp.akshare-only.windows.json.example` to `%USERPROFILE%\.cursor\mcp.json`.
