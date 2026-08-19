@@ -37,4 +37,4 @@ Write-Host "Cursor mcp.json 使用 qmt-http 条目（见 mcp.windows.json.exampl
 Write-Host "按 Ctrl+C 停止服务"
 Write-Host ""
 
-python $ServerScript.FullName --http
+python $ServerScript.FullName --transport http --port $McpPort

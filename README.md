@@ -24,3 +24,25 @@ uv run my-data-server
 ```
 
 Remove unused `mcpServers` entries from `~/.cursor/mcp.json` if a service is not running.
+
+## Windows + miniQMT
+
+Use `.cursor/mcp.windows.json.example` and `.env.windows.example`.
+
+```powershell
+# 1) 修改 scripts/setup-qmt-windows.ps1 顶部路径变量
+# 2) 以管理员或普通 PowerShell 运行：
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\scripts\setup-qmt-windows.ps1
+
+# 可选 HTTP 模式（与 stdio 二选一）：
+.\scripts\start-qmt-mcp-http.ps1
+```
+
+Cursor config path on Windows: `%USERPROFILE%\.cursor\mcp.json`
+
+miniQMT checklist:
+- Login with「极简模式 / 独立交易模式」
+- Keep miniQMT running in background
+- Set `QMT_PATH` to `...\userdata_mini`
+- Set `PYTHONPATH` to `...\bin.x64\Lib\site-packages`
