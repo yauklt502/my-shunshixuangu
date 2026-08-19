@@ -1,0 +1,8 @@
+.cursor/mcp.json
+.env
+*.bak.*
+mcp-servers/my-data-server/.venv/
+mcp-servers/my-data-server/data/
+__pycache__/
+*.pyc
+.DS_Store

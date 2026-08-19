@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "china-stock": {
+      "command": "uvx",
+      "args": ["china-a-stock-mcp[tushare]"],
+      "env": {
+        "CSM_TUSHARE_TOKEN": "YOUR_TUSHARE_TOKEN",
+        "CSM_CACHE_DIR": "/home/YOUR_USER/.cache/china-stock-mcp",
+        "CSM_LOG_LEVEL": "INFO"
+      }
+    },
+    "tushare": {
+      "command": "npx",
+      "args": ["-y", "tushare-mcp-server"],
+      "env": {
+        "TUSHARE_TOKEN": "YOUR_TUSHARE_TOKEN"
+      }
+    },
+    "ashare": {
+      "url": "http://127.0.0.1:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_ASHARE_MCP_AUTH_TOKEN"
+      }
+    },
+    "qmt": {
+      "url": "http://127.0.0.1:8765/sse",
+      "headers": {
+        "Authorization": "Bearer YOUR_QMT_MCP_API_TOKEN"
+      }
+    },
+    "myquant": {
+      "url": "http://127.0.0.1:8001/mcp/"
+    },
+    "my-data": {
+      "url": "http://127.0.0.1:9000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_MY_DATA_MCP_TOKEN"
+      }
+    }
+  }
+}
