@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "china-stock": {
+      "command": "uvx",
+      "args": ["china-a-stock-mcp"],
+      "env": {
+        "CSM_CACHE_DIR": "C:\\Users\\YOUR_USER\\.cache\\china-stock-mcp",
+        "CSM_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "china-stock": {
+      "command": "uvx",
+      "args": ["china-a-stock-mcp[tushare]"],
+      "env": {
+        "CSM_TUSHARE_TOKEN": "YOUR_TUSHARE_TOKEN",
+        "CSM_CACHE_DIR": "C:\\Users\\YOUR_USER\\.cache\\china-stock-mcp",
+        "CSM_LOG_LEVEL": "INFO"
+      }
+    },
+    "tushare": {
+      "command": "npx",
+      "args": ["-y", "tushare-mcp-server"],
+      "env": {
+        "TUSHARE_TOKEN": "YOUR_TUSHARE_TOKEN"
+      }
+    },
+    "qmt": {
+      "command": "python",
+      "args": ["C:\\Tools\\qmt-mcp-server\\qmt-mcp-server.py"],
+      "env": {
+        "QMT_ACCOUNT": "YOUR_FUND_ACCOUNT",
+        "QMT_PATH": "D:\\国金QMT交易端\\userdata_mini",
+        "QMT_ACCOUNT_TYPE": "STOCK",
+        "PYTHONPATH": "D:\\国金QMT交易端\\bin.x64\\Lib\\site-packages"
+      }
+    },
+    "qmt-http": {
+      "url": "http://127.0.0.1:8765/sse",
+      "headers": {
+        "Authorization": "Bearer YOUR_QMT_MCP_API_TOKEN"
+      }
+    },
+    "my-data": {
+      "url": "http://127.0.0.1:9000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_MY_DATA_MCP_TOKEN"
+      }
+    }
+  }
+}
