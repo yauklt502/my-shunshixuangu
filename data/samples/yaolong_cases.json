@@ -1,0 +1,207 @@
+[
+  {
+    "id": "fenglong_like_warmup_leader",
+    "desc": "主线机器人龙头，换手连板，真合力，一进二窗口",
+    "emotion": {
+      "limit_up_count": 90,
+      "limit_down_count": 5,
+      "max_board": 6,
+      "promote_rate": 0.52,
+      "prev_label": "REPAIR"
+    },
+    "basics": {
+      "code": "002931",
+      "name": "锋龙股份(样本骨架)",
+      "circ_mv": 48.0,
+      "theme_tags": ["机器人", "优必选", "园林机械"],
+      "board_height": 2,
+      "market_max_board": 6,
+      "relative_to_60d_low": 0.18
+    },
+    "pattern": {
+      "stage": "accelerate",
+      "turnover": 16.5,
+      "volume_vs_5d": 1.8,
+      "limit_up": true,
+      "broken_then_seal": true,
+      "above_ma5": true,
+      "above_ma10": true
+    },
+    "leader": {
+      "is_theme_first_mover": true,
+      "highest_board_in_theme": true,
+      "best_resilience": true,
+      "follower_count": 4,
+      "uniqueness": 0.9
+    },
+    "seat": {
+      "buys": [
+        {"name": "华鑫上海分公司", "buy": 8200},
+        {"name": "上塘路", "buy": 6100},
+        {"name": "炒股养家", "buy": 5400},
+        {"name": "普通营业部A", "buy": 3000},
+        {"name": "普通营业部B", "buy": 2800}
+      ],
+      "sells": [
+        {"name": "散户席位X", "sell": 4000}
+      ]
+    },
+    "bar": {
+      "board_height": 2,
+      "yesterday_board_height": 1,
+      "turnover": 16.5,
+      "limit_up": true,
+      "broken_then_seal": true,
+      "auction_strong": true
+    }
+  },
+  {
+    "id": "fake_ignite_chase",
+    "desc": "单席位畸高假点火，禁追",
+    "emotion": "WARM",
+    "basics": {
+      "code": "000000",
+      "name": "假点火样本",
+      "circ_mv": 55.0,
+      "theme_tags": ["AI", "算力"],
+      "board_height": 2,
+      "market_max_board": 7,
+      "relative_to_60d_low": 0.22
+    },
+    "pattern": {
+      "stage": "accelerate",
+      "turnover": 28.0,
+      "volume_vs_5d": 2.5,
+      "limit_up": true
+    },
+    "leader": {
+      "highest_board_in_theme": true,
+      "follower_count": 2,
+      "uniqueness": 0.6
+    },
+    "seat": {
+      "buys": [
+        {"name": "神秘席位独舞", "buy": 20000},
+        {"name": "普通A", "buy": 2000},
+        {"name": "普通B", "buy": 1500}
+      ],
+      "sells": [
+        {"name": "神秘席位独舞", "sell": 15000}
+      ]
+    },
+    "bar": {
+      "board_height": 2,
+      "yesterday_board_height": 1,
+      "limit_up": true,
+      "auction_strong": true
+    }
+  },
+  {
+    "id": "yizi_rear_reject",
+    "desc": "一字后排硬过滤剔除",
+    "emotion": "CLIMAX",
+    "basics": {
+      "code": "111111",
+      "name": "后排一字",
+      "circ_mv": 35.0,
+      "theme_tags": ["机器人"],
+      "is_yizi_rear": true,
+      "board_height": 4,
+      "market_max_board": 9
+    },
+    "pattern": {
+      "stage": "accelerate",
+      "turnover": 0.5,
+      "limit_up": true
+    },
+    "leader": {
+      "uniqueness": 0.2
+    },
+    "bar": {
+      "board_height": 4,
+      "yesterday_board_height": 3,
+      "limit_up": true
+    }
+  },
+  {
+    "id": "first_yin_dragon_pullback",
+    "desc": "总龙头断板首阴，缩量承接",
+    "emotion": "CLIMAX",
+    "basics": {
+      "code": "603629",
+      "name": "利通电子(样本骨架)",
+      "circ_mv": 62.0,
+      "theme_tags": ["AI", "算力", "PCB"],
+      "board_height": 0,
+      "market_max_board": 8,
+      "relative_to_60d_low": 0.35
+    },
+    "pattern": {
+      "stage": "first_yin",
+      "turnover": 12.0,
+      "volume_vs_5d": 0.85,
+      "above_ma5": true,
+      "above_ma10": true,
+      "limit_up": false
+    },
+    "leader": {
+      "is_theme_first_mover": true,
+      "highest_board_in_theme": true,
+      "best_resilience": true,
+      "follower_count": 5,
+      "uniqueness": 0.95
+    },
+    "seat": {
+      "buys": [
+        {"name": "章盟主", "buy": 7000},
+        {"name": "方新侠", "buy": 6500},
+        {"name": "桑田路", "buy": 5000}
+      ],
+      "sells": [
+        {"name": "获利盘A", "sell": 8000}
+      ]
+    },
+    "bar": {
+      "board_height": 0,
+      "yesterday_board_height": 5,
+      "first_yin": true,
+      "turnover": 12.0,
+      "above_ma5": true,
+      "above_ma10": true
+    }
+  },
+  {
+    "id": "ebb_no_trade",
+    "desc": "退潮期即使龙头也不开仓",
+    "emotion": {
+      "limit_up_count": 35,
+      "limit_down_count": 28,
+      "max_board": 4,
+      "promote_rate": 0.18,
+      "broken_big_face": true,
+      "prev_label": "CLIMAX"
+    },
+    "basics": {
+      "code": "222222",
+      "name": "退潮高标",
+      "circ_mv": 50.0,
+      "theme_tags": ["绿电"],
+      "board_height": 3,
+      "market_max_board": 4
+    },
+    "pattern": {
+      "stage": "accelerate",
+      "turnover": 18.0,
+      "limit_up": true
+    },
+    "leader": {
+      "highest_board_in_theme": true,
+      "uniqueness": 0.8
+    },
+    "bar": {
+      "board_height": 3,
+      "yesterday_board_height": 2,
+      "limit_up": true
+    }
+  }
+]
