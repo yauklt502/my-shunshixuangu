@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>龙虎榜弱转强 · 2026-08-03</title>
+<style>
+:root {
+  --bg0: #0f1419;
+  --bg1: #172029;
+  --bg2: #1e2a36;
+  --line: #2c3b4a;
+  --text: #e7eef5;
+  --muted: #8fa3b5;
+  --pos: #e85d4c;
+  --neg: #3cb89a;
+  --accent: #d4a017;
+  --s: #ff6b4a;
+  --a: #f0a202;
+  --b: #5b8def;
+  --c: #7a8a99;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Source Han Sans SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #243447 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #3a2a14 0%, transparent 50%),
+    var(--bg0);
+  line-height: 1.55;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 28px 18px 60px; }
+.hero {
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(212,160,23,.12), rgba(23,32,41,.9));
+  padding: 28px 24px;
+  border-radius: 4px;
+  margin-bottom: 22px;
+}
+.brand {
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 800;
+  letter-spacing: .04em;
+  margin: 0 0 8px;
+}
+.hero h1 { font-size: clamp(18px, 2.4vw, 24px); font-weight: 600; margin: 0 0 10px; color: #f3d27a; }
+.hero p { margin: 0; color: var(--muted); max-width: 46rem; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.pill {
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pill b { color: var(--text); }
+.panel {
+  border: 1px solid var(--line);
+  background: rgba(23,32,41,.88);
+  padding: 20px;
+  margin-bottom: 18px;
+  border-radius: 4px;
+}
+.panel h2 { margin: 0 0 12px; font-size: 18px; }
+.panel h3 { margin: 16px 0 8px; font-size: 15px; color: #d7e3ee; }
+.panel ol, .panel ul { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+.panel li { margin: 6px 0; }
+.grid { display: grid; gap: 14px; }
+@media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+.card {
+  border: 1px solid var(--line);
+  background: var(--bg1);
+  padding: 16px;
+  border-left-width: 4px;
+}
+.tier-s { border-left-color: var(--s); }
+.tier-a { border-left-color: var(--a); }
+.tier-b { border-left-color: var(--b); }
+.tier-c { border-left-color: var(--c); }
+.code-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tier {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; border-radius: 2px;
+  background: #0006; font-weight: 800; font-size: 14px;
+}
+.tier-s .tier { color: var(--s); }
+.tier-a .tier { color: var(--a); }
+.tier-b .tier { color: var(--b); }
+.code { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.score { margin-left: auto; font-size: 22px; font-weight: 800; color: var(--accent); }
+.pattern { color: #c9b27a; font-size: 13px; margin-top: 4px; }
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.metrics div { background: var(--bg2); padding: 8px; border: 1px solid var(--line); }
+.metrics label { display: block; color: var(--muted); font-size: 11px; }
+.metrics b { font-size: 14px; }
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+.action { margin: 8px 0; color: #f0e6c8; }
+.notes, .reason, .fine { color: var(--muted); font-size: 13px; }
+.seats { margin: 8px 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 12px; }
+.seat-kind {
+  display: inline-block; min-width: 4.5em; color: #9fc0df;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; }
+th { color: var(--muted); font-weight: 600; }
+.bt-grid, .method-grid { display: grid; gap: 10px; }
+@media (min-width: 800px) {
+  .bt-grid { grid-template-columns: 1fr 1fr; }
+  .method-grid { grid-template-columns: 1fr 1fr; }
+}
+.bt-grid > div, .method { background: var(--bg2); border: 1px solid var(--line); padding: 12px; }
+.bt-grid h3, .method h3 { margin: 0 0 6px; font-size: 14px; }
+.bt-grid p { margin: 0; color: var(--muted); font-size: 13px; }
+tr.q-good td:last-child { color: var(--pos); }
+tr.q-bad td:last-child { color: var(--neg); }
+footer { margin-top: 24px; color: var(--muted); font-size: 12px; }
+@media print {
+  body { background: #fff; color: #111; }
+  .hero, .panel, .card, .metrics div, .bt-grid > div, .method { background: #fff; color: #111; }
+  .pos { color: #b42318; } .neg { color: #0f7b5c; }
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <p class="brand">顺势选股 · 龙虎榜弱转强</p>
+      <h1>2026-08-03 净买入承接扫描</h1>
+      <p>2026-08-03 弱转强候选 5 只（S级 5 / A级 0）；对照弱势出货 7 只。核心逻辑：大跌日有真金白银承接（尤其机构/北向），比单纯追涨停更接近「弱转强」启动点。榜面只做概率增强，次日竞价才是验证。</p>
+      <div class="meta">
+        <div class="pill">评分版本 <b>wts-lhb-v1</b></div>
+        <div class="pill">原始上榜 <b>58</b></div>
+        <div class="pill">弱转强候选 <b>5</b></div>
+        <div class="pill">共振标记 <b>是</b></div>
+        <div class="pill">上证当日 <b>-0.59%</b></div>
+        <div class="pill">上证次日 <b>0.33%</b></div>
+        <div class="pill">环境 <b>confirmed_bounce</b></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>锚定案例（2026-08-03）</h2>
+      <ul><li><b>雅克科技（002409）</b> — 机构四席+深股通净买，净买占比10.3%，次日+7.1%、五日+28.4%</li><li><b>通富微电（002156）</b> — 机构+深股通承接，净买2.23亿，次日+8.3%、五日+23.1%</li><li><b>万邦医药（301520）</b> — 高换手弱转强（游资主导），净买比6.1%，次日+9.8%、五日+40.2%</li><li><b>共进股份（603118）</b> — 连续下跌偏离上榜+沪股通，次日仅微涨+3.4%，属于弱转强偏弱档</li></ul>
+    </section>
+
+    <section class="panel">
+      <h2>公开买入法 → 本工具映射</h2>
+      <div class="method-grid"><div class="method">
+          <h3>席位质量优先法</h3>
+          <p class="fine">来源：公开复盘框架（机构/游资/北向）</p>
+          <ul><li>买方出现「机构专用」多家协同，偏中线承接，趋势持续性更好</li><li>买方出现「沪/深股通」且净买靠前，视为北向窗口资金</li><li>机构+知名游资合力 &gt; 单一类型资金</li><li>警惕买卖两侧都是机构且金额接近的「假机构/倒仓」</li></ul>
+        </div><div class="method">
+          <h3>净买占比法</h3>
+          <p class="fine">来源：公开复盘框架（净买/成交额）</p>
+          <ul><li>净买占比（净买额/当日成交额）比绝对金额更可比</li><li>小盘股几千万占比可达两位数；大盘股上亿也可能只有个位数</li><li>占比越高，说明榜面资金对定价影响越大</li></ul>
+        </div><div class="method">
+          <h3>弱转强承接法（本项目主线）</h3>
+          <p class="fine">来源：2026-08-03 雅克科技/通富微电/万邦医药/共进股份</p>
+          <ul><li>当日大跌上榜（跌幅偏离≤-7%），但龙虎榜净买入为正</li><li>本质是恐慌盘中有真金白银承接，而非涨停追价</li><li>次日看竞价是否转强；成功者常开启一段主升或修复浪</li><li>共进股份类「连续下跌偏离」弹性弱于「单日恐慌偏离」</li></ul>
+        </div><div class="method">
+          <h3>板块/情绪共振法</h3>
+          <p class="fine">来源：公开复盘 + 样本回测</p>
+          <ul><li>同日多只弱转强候选同时出现，溢价会互相强化</li><li>但共振≠必赚：瀑布式续跌日的「假共振」胜率极低</li><li>更可靠的是「杀跌后的反击日」共振（如 7/20、7/30、8/3）</li></ul>
+        </div><div class="method">
+          <h3>位置与环境过滤法</h3>
+          <p class="fine">来源：公开复盘框架</p>
+          <ul><li>低位/启动初期净买 &gt; 高位加速后净买</li><li>情绪高潮期溢价放大；退潮/缩量期即使榜面好看也降预期</li><li>龙虎榜是收盘后滞后信息，最终以次日竞价验证</li></ul>
+        </div><div class="method">
+          <h3>对照排除法</h3>
+          <p class="fine">来源：样本对照（大跌净卖）</p>
+          <ul><li>同为跌幅榜，净卖出组次日期望显著更差 → 先排除弱势出货</li><li>不要只因「跌多了」就抄底；必须看到榜面净买结构</li></ul>
+        </div></div>
+    </section>
+
+    <section class="panel">
+      <h2>操作手册</h2>
+      <ol><li>今日共振信号开启（5只），可提高试错优先级</li><li>✓ 大盘止跌/反弹环境：共振质量更接近 7/20、8/3 一类反击日</li><li>收盘拉取龙虎榜：筛选 涨跌幅≤-7% 且 净买额&gt;0，剔除 ST/退/债/B股</li><li>看净买占比：优先 ≥1.5%，更强信号看 ≥5%</li><li>看席位：机构≥2 或北向现身优先；游资单干需高换手+高占比（如万邦医药）</li><li>看上榜原因：单日跌幅偏离 &gt; 连续三日下跌偏离（后者修复更慢）</li><li>看共振：同日候选≥3 只时提高关注，但需排除持续瀑布杀跌日</li><li>次日验证：竞价不炸、高开2%~5%或平开回踩分时均线再接；大低开无承接则放弃</li><li>风控：跌破上榜日最低价，或开盘低开超3%且无力回抽，止损离场</li><li>重点池：雅克科技(002409)、通富微电(002156)、宏桥控股(002379)、万邦医药(301520)</li></ol>
+    </section>
+
+    <section class="panel">
+      <h2>今日候选（按评分）</h2>
+      <div class="grid">
+        
+            <article class="card tier-s">
+              <header>
+                <div class="code-line">
+                  <span class="tier">S</span>
+                  <strong>雅克科技</strong>
+                  <span class="code">002409</span>
+                  <span class="score">100.0</span>
+                </div>
+                <div class="pattern">机构北向双杀接</div>
+              </header>
+              <div class="metrics">
+                <div><label>当日涨跌</label><b class="neg">-9.63%</b></div>
+                <div><label>龙虎净买</label><b class="pos">4.90亿</b></div>
+                <div><label>净买占比</label><b>10.29%</b></div>
+                <div><label>换手</label><b>12.07%</b></div>
+                <div><label>机构席</label><b>4</b></div>
+                <div><label>北向席</label><b>1</b></div>
+                <div><label>上榜后1日</label><b class="pos">+7.09%</b></div>
+                <div><label>上榜后5日</label><b class="pos">+28.39%</b></div>
+              </div>
+              <p class="action">优先：次日竞价/开盘回踩低吸，设好止损</p>
+              <p class="notes">机构+北向双料买入 · 跌幅甜区[-11,-7] · 单日跌幅偏离上榜 · 强共振：同日5只弱转强候选</p>
+              <p class="reason">上榜原因：日跌幅偏离值达到7%的前5只证券</p>
+              <ul class="seats"><li><span class='seat-kind'>北向</span> 深股通专用 <b>2.17亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>1.04亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.70亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.55亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.45亿</b></li></ul>
+            </article>
+            
+            <article class="card tier-s">
+              <header>
+                <div class="code-line">
+                  <span class="tier">S</span>
+                  <strong>通富微电</strong>
+                  <span class="code">002156</span>
+                  <span class="score">100.0</span>
+                </div>
+                <div class="pattern">机构北向双杀接</div>
+              </header>
+              <div class="metrics">
+                <div><label>当日涨跌</label><b class="neg">-9.50%</b></div>
+                <div><label>龙虎净买</label><b class="pos">2.23亿</b></div>
+                <div><label>净买占比</label><b>2.61%</b></div>
+                <div><label>换手</label><b>10.64%</b></div>
+                <div><label>机构席</label><b>4</b></div>
+                <div><label>北向席</label><b>1</b></div>
+                <div><label>上榜后1日</label><b class="pos">+8.30%</b></div>
+                <div><label>上榜后5日</label><b class="pos">+23.10%</b></div>
+              </div>
+              <p class="action">优先：次日竞价/开盘回踩低吸，设好止损</p>
+              <p class="notes">机构+北向双料买入 · 跌幅甜区[-11,-7] · 单日跌幅偏离上榜 · 强共振：同日5只弱转强候选</p>
+              <p class="reason">上榜原因：日跌幅偏离值达到7%的前5只证券</p>
+              <ul class="seats"><li><span class='seat-kind'>北向</span> 深股通专用 <b>1.97亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>2.85亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>2.74亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>1.54亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.50亿</b></li></ul>
+            </article>
+            
+            <article class="card tier-s">
+              <header>
+                <div class="code-line">
+                  <span class="tier">S</span>
+                  <strong>宏桥控股</strong>
+                  <span class="code">002379</span>
+                  <span class="score">83.8</span>
+                </div>
+                <div class="pattern">机构北向双杀接</div>
+              </header>
+              <div class="metrics">
+                <div><label>当日涨跌</label><b class="neg">-10.01%</b></div>
+                <div><label>龙虎净买</label><b class="pos">0.07亿</b></div>
+                <div><label>净买占比</label><b>0.51%</b></div>
+                <div><label>换手</label><b>6.45%</b></div>
+                <div><label>机构席</label><b>3</b></div>
+                <div><label>北向席</label><b>1</b></div>
+                <div><label>上榜后1日</label><b class="pos">+3.00%</b></div>
+                <div><label>上榜后5日</label><b class="pos">+5.72%</b></div>
+              </div>
+              <p class="action">优先：次日竞价/开盘回踩低吸，设好止损</p>
+              <p class="notes">机构+北向双料买入 · 跌幅甜区[-11,-7] · 单日跌幅偏离上榜 · 强共振：同日5只弱转强候选</p>
+              <p class="reason">上榜原因：日跌幅偏离值达到7%的前5只证券</p>
+              <ul class="seats"><li><span class='seat-kind'>机构</span> 机构专用 <b>0.50亿</b></li><li><span class='seat-kind'>北向</span> 深股通专用 <b>0.06亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.31亿</b></li><li><span class='seat-kind'>机构</span> 机构专用 <b>0.29亿</b></li><li><span class='seat-kind'>游资/营业部</span> 中信证券股份有限公司深圳分公司 <b>0.20亿</b></li></ul>
+            </article>
+            
+            <article class="card tier-s">
+              <header>
+                <div class="code-line">
+                  <span class="tier">S</span>
+                  <strong>万邦医药</strong>
+                  <span class="code">301520</span>
+                  <span class="score">80.9</span>
+                </div>
+                <div class="pattern">高换手游资弱转强</div>
+              </header>
+              <div class="metrics">
+                <div><label>当日涨跌</label><b class="neg">-8.89%</b></div>
+                <div><label>龙虎净买</label><b class="pos">0.31亿</b></div>
+                <div><label>净买占比</label><b>6.06%</b></div>
+                <div><label>换手</label><b>36.04%</b></div>
+                <div><label>机构席</label><b>0</b></div>
+                <div><label>北向席</label><b>0</b></div>
+                <div><label>上榜后1日</label><b class="pos">+9.85%</b></div>
+                <div><label>上榜后5日</label><b class="pos">+40.23%</b></div>
+              </div>
+              <p class="action">优先：次日竞价/开盘回踩低吸，设好止损</p>
+              <p class="notes">游资主导弱转强（需更高换手/净买比验证） · 跌幅甜区[-11,-7] · 高换手换筹上榜 · 强共振：同日5只弱转强候选</p>
+              <p class="reason">上榜原因：日换手率达到30%的前5只证券</p>
+              <ul class="seats"><li><span class='seat-kind'>游资/营业部</span> 东方财富证券股份有限公司江苏分公司 <b>0.12亿</b></li><li><span class='seat-kind'>游资/营业部</span> 东莞证券股份有限公司四川分公司 <b>0.08亿</b></li><li><span class='seat-kind'>游资/营业部</span> 招商证券股份有限公司深圳益田路免税商务大厦证券营业部 <b>0.07亿</b></li><li><span class='seat-kind'>游资/营业部</span> 东海证券股份有限公司湖南分公司 <b>0.07亿</b></li><li><span class='seat-kind'>游资/营业部</span> 国泰海通证券股份有限公司东莞总部一路证券营业部 <b>0.06亿</b></li></ul>
+            </article>
+            
+            <article class="card tier-s">
+              <header>
+                <div class="code-line">
+                  <span class="tier">S</span>
+                  <strong>共进股份</strong>
+                  <span class="code">603118</span>
+                  <span class="score">76.9</span>
+                </div>
+                <div class="pattern">北向承接</div>
+              </header>
+              <div class="metrics">
+                <div><label>当日涨跌</label><b class="neg">-9.17%</b></div>
+                <div><label>龙虎净买</label><b class="pos">0.98亿</b></div>
+                <div><label>净买占比</label><b>1.74%</b></div>
+                <div><label>换手</label><b>17.26%</b></div>
+                <div><label>机构席</label><b>0</b></div>
+                <div><label>北向席</label><b>1</b></div>
+                <div><label>上榜后1日</label><b class="pos">+3.41%</b></div>
+                <div><label>上榜后5日</label><b class="pos">+11.38%</b></div>
+              </div>
+              <p class="action">优先：次日竞价/开盘回踩低吸，设好止损</p>
+              <p class="notes">北向席位现身买入 · 跌幅甜区[-11,-7] · 连续下跌偏离上榜（修复弹性弱于单日恐慌） · 强共振：同日5只弱转强候选</p>
+              <p class="reason">上榜原因：非S证券连续三个交易日内收盘价格跌幅偏离值累计达到20%的证券</p>
+              <ul class="seats"><li><span class='seat-kind'>北向</span> 沪股通专用 <b>2.89亿</b></li><li><span class='seat-kind'>游资/营业部</span> 高盛(中国)证券有限责任公司上海浦东新区世纪大道证券营业部 <b>1.11亿</b></li><li><span class='seat-kind'>游资/营业部</span> 国泰海通证券股份有限公司总部 <b>1.04亿</b></li><li><span class='seat-kind'>游资/营业部</span> 国信证券股份有限公司浙江互联网分公司 <b>0.53亿</b></li><li><span class='seat-kind'>游资/营业部</span> 东方财富证券股份有限公司拉萨金融城南环路证券营业部 <b>0.50亿</b></li></ul>
+            </article>
+            
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>对照：弱势出货（大跌且净卖）</h2>
+      <table>
+        <thead><tr><th>代码</th><th>名称</th><th>涨跌</th><th>净买</th><th>T+1</th><th>T+5</th></tr></thead>
+        <tbody><tr><td>001309</td><td>德明利</td><td class='neg'>-9.56%</td><td class='neg'>-4.36亿</td><td>+4.35%</td><td>+14.84%</td></tr><tr><td>600641</td><td>先导基电</td><td class='neg'>-10.00%</td><td class='neg'>-2.41亿</td><td>+4.27%</td><td>+46.99%</td></tr><tr><td>603986</td><td>兆易创新</td><td class='neg'>-10.00%</td><td class='neg'>-2.17亿</td><td>+4.48%</td><td>+18.28%</td></tr><tr><td>603256</td><td>宏和科技</td><td class='neg'>-10.00%</td><td class='neg'>-1.15亿</td><td>+8.87%</td><td>+36.61%</td></tr><tr><td>300996</td><td>普联软件</td><td class='neg'>-8.22%</td><td class='neg'>-0.85亿</td><td>+5.62%</td><td>+14.10%</td></tr><tr><td>002199</td><td>东晶电子</td><td class='neg'>-10.02%</td><td class='neg'>-0.19亿</td><td>+10.00%</td><td>+13.82%</td></tr><tr><td>605068</td><td>明新旭腾</td><td class='neg'>-10.00%</td><td class='neg'>-0.02亿</td><td>+9.99%</td><td>+8.09%</td></tr></tbody>
+      </table>
+    </section>
+
+    
+        <section class="panel">
+          <h2>相似样本与共振质量（2026-06-01~2026-08-19）</h2>
+          <p class="fine">共振日分化：优质日(如7/20、7/30、8/3)次日指数转正或止跌，弱转强T+1胜率≥70%；劣质日指数继续杀跌，胜率≤40%。共振必须叠加大盘止跌环境。</p>
+          <p class="fine">T+1 与次日指数相关性：0.556；
+            优质日次日指数均值 0.92% /
+            劣质日 -0.42%</p>
+          <h3>共振日对照</h3>
+          <table>
+            <thead><tr><th>日期</th><th>候选数</th><th>T+1均</th><th>胜率</th><th>当日指数</th><th>次日指数</th><th>质量</th></tr></thead>
+            <tbody><tr class='q-good'><td>2026-07-20</td><td>20</td><td>7.37%</td><td>90.0%</td><td>0.85%</td><td>1.79%</td><td>good</td></tr><tr class='q-good'><td>2026-08-03</td><td>4</td><td>7.16%</td><td>100.0%</td><td>-0.59%</td><td>0.33%</td><td>good</td></tr><tr class='q-good'><td>2026-06-08</td><td>4</td><td>5.43%</td><td>100.0%</td><td>-1.7%</td><td>1.28%</td><td>good</td></tr><tr class='q-good'><td>2026-07-30</td><td>7</td><td>4.45%</td><td>85.7%</td><td>-0.62%</td><td>0.72%</td><td>good</td></tr><tr class='q-good'><td>2026-07-28</td><td>3</td><td>4.43%</td><td>100.0%</td><td>-1.16%</td><td>0.4%</td><td>good</td></tr><tr class='q-good'><td>2026-06-12</td><td>5</td><td>4.18%</td><td>100.0%</td><td>1.12%</td><td>1.61%</td><td>good</td></tr><tr class='q-good'><td>2026-07-13</td><td>4</td><td>2.45%</td><td>75.0%</td><td>-2.06%</td><td>1.36%</td><td>good</td></tr><tr class='q-mixed'><td>2026-07-21</td><td>4</td><td>2.02%</td><td>50.0%</td><td>1.79%</td><td>0.07%</td><td>mixed</td></tr><tr class='q-good'><td>2026-06-10</td><td>4</td><td>1.89%</td><td>75.0%</td><td>-0.42%</td><td>-0.16%</td><td>good</td></tr><tr class='q-bad'><td>2026-07-09</td><td>3</td><td>-0.27%</td><td>33.3%</td><td>1.65%</td><td>-1.0%</td><td>bad</td></tr><tr class='q-mixed'><td>2026-07-06</td><td>7</td><td>-2.05%</td><td>42.9%</td><td>-0.06%</td><td>-1.26%</td><td>mixed</td></tr><tr class='q-bad'><td>2026-06-11</td><td>5</td><td>-2.32%</td><td>20.0%</td><td>-0.16%</td><td>1.12%</td><td>bad</td></tr><tr class='q-bad'><td>2026-06-23</td><td>4</td><td>-2.45%</td><td>0.0%</td><td>-1.37%</td><td>0.11%</td><td>bad</td></tr><tr class='q-bad'><td>2026-07-07</td><td>3</td><td>-4.3%</td><td>33.3%</td><td>-1.26%</td><td>-0.49%</td><td>bad</td></tr><tr class='q-bad'><td>2026-07-10</td><td>6</td><td>-6.58%</td><td>0.0%</td><td>-1.0%</td><td>-2.06%</td><td>bad</td></tr><tr class='q-bad'><td>2026-07-15</td><td>4</td><td>-7.05%</td><td>0.0%</td><td>-0.29%</td><td>-1.85%</td><td>bad</td></tr><tr class='q-bad'><td>2026-07-03</td><td>5</td><td>-8.55%</td><td>0.0%</td><td>0.37%</td><td>-0.06%</td><td>bad</td></tr><tr class='q-bad'><td>2026-07-17</td><td>3</td><td>-9.93%</td><td>0.0%</td><td>-3.05%</td><td>0.85%</td><td>bad</td></tr></tbody>
+          </table>
+          <h3>最像 8.3 甜区的历史样本</h3>
+          <table>
+            <thead><tr><th>日期</th><th>代码</th><th>名称</th><th>涨跌</th><th>净买</th><th>占比</th><th>T+1</th><th>T+5</th></tr></thead>
+            <tbody><tr><td>2026-07-23</td><td>301583</td><td>托伦斯</td><td class='neg'>-8.64%</td><td class='pos'>1.23亿</td><td>4.66%</td><td class='pos'>+20.00%</td><td>+9.01%</td></tr><tr><td>2026-07-20</td><td>605111</td><td>新洁能</td><td class='neg'>-8.64%</td><td class='pos'>1.03亿</td><td>2.47%</td><td class='pos'>+10.01%</td><td>+14.93%</td></tr><tr><td>2026-06-01</td><td>002384</td><td>东山精密</td><td class='neg'>-10.00%</td><td class='pos'>26.07亿</td><td>9.75%</td><td class='pos'>+10.00%</td><td>+11.08%</td></tr><tr><td>2026-07-20</td><td>002432</td><td>九安医疗</td><td class='neg'>-8.46%</td><td class='pos'>6.14亿</td><td>8.16%</td><td class='pos'>+10.00%</td><td>-0.14%</td></tr><tr><td>2026-07-20</td><td>600641</td><td>先导基电</td><td class='neg'>-10.01%</td><td class='pos'>1.81亿</td><td>2.43%</td><td class='pos'>+9.99%</td><td>+5.46%</td></tr><tr><td>2026-07-20</td><td>002281</td><td>光迅科技</td><td class='neg'>-10.00%</td><td class='pos'>3.24亿</td><td>4.01%</td><td class='pos'>+9.67%</td><td>+13.10%</td></tr><tr><td>2026-07-20</td><td>600176</td><td>中国巨石</td><td class='neg'>-9.95%</td><td class='pos'>9.07亿</td><td>3.47%</td><td class='pos'>+9.03%</td><td>+4.13%</td></tr><tr><td>2026-07-21</td><td>300164</td><td>通源石油</td><td class='neg'>-8.77%</td><td class='pos'>0.52亿</td><td>2.26%</td><td class='pos'>+8.89%</td><td>-2.88%</td></tr><tr><td>2026-07-20</td><td>603283</td><td>赛腾股份</td><td class='neg'>-9.99%</td><td class='pos'>2.66亿</td><td>6.65%</td><td class='pos'>+8.75%</td><td>+6.12%</td></tr><tr><td>2026-07-20</td><td>600545</td><td>卓郎智能</td><td class='neg'>-10.07%</td><td class='pos'>1.37亿</td><td>11.15%</td><td class='pos'>+8.47%</td><td>+10.93%</td></tr><tr><td>2026-07-20</td><td>603738</td><td>泰晶科技</td><td class='neg'>-9.99%</td><td class='pos'>2.5亿</td><td>6.8%</td><td class='pos'>+8.46%</td><td>+7.12%</td></tr><tr><td>2026-08-03</td><td>002156</td><td>通富微电</td><td class='neg'>-9.50%</td><td class='pos'>2.23亿</td><td>2.61%</td><td class='pos'>+8.30%</td><td>+23.10%</td></tr><tr><td>2026-07-30</td><td>603124</td><td>江南新材</td><td class='neg'>-9.97%</td><td class='pos'>0.62亿</td><td>3.03%</td><td class='pos'>+7.33%</td><td>+29.53%</td></tr><tr><td>2026-08-03</td><td>002409</td><td>雅克科技</td><td class='neg'>-9.63%</td><td class='pos'>4.9亿</td><td>10.29%</td><td class='pos'>+7.09%</td><td>+28.39%</td></tr><tr><td>2026-07-20</td><td>600226</td><td>亨通股份</td><td class='neg'>-10.05%</td><td class='pos'>1.66亿</td><td>5.37%</td><td class='pos'>+6.67%</td><td>+3.42%</td></tr><tr><td>2026-07-20</td><td>603045</td><td>福达合金</td><td class='neg'>-9.99%</td><td class='pos'>0.89亿</td><td>6.51%</td><td class='pos'>+6.62%</td><td>+3.50%</td></tr><tr><td>2026-06-10</td><td>600255</td><td>鑫科材料</td><td class='neg'>-10.09%</td><td class='pos'>0.5亿</td><td>4.03%</td><td class='pos'>+6.48%</td><td>+8.98%</td></tr><tr><td>2026-07-20</td><td>002384</td><td>东山精密</td><td class='neg'>-10.00%</td><td class='pos'>7.27亿</td><td>2.96%</td><td class='pos'>+6.09%</td><td>-2.68%</td></tr></tbody>
+          </table>
+        </section>
+        
+    
+        <section class="panel">
+          <h2>回测快照（2026-06-01 ~ 2026-08-03）</h2>
+          <div class="bt-grid">
+            <div><h3>弱势出货（跌≤-7% 且净买≤0）</h3>
+              <p>n=562 · T+1均 -2.34% · 胜率 33.8%</p></div>
+            <div><h3>弱转强粗筛（仅跌+净买>0）</h3>
+              <p>n=273 · T+1均 0.16% · 胜率 52.0%</p></div>
+            <div><h3>加门槛（净买≥3000万 & 占比≥1.5%）</h3>
+              <p>n=119 · T+1均 0.98% · 胜率 58.0%</p></div>
+            <div><h3>共振日子集（同日候选≥3）</h3>
+              <p>n=95 · T+1均 1.04% · 胜率 56.8%</p></div>
+          </div>
+          <p class="fine">粗筛胜率接近硬币；加净买额/占比门槛后略改善。同日≥3只共振需叠加大盘止跌才有效：反击日（如7/20、8/3）胜率高，续跌日（如7/3、7/10）胜率接近0。样本随区间变化，不构成收益承诺。</p>
+        </section>
+        
+
+    <footer>
+      数据来源：东方财富/交易所公开龙虎榜（经 akshare）。买入法要点综合公开复盘框架与样本回测。仅供研究复盘，不构成投资建议。市场有风险，交易需谨慎。
+    </footer>
+  </div>
+  <script type="application/json" id="wts-data">{&quot;trade_date&quot;: &quot;2026-08-03&quot;, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;, &quot;raw_count&quot;: 58, &quot;cluster_count&quot;: 5, &quot;candidates&quot;: [{&quot;eligible&quot;: true, &quot;filter_reason&quot;: &quot;ok&quot;, &quot;code&quot;: &quot;002409&quot;, &quot;name&quot;: &quot;雅克科技&quot;, &quot;close&quot;: 120.91, &quot;chg&quot;: -9.6338, &quot;net&quot;: 490122501.43, &quot;ratio&quot;: 10.287306386497, &quot;turnover&quot;: 12.0737, &quot;mcap&quot;: 38512585339.77, &quot;list_reason&quot;: &quot;日跌幅偏离值达到7%的前5只证券&quot;, &quot;n_inst&quot;: 4, &quot;n_north&quot;: 1, &quot;inst_net&quot;: 273935373.65, &quot;north_net&quot;: 216709595.52, &quot;hot_net&quot;: 0.0, &quot;buy_seats&quot;: [{&quot;name&quot;: &quot;深股通专用&quot;, &quot;kind&quot;: &quot;北向&quot;, &quot;buy&quot;: 405070457.78, &quot;sell&quot;: 188360862.26, &quot;net&quot;: 216709595.52}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 148434702.58, &quot;sell&quot;: 44531816.0, &quot;net&quot;: 103902886.58}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 147794800.96, &quot;sell&quot;: 77571488.0, &quot;net&quot;: 70223312.96}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 126409256.69, &quot;sell&quot;: 71467883.05, &quot;net&quot;: 54941373.64}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 103800701.52, &quot;sell&quot;: 58932901.05, &quot;net&quot;: 44867800.47}], &quot;cluster_count&quot;: 5, &quot;score&quot;: 100.0, &quot;tier&quot;: &quot;S&quot;, &quot;pattern&quot;: &quot;机构北向双杀接&quot;, &quot;breakdown&quot;: {&quot;net_amount&quot;: 33.52, &quot;net_ratio&quot;: 25.0, &quot;seat_quality&quot;: 35.0, &quot;chg_zone&quot;: 10.0, &quot;list_reason&quot;: 6.0, &quot;turnover&quot;: 3.0, &quot;cluster&quot;: 12.0}, &quot;notes&quot;: [&quot;机构+北向双料买入&quot;, &quot;跌幅甜区[-11,-7]&quot;, &quot;单日跌幅偏离上榜&quot;, &quot;强共振：同日5只弱转强候选&quot;], &quot;action&quot;: &quot;优先：次日竞价/开盘回踩低吸，设好止损&quot;, &quot;t1&quot;: 7.08791663, &quot;t2&quot;: 16.30138119, &quot;t5&quot;: 28.3930196, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;}, {&quot;eligible&quot;: true, &quot;filter_reason&quot;: &quot;ok&quot;, &quot;code&quot;: &quot;002156&quot;, &quot;name&quot;: &quot;通富微电&quot;, &quot;close&quot;: 51.34, &quot;chg&quot;: -9.5011, &quot;net&quot;: 222902801.95, &quot;ratio&quot;: 2.613818223371, &quot;turnover&quot;: 10.6436, &quot;mcap&quot;: 77905997077.48, &quot;list_reason&quot;: &quot;日跌幅偏离值达到7%的前5只证券&quot;, &quot;n_inst&quot;: 4, &quot;n_north&quot;: 1, &quot;inst_net&quot;: 764068955.08, &quot;north_net&quot;: 197468059.5, &quot;hot_net&quot;: 0.0, &quot;buy_seats&quot;: [{&quot;name&quot;: &quot;深股通专用&quot;, &quot;kind&quot;: &quot;北向&quot;, &quot;buy&quot;: 751909362.33, &quot;sell&quot;: 554441302.83, &quot;net&quot;: 197468059.5}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 407622258.66, &quot;sell&quot;: 122347034.31, &quot;net&quot;: 285275224.35}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 307327973.23, &quot;sell&quot;: 33206452.0, &quot;net&quot;: 274121521.23}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 154400669.71, &quot;sell&quot;: 0.0, &quot;net&quot;: 154400669.71}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 104317868.61, &quot;sell&quot;: 54046328.82, &quot;net&quot;: 50271539.79}], &quot;cluster_count&quot;: 5, &quot;score&quot;: 100.0, &quot;tier&quot;: &quot;S&quot;, &quot;pattern&quot;: &quot;机构北向双杀接&quot;, &quot;breakdown&quot;: {&quot;net_amount&quot;: 30.78, &quot;net_ratio&quot;: 15.0, &quot;seat_quality&quot;: 35.0, &quot;chg_zone&quot;: 10.0, &quot;list_reason&quot;: 6.0, &quot;turnover&quot;: 3.0, &quot;cluster&quot;: 12.0}, &quot;notes&quot;: [&quot;机构+北向双料买入&quot;, &quot;跌幅甜区[-11,-7]&quot;, &quot;单日跌幅偏离上榜&quot;, &quot;强共振：同日5只弱转强候选&quot;], &quot;action&quot;: &quot;优先：次日竞价/开盘回踩低吸，设好止损&quot;, &quot;t1&quot;: 8.29762369, &quot;t2&quot;: 12.97234125, &quot;t5&quot;: 23.10089599, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;}, {&quot;eligible&quot;: true, &quot;filter_reason&quot;: &quot;ok&quot;, &quot;code&quot;: &quot;002379&quot;, &quot;name&quot;: &quot;宏桥控股&quot;, &quot;close&quot;: 18.69, &quot;chg&quot;: -10.0144, &quot;net&quot;: 7086711.78, &quot;ratio&quot;: 0.50949822179, &quot;turnover&quot;: 6.4533, &quot;mcap&quot;: 21238825443.57, &quot;list_reason&quot;: &quot;日跌幅偏离值达到7%的前5只证券&quot;, &quot;n_inst&quot;: 3, &quot;n_north&quot;: 1, &quot;inst_net&quot;: 109271161.14, &quot;north_net&quot;: 5703375.4, &quot;hot_net&quot;: 20199352.92, &quot;buy_seats&quot;: [{&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 56358618.14, &quot;sell&quot;: 6775598.0, &quot;net&quot;: 49583020.14}, {&quot;name&quot;: &quot;深股通专用&quot;, &quot;kind&quot;: &quot;北向&quot;, &quot;buy&quot;: 52719904.0, &quot;sell&quot;: 47016528.6, &quot;net&quot;: 5703375.4}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 30800690.0, &quot;sell&quot;: 0.0, &quot;net&quot;: 30800690.0}, {&quot;name&quot;: &quot;机构专用&quot;, &quot;kind&quot;: &quot;机构&quot;, &quot;buy&quot;: 28887451.0, &quot;sell&quot;: 0.0, &quot;net&quot;: 28887451.0}, {&quot;name&quot;: &quot;中信证券股份有限公司深圳分公司&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 25137899.92, &quot;sell&quot;: 4938547.0, &quot;net&quot;: 20199352.92}], &quot;cluster_count&quot;: 5, &quot;score&quot;: 83.8, &quot;tier&quot;: &quot;S&quot;, &quot;pattern&quot;: &quot;机构北向双杀接&quot;, &quot;breakdown&quot;: {&quot;net_amount&quot;: 18.8, &quot;net_ratio&quot;: 2.0, &quot;seat_quality&quot;: 35.0, &quot;chg_zone&quot;: 10.0, &quot;list_reason&quot;: 6.0, &quot;turnover&quot;: 0.0, &quot;cluster&quot;: 12.0}, &quot;notes&quot;: [&quot;机构+北向双料买入&quot;, &quot;跌幅甜区[-11,-7]&quot;, &quot;单日跌幅偏离上榜&quot;, &quot;强共振：同日5只弱转强候选&quot;], &quot;action&quot;: &quot;优先：次日竞价/开盘回踩低吸，设好止损&quot;, &quot;t1&quot;: 2.99625468, &quot;t2&quot;: 0.80256822, &quot;t5&quot;: 5.72498662, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;}, {&quot;eligible&quot;: true, &quot;filter_reason&quot;: &quot;ok&quot;, &quot;code&quot;: &quot;301520&quot;, &quot;name&quot;: &quot;万邦医药&quot;, &quot;close&quot;: 41.83, &quot;chg&quot;: -8.887, &quot;net&quot;: 30854322.3, &quot;ratio&quot;: 6.061155663532, &quot;turnover&quot;: 36.0369, &quot;mcap&quot;: 1367775870.69, &quot;list_reason&quot;: &quot;日换手率达到30%的前5只证券&quot;, &quot;n_inst&quot;: 0, &quot;n_north&quot;: 0, &quot;inst_net&quot;: 0.0, &quot;north_net&quot;: 0.0, &quot;hot_net&quot;: 39391112.57, &quot;buy_seats&quot;: [{&quot;name&quot;: &quot;东方财富证券股份有限公司江苏分公司&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 11797261.86, &quot;sell&quot;: 244924.0, &quot;net&quot;: 11552337.86}, {&quot;name&quot;: &quot;东莞证券股份有限公司四川分公司&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 8365489.67, &quot;sell&quot;: 481367.0, &quot;net&quot;: 7884122.67}, {&quot;name&quot;: &quot;招商证券股份有限公司深圳益田路免税商务大厦证券营业部&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 6898088.0, &quot;sell&quot;: 223613.0, &quot;net&quot;: 6674475.0}, {&quot;name&quot;: &quot;东海证券股份有限公司湖南分公司&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 6782415.0, &quot;sell&quot;: 0.0, &quot;net&quot;: 6782415.0}, {&quot;name&quot;: &quot;国泰海通证券股份有限公司东莞总部一路证券营业部&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 6497762.04, &quot;sell&quot;: 0.0, &quot;net&quot;: 6497762.04}], &quot;cluster_count&quot;: 5, &quot;score&quot;: 80.9, &quot;tier&quot;: &quot;S&quot;, &quot;pattern&quot;: &quot;高换手游资弱转强&quot;, &quot;breakdown&quot;: {&quot;net_amount&quot;: 23.91, &quot;net_ratio&quot;: 20.0, &quot;seat_quality&quot;: 6.0, &quot;chg_zone&quot;: 10.0, &quot;list_reason&quot;: 4.0, &quot;turnover&quot;: 5.0, &quot;cluster&quot;: 12.0}, &quot;notes&quot;: [&quot;游资主导弱转强（需更高换手/净买比验证）&quot;, &quot;跌幅甜区[-11,-7]&quot;, &quot;高换手换筹上榜&quot;, &quot;强共振：同日5只弱转强候选&quot;], &quot;action&quot;: &quot;优先：次日竞价/开盘回踩低吸，设好止损&quot;, &quot;t1&quot;: 9.84939039, &quot;t2&quot;: 17.73846522, &quot;t5&quot;: 40.23428162, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;}, {&quot;eligible&quot;: true, &quot;filter_reason&quot;: &quot;ok&quot;, &quot;code&quot;: &quot;603118&quot;, &quot;name&quot;: &quot;共进股份&quot;, &quot;close&quot;: 13.18, &quot;chg&quot;: -9.1661, &quot;net&quot;: 97582298.78, &quot;ratio&quot;: 1.735657660098, &quot;turnover&quot;: 17.2559, &quot;mcap&quot;: 10376303031.08, &quot;list_reason&quot;: &quot;非S证券连续三个交易日内收盘价格跌幅偏离值累计达到20%的证券&quot;, &quot;n_inst&quot;: 0, &quot;n_north&quot;: 1, &quot;inst_net&quot;: 0.0, &quot;north_net&quot;: 289432718.62, &quot;hot_net&quot;: 317398880.11, &quot;buy_seats&quot;: [{&quot;name&quot;: &quot;沪股通专用&quot;, &quot;kind&quot;: &quot;北向&quot;, &quot;buy&quot;: 289432718.62, &quot;sell&quot;: NaN, &quot;net&quot;: 289432718.62}, {&quot;name&quot;: &quot;高盛(中国)证券有限责任公司上海浦东新区世纪大道证券营业部&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 111137411.22, &quot;sell&quot;: NaN, &quot;net&quot;: 111137411.22}, {&quot;name&quot;: &quot;国泰海通证券股份有限公司总部&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 103561345.43, &quot;sell&quot;: NaN, &quot;net&quot;: 103561345.43}, {&quot;name&quot;: &quot;国信证券股份有限公司浙江互联网分公司&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 52811342.8, &quot;sell&quot;: NaN, &quot;net&quot;: 52811342.8}, {&quot;name&quot;: &quot;东方财富证券股份有限公司拉萨金融城南环路证券营业部&quot;, &quot;kind&quot;: &quot;游资/营业部&quot;, &quot;buy&quot;: 49888780.66, &quot;sell&quot;: NaN, &quot;net&quot;: 49888780.66}], &quot;cluster_count&quot;: 5, &quot;score&quot;: 76.9, &quot;tier&quot;: &quot;S&quot;, &quot;pattern&quot;: &quot;北向承接&quot;, &quot;breakdown&quot;: {&quot;net_amount&quot;: 27.91, &quot;net_ratio&quot;: 10.0, &quot;seat_quality&quot;: 12.0, &quot;chg_zone&quot;: 10.0, &quot;list_reason&quot;: 2.0, &quot;turnover&quot;: 3.0, &quot;cluster&quot;: 12.0}, &quot;notes&quot;: [&quot;北向席位现身买入&quot;, &quot;跌幅甜区[-11,-7]&quot;, &quot;连续下跌偏离上榜（修复弹性弱于单日恐慌）&quot;, &quot;强共振：同日5只弱转强候选&quot;], &quot;action&quot;: &quot;优先：次日竞价/开盘回踩低吸，设好止损&quot;, &quot;t1&quot;: 3.41426404, &quot;t2&quot;: 9.25644917, &quot;t5&quot;: 11.38088012, &quot;score_version&quot;: &quot;wts-lhb-v1&quot;}], &quot;weak_dump&quot;: [{&quot;code&quot;: &quot;001309&quot;, &quot;name&quot;: &quot;德明利&quot;, &quot;chg&quot;: -9.5621, &quot;net&quot;: -436118879.2, &quot;ratio&quot;: -4.461393787067, &quot;t1&quot;: 4.3495702, &quot;t5&quot;: 14.84240688}, {&quot;code&quot;: &quot;600641&quot;, &quot;name&quot;: &quot;先导基电&quot;, &quot;chg&quot;: -9.9962, &quot;net&quot;: -241005777.81, &quot;ratio&quot;: -12.364018776181, &quot;t1&quot;: 4.27167877, &quot;t5&quot;: 46.98846647}, {&quot;code&quot;: &quot;603986&quot;, &quot;name&quot;: &quot;兆易创新&quot;, &quot;chg&quot;: -10.0, &quot;net&quot;: -217425087.52, &quot;ratio&quot;: -0.943983518847, &quot;t1&quot;: 4.48435757, &quot;t5&quot;: 18.28080061}, {&quot;code&quot;: &quot;603256&quot;, &quot;name&quot;: &quot;宏和科技&quot;, &quot;chg&quot;: -9.9977, &quot;net&quot;: -115456067.32, &quot;ratio&quot;: -3.911821510801, &quot;t1&quot;: 8.87096774, &quot;t5&quot;: 36.61116892}, {&quot;code&quot;: &quot;300996&quot;, &quot;name&quot;: &quot;普联软件&quot;, &quot;chg&quot;: -8.217, &quot;net&quot;: -84924110.37, &quot;ratio&quot;: -4.708277157006, &quot;t1&quot;: 5.61732007, &quot;t5&quot;: 14.10181393}, {&quot;code&quot;: &quot;002199&quot;, &quot;name&quot;: &quot;东晶电子&quot;, &quot;chg&quot;: -10.0219, &quot;net&quot;: -18896641.6, &quot;ratio&quot;: -7.34229047074, &quot;t1&quot;: 10.0, &quot;t5&quot;: 13.82113821}, {&quot;code&quot;: &quot;605068&quot;, &quot;name&quot;: &quot;明新旭腾&quot;, &quot;chg&quot;: -10.0046, &quot;net&quot;: -2045913.0, &quot;ratio&quot;: -1.71607580053, &quot;t1&quot;: 9.9897541, &quot;t5&quot;: 8.0942623}], &quot;rejected_sample&quot;: [{&quot;code&quot;: &quot;300613&quot;, &quot;name&quot;: &quot;富瀚微&quot;, &quot;chg&quot;: 20.0071, &quot;net&quot;: 374759516.83, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;002131&quot;, &quot;name&quot;: &quot;利欧股份&quot;, &quot;chg&quot;: 10.0858, &quot;net&quot;: 275115940.56, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;603823&quot;, &quot;name&quot;: &quot;百合花&quot;, &quot;chg&quot;: 10.0, &quot;net&quot;: 240501100.18, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;113707&quot;, &quot;name&quot;: &quot;科博转债&quot;, &quot;chg&quot;: 20.0, &quot;net&quot;: 124408360.0, &quot;reason&quot;: &quot;排除ST/退市/债/B股&quot;}, {&quot;code&quot;: &quot;301583&quot;, &quot;name&quot;: &quot;托伦斯&quot;, &quot;chg&quot;: 3.4759, &quot;net&quot;: 74832088.43, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;603682&quot;, &quot;name&quot;: &quot;锦和商管&quot;, &quot;chg&quot;: 10.0, &quot;net&quot;: 61648945.52, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;600468&quot;, &quot;name&quot;: &quot;百利电气&quot;, &quot;chg&quot;: 10.0885, &quot;net&quot;: 54929767.86, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;600644&quot;, &quot;name&quot;: &quot;乐山电力&quot;, &quot;chg&quot;: 10.0535, &quot;net&quot;: 45395796.99, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;000533&quot;, &quot;name&quot;: &quot;顺钠股份&quot;, &quot;chg&quot;: 9.9904, &quot;net&quot;: 43789908.22, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;603336&quot;, &quot;name&quot;: &quot;宏辉果蔬&quot;, &quot;chg&quot;: 1.9447, &quot;net&quot;: 39810638.36, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;603106&quot;, &quot;name&quot;: &quot;恒银科技&quot;, &quot;chg&quot;: 10.0402, &quot;net&quot;: 31826992.92, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;603660&quot;, &quot;name&quot;: &quot;苏州科达&quot;, &quot;chg&quot;: 6.8596, &quot;net&quot;: 31160997.24, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;301596&quot;, &quot;name&quot;: &quot;瑞迪智驱&quot;, &quot;chg&quot;: 19.9904, &quot;net&quot;: 29708729.81, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;301082&quot;, &quot;name&quot;: &quot;久盛电气&quot;, &quot;chg&quot;: 20.0, &quot;net&quot;: 22333590.98, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;301182&quot;, &quot;name&quot;: &quot;凯旺科技&quot;, &quot;chg&quot;: 19.9921, &quot;net&quot;: 21257428.0, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;000815&quot;, &quot;name&quot;: &quot;美利云&quot;, &quot;chg&quot;: 10.0132, &quot;net&quot;: 18001352.47, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;605179&quot;, &quot;name&quot;: &quot;一鸣食品&quot;, &quot;chg&quot;: 10.0155, &quot;net&quot;: 17986687.01, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;920065&quot;, &quot;name&quot;: &quot;千岸科技&quot;, &quot;chg&quot;: -1.0325, &quot;net&quot;: 16511804.78, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;600540&quot;, &quot;name&quot;: &quot;新赛股份&quot;, &quot;chg&quot;: 10.0575, &quot;net&quot;: 12922351.2, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}, {&quot;code&quot;: &quot;300305&quot;, &quot;name&quot;: &quot;裕兴股份&quot;, &quot;chg&quot;: 20.0, &quot;net&quot;: 12440657.2, &quot;reason&quot;: &quot;跌幅未达弱转强门槛(需≤-7%)&quot;}], &quot;anchor_cases&quot;: [{&quot;code&quot;: &quot;002409&quot;, &quot;name&quot;: &quot;雅克科技&quot;, &quot;note&quot;: &quot;机构四席+深股通净买，净买占比10.3%，次日+7.1%、五日+28.4%&quot;}, {&quot;code&quot;: &quot;002156&quot;, &quot;name&quot;: &quot;通富微电&quot;, &quot;note&quot;: &quot;机构+深股通承接，净买2.23亿，次日+8.3%、五日+23.1%&quot;}, {&quot;code&quot;: &quot;301520&quot;, &quot;name&quot;: &quot;万邦医药&quot;, &quot;note&quot;: &quot;高换手弱转强（游资主导），净买比6.1%，次日+9.8%、五日+40.2%&quot;}, {&quot;code&quot;: &quot;603118&quot;, &quot;name&quot;: &quot;共进股份&quot;, &quot;note&quot;: &quot;连续下跌偏离上榜+沪股通，次日仅微涨+3.4%，属于弱转强偏弱档&quot;}], &quot;research&quot;: {&quot;window&quot;: &quot;2026-06-01~2026-08-19&quot;, &quot;families&quot;: {&quot;A_weak_to_strong_filtered&quot;: {&quot;desc&quot;: &quot;跌≤-7% &amp; 净买≥3000万 &amp; 占比≥1.5%&quot;, &quot;n&quot;: 124, &quot;t1_mean&quot;: 0.87, &quot;t1_median&quot;: 1.9, &quot;t1_win&quot;: 57.3}, &quot;C_limit_up_netbuy&quot;: {&quot;desc&quot;: &quot;涨停净买对照&quot;, &quot;n&quot;: 1057, &quot;t1_mean&quot;: 1.41, &quot;t1_win&quot;: 56.1}, &quot;D_weak_dump&quot;: {&quot;desc&quot;: &quot;大跌净卖对照&quot;, &quot;n&quot;: 373, &quot;t1_mean&quot;: -1.76, &quot;t1_win&quot;: 36.2}}, &quot;cluster_days&quot;: [{&quot;date&quot;: &quot;2026-06-08&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: 5.43, &quot;t1_win&quot;: 100.0, &quot;t5_mean&quot;: 2.39, &quot;avg_net_yi&quot;: 0.77, &quot;avg_ratio&quot;: 4.85, &quot;avg_chg&quot;: -9.49, &quot;idx_day&quot;: -1.7, &quot;idx_next&quot;: 1.28, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-06-10&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: 1.89, &quot;t1_win&quot;: 75.0, &quot;t5_mean&quot;: 8.65, &quot;avg_net_yi&quot;: 0.89, &quot;avg_ratio&quot;: 3.25, &quot;avg_chg&quot;: -11.44, &quot;idx_day&quot;: -0.42, &quot;idx_next&quot;: -0.16, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-06-11&quot;, &quot;n&quot;: 5, &quot;t1_mean&quot;: -2.32, &quot;t1_win&quot;: 20.0, &quot;t5_mean&quot;: 2.83, &quot;avg_net_yi&quot;: 1.52, &quot;avg_ratio&quot;: 8.17, &quot;avg_chg&quot;: -10.38, &quot;idx_day&quot;: -0.16, &quot;idx_next&quot;: 1.12, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-06-12&quot;, &quot;n&quot;: 5, &quot;t1_mean&quot;: 4.18, &quot;t1_win&quot;: 100.0, &quot;t5_mean&quot;: 19.65, &quot;avg_net_yi&quot;: 0.67, &quot;avg_ratio&quot;: 5.99, &quot;avg_chg&quot;: -12.0, &quot;idx_day&quot;: 1.12, &quot;idx_next&quot;: 1.61, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-06-23&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: -2.45, &quot;t1_win&quot;: 0.0, &quot;t5_mean&quot;: -3.74, &quot;avg_net_yi&quot;: 1.41, &quot;avg_ratio&quot;: 5.55, &quot;avg_chg&quot;: -9.15, &quot;idx_day&quot;: -1.37, &quot;idx_next&quot;: 0.11, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-03&quot;, &quot;n&quot;: 5, &quot;t1_mean&quot;: -8.55, &quot;t1_win&quot;: 0.0, &quot;t5_mean&quot;: -14.44, &quot;avg_net_yi&quot;: 1.72, &quot;avg_ratio&quot;: 4.09, &quot;avg_chg&quot;: -10.6, &quot;idx_day&quot;: 0.37, &quot;idx_next&quot;: -0.06, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-06&quot;, &quot;n&quot;: 7, &quot;t1_mean&quot;: -2.05, &quot;t1_win&quot;: 42.9, &quot;t5_mean&quot;: -11.55, &quot;avg_net_yi&quot;: 2.08, &quot;avg_ratio&quot;: 4.7, &quot;avg_chg&quot;: -10.41, &quot;idx_day&quot;: -0.06, &quot;idx_next&quot;: -1.26, &quot;quality&quot;: &quot;mixed&quot;}, {&quot;date&quot;: &quot;2026-07-07&quot;, &quot;n&quot;: 3, &quot;t1_mean&quot;: -4.3, &quot;t1_win&quot;: 33.3, &quot;t5_mean&quot;: -11.64, &quot;avg_net_yi&quot;: 2.3, &quot;avg_ratio&quot;: 7.87, &quot;avg_chg&quot;: -9.55, &quot;idx_day&quot;: -1.26, &quot;idx_next&quot;: -0.49, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-09&quot;, &quot;n&quot;: 3, &quot;t1_mean&quot;: -0.27, &quot;t1_win&quot;: 33.3, &quot;t5_mean&quot;: -2.28, &quot;avg_net_yi&quot;: 1.07, &quot;avg_ratio&quot;: 2.98, &quot;avg_chg&quot;: -8.54, &quot;idx_day&quot;: 1.65, &quot;idx_next&quot;: -1.0, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-10&quot;, &quot;n&quot;: 6, &quot;t1_mean&quot;: -6.58, &quot;t1_win&quot;: 0.0, &quot;t5_mean&quot;: -21.12, &quot;avg_net_yi&quot;: 0.91, &quot;avg_ratio&quot;: 4.69, &quot;avg_chg&quot;: -12.43, &quot;idx_day&quot;: -1.0, &quot;idx_next&quot;: -2.06, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-13&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: 2.45, &quot;t1_win&quot;: 75.0, &quot;t5_mean&quot;: -20.14, &quot;avg_net_yi&quot;: 0.61, &quot;avg_ratio&quot;: 4.21, &quot;avg_chg&quot;: -12.23, &quot;idx_day&quot;: -2.06, &quot;idx_next&quot;: 1.36, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-07-15&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: -7.05, &quot;t1_win&quot;: 0.0, &quot;t5_mean&quot;: -16.39, &quot;avg_net_yi&quot;: 0.83, &quot;avg_ratio&quot;: 3.54, &quot;avg_chg&quot;: -11.43, &quot;idx_day&quot;: -0.29, &quot;idx_next&quot;: -1.85, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-17&quot;, &quot;n&quot;: 3, &quot;t1_mean&quot;: -9.93, &quot;t1_win&quot;: 0.0, &quot;t5_mean&quot;: -7.99, &quot;avg_net_yi&quot;: 2.51, &quot;avg_ratio&quot;: 3.65, &quot;avg_chg&quot;: -13.32, &quot;idx_day&quot;: -3.05, &quot;idx_next&quot;: 0.85, &quot;quality&quot;: &quot;bad&quot;}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;n&quot;: 20, &quot;t1_mean&quot;: 7.37, &quot;t1_win&quot;: 90.0, &quot;t5_mean&quot;: 5.4, &quot;avg_net_yi&quot;: 2.62, &quot;avg_ratio&quot;: 5.8, &quot;avg_chg&quot;: -11.16, &quot;idx_day&quot;: 0.85, &quot;idx_next&quot;: 1.79, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-07-21&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: 2.02, &quot;t1_win&quot;: 50.0, &quot;t5_mean&quot;: -5.24, &quot;avg_net_yi&quot;: 0.58, &quot;avg_ratio&quot;: 4.91, &quot;avg_chg&quot;: -8.87, &quot;idx_day&quot;: 1.79, &quot;idx_next&quot;: 0.07, &quot;quality&quot;: &quot;mixed&quot;}, {&quot;date&quot;: &quot;2026-07-28&quot;, &quot;n&quot;: 3, &quot;t1_mean&quot;: 4.43, &quot;t1_win&quot;: 100.0, &quot;t5_mean&quot;: 6.79, &quot;avg_net_yi&quot;: 15.99, &quot;avg_ratio&quot;: 4.62, &quot;avg_chg&quot;: -14.27, &quot;idx_day&quot;: -1.16, &quot;idx_next&quot;: 0.4, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-07-30&quot;, &quot;n&quot;: 7, &quot;t1_mean&quot;: 4.45, &quot;t1_win&quot;: 85.7, &quot;t5_mean&quot;: 19.05, &quot;avg_net_yi&quot;: 2.06, &quot;avg_ratio&quot;: 5.06, &quot;avg_chg&quot;: -12.46, &quot;idx_day&quot;: -0.62, &quot;idx_next&quot;: 0.72, &quot;quality&quot;: &quot;good&quot;}, {&quot;date&quot;: &quot;2026-08-03&quot;, &quot;n&quot;: 4, &quot;t1_mean&quot;: 7.16, &quot;t1_win&quot;: 100.0, &quot;t5_mean&quot;: 25.78, &quot;avg_net_yi&quot;: 2.1, &quot;avg_ratio&quot;: 5.17, &quot;avg_chg&quot;: -9.3, &quot;idx_day&quot;: -0.59, &quot;idx_next&quot;: 0.33, &quot;quality&quot;: &quot;good&quot;}], &quot;cluster_insight&quot;: {&quot;good_days&quot;: [&quot;2026-06-08&quot;, &quot;2026-06-10&quot;, &quot;2026-06-12&quot;, &quot;2026-07-13&quot;, &quot;2026-07-20&quot;, &quot;2026-07-28&quot;, &quot;2026-07-30&quot;, &quot;2026-08-03&quot;], &quot;bad_days&quot;: [&quot;2026-06-11&quot;, &quot;2026-06-23&quot;, &quot;2026-07-03&quot;, &quot;2026-07-07&quot;, &quot;2026-07-09&quot;, &quot;2026-07-10&quot;, &quot;2026-07-15&quot;, &quot;2026-07-17&quot;], &quot;finding&quot;: &quot;共振日分化：优质日(如7/20、7/30、8/3)次日指数转正或止跌，弱转强T+1胜率≥70%；劣质日指数继续杀跌，胜率≤40%。共振必须叠加大盘止跌环境。&quot;, &quot;corr_t1_vs_idx_next&quot;: 0.556, &quot;corr_t1_vs_idx_day&quot;: 0.255, &quot;good_avg_idx_next&quot;: 0.92, &quot;bad_avg_idx_next&quot;: -0.42}, &quot;aug3_anchors&quot;: [{&quot;code&quot;: &quot;002409&quot;, &quot;name&quot;: &quot;雅克科技&quot;, &quot;chg&quot;: -9.63, &quot;net_yi&quot;: 4.9, &quot;ratio&quot;: 10.29, &quot;t1&quot;: 7.09, &quot;t5&quot;: 28.39, &quot;pattern&quot;: &quot;机构+北向&quot;, &quot;note&quot;: &quot;次日开启主升&quot;}, {&quot;code&quot;: &quot;002156&quot;, &quot;name&quot;: &quot;通富微电&quot;, &quot;chg&quot;: -9.5, &quot;net_yi&quot;: 2.23, &quot;ratio&quot;: 2.61, &quot;t1&quot;: 8.3, &quot;t5&quot;: 23.1, &quot;pattern&quot;: &quot;机构+北向&quot;, &quot;note&quot;: &quot;次日开启主升&quot;}, {&quot;code&quot;: &quot;301520&quot;, &quot;name&quot;: &quot;万邦医药&quot;, &quot;chg&quot;: -8.89, &quot;net_yi&quot;: 0.31, &quot;ratio&quot;: 6.06, &quot;t1&quot;: 9.85, &quot;t5&quot;: 40.23, &quot;pattern&quot;: &quot;高换手游资&quot;, &quot;note&quot;: &quot;次日开启主升&quot;}, {&quot;code&quot;: &quot;603118&quot;, &quot;name&quot;: &quot;共进股份&quot;, &quot;chg&quot;: -9.17, &quot;net_yi&quot;: 0.98, &quot;ratio&quot;: 1.74, &quot;t1&quot;: 3.41, &quot;t5&quot;: 11.38, &quot;pattern&quot;: &quot;北向+连续下跌偏离&quot;, &quot;note&quot;: &quot;次日仅微涨&quot;}], &quot;similar_analogs&quot;: [{&quot;date&quot;: &quot;2026-07-23&quot;, &quot;code&quot;: &quot;301583&quot;, &quot;name&quot;: &quot;托伦斯&quot;, &quot;chg&quot;: -8.64, &quot;net_yi&quot;: 1.23, &quot;ratio&quot;: 4.66, &quot;t1&quot;: 20.0, &quot;t5&quot;: 9.01}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;605111&quot;, &quot;name&quot;: &quot;新洁能&quot;, &quot;chg&quot;: -8.64, &quot;net_yi&quot;: 1.03, &quot;ratio&quot;: 2.47, &quot;t1&quot;: 10.01, &quot;t5&quot;: 14.93}, {&quot;date&quot;: &quot;2026-06-01&quot;, &quot;code&quot;: &quot;002384&quot;, &quot;name&quot;: &quot;东山精密&quot;, &quot;chg&quot;: -10.0, &quot;net_yi&quot;: 26.07, &quot;ratio&quot;: 9.75, &quot;t1&quot;: 10.0, &quot;t5&quot;: 11.08}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;002432&quot;, &quot;name&quot;: &quot;九安医疗&quot;, &quot;chg&quot;: -8.46, &quot;net_yi&quot;: 6.14, &quot;ratio&quot;: 8.16, &quot;t1&quot;: 10.0, &quot;t5&quot;: -0.14}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;600641&quot;, &quot;name&quot;: &quot;先导基电&quot;, &quot;chg&quot;: -10.01, &quot;net_yi&quot;: 1.81, &quot;ratio&quot;: 2.43, &quot;t1&quot;: 9.99, &quot;t5&quot;: 5.46}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;002281&quot;, &quot;name&quot;: &quot;光迅科技&quot;, &quot;chg&quot;: -10.0, &quot;net_yi&quot;: 3.24, &quot;ratio&quot;: 4.01, &quot;t1&quot;: 9.67, &quot;t5&quot;: 13.1}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;600176&quot;, &quot;name&quot;: &quot;中国巨石&quot;, &quot;chg&quot;: -9.95, &quot;net_yi&quot;: 9.07, &quot;ratio&quot;: 3.47, &quot;t1&quot;: 9.03, &quot;t5&quot;: 4.13}, {&quot;date&quot;: &quot;2026-07-21&quot;, &quot;code&quot;: &quot;300164&quot;, &quot;name&quot;: &quot;通源石油&quot;, &quot;chg&quot;: -8.77, &quot;net_yi&quot;: 0.52, &quot;ratio&quot;: 2.26, &quot;t1&quot;: 8.89, &quot;t5&quot;: -2.88}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;603283&quot;, &quot;name&quot;: &quot;赛腾股份&quot;, &quot;chg&quot;: -9.99, &quot;net_yi&quot;: 2.66, &quot;ratio&quot;: 6.65, &quot;t1&quot;: 8.75, &quot;t5&quot;: 6.12}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;600545&quot;, &quot;name&quot;: &quot;卓郎智能&quot;, &quot;chg&quot;: -10.07, &quot;net_yi&quot;: 1.37, &quot;ratio&quot;: 11.15, &quot;t1&quot;: 8.47, &quot;t5&quot;: 10.93}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;603738&quot;, &quot;name&quot;: &quot;泰晶科技&quot;, &quot;chg&quot;: -9.99, &quot;net_yi&quot;: 2.5, &quot;ratio&quot;: 6.8, &quot;t1&quot;: 8.46, &quot;t5&quot;: 7.12}, {&quot;date&quot;: &quot;2026-08-03&quot;, &quot;code&quot;: &quot;002156&quot;, &quot;name&quot;: &quot;通富微电&quot;, &quot;chg&quot;: -9.5, &quot;net_yi&quot;: 2.23, &quot;ratio&quot;: 2.61, &quot;t1&quot;: 8.3, &quot;t5&quot;: 23.1}, {&quot;date&quot;: &quot;2026-07-30&quot;, &quot;code&quot;: &quot;603124&quot;, &quot;name&quot;: &quot;江南新材&quot;, &quot;chg&quot;: -9.97, &quot;net_yi&quot;: 0.62, &quot;ratio&quot;: 3.03, &quot;t1&quot;: 7.33, &quot;t5&quot;: 29.53}, {&quot;date&quot;: &quot;2026-08-03&quot;, &quot;code&quot;: &quot;002409&quot;, &quot;name&quot;: &quot;雅克科技&quot;, &quot;chg&quot;: -9.63, &quot;net_yi&quot;: 4.9, &quot;ratio&quot;: 10.29, &quot;t1&quot;: 7.09, &quot;t5&quot;: 28.39}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;600226&quot;, &quot;name&quot;: &quot;亨通股份&quot;, &quot;chg&quot;: -10.05, &quot;net_yi&quot;: 1.66, &quot;ratio&quot;: 5.37, &quot;t1&quot;: 6.67, &quot;t5&quot;: 3.42}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;603045&quot;, &quot;name&quot;: &quot;福达合金&quot;, &quot;chg&quot;: -9.99, &quot;net_yi&quot;: 0.89, &quot;ratio&quot;: 6.51, &quot;t1&quot;: 6.62, &quot;t5&quot;: 3.5}, {&quot;date&quot;: &quot;2026-06-10&quot;, &quot;code&quot;: &quot;600255&quot;, &quot;name&quot;: &quot;鑫科材料&quot;, &quot;chg&quot;: -10.09, &quot;net_yi&quot;: 0.5, &quot;ratio&quot;: 4.03, &quot;t1&quot;: 6.48, &quot;t5&quot;: 8.98}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;002384&quot;, &quot;name&quot;: &quot;东山精密&quot;, &quot;chg&quot;: -10.0, &quot;net_yi&quot;: 7.27, &quot;ratio&quot;: 2.96, &quot;t1&quot;: 6.09, &quot;t5&quot;: -2.68}, {&quot;date&quot;: &quot;2026-06-04&quot;, &quot;code&quot;: &quot;603637&quot;, &quot;name&quot;: &quot;镇海股份&quot;, &quot;chg&quot;: -8.71, &quot;net_yi&quot;: 0.78, &quot;ratio&quot;: 6.68, &quot;t1&quot;: 5.77, &quot;t5&quot;: 1.83}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;603928&quot;, &quot;name&quot;: &quot;兴业股份&quot;, &quot;chg&quot;: -9.22, &quot;net_yi&quot;: 0.73, &quot;ratio&quot;: 5.83, &quot;t1&quot;: 5.37, &quot;t5&quot;: 8.98}, {&quot;date&quot;: &quot;2026-06-08&quot;, &quot;code&quot;: &quot;603678&quot;, &quot;name&quot;: &quot;火炬电子&quot;, &quot;chg&quot;: -10.0, &quot;net_yi&quot;: 1.88, &quot;ratio&quot;: 4.9, &quot;t1&quot;: 5.19, &quot;t5&quot;: 12.86}, {&quot;date&quot;: &quot;2026-08-13&quot;, &quot;code&quot;: &quot;603990&quot;, &quot;name&quot;: &quot;麦迪科技&quot;, &quot;chg&quot;: -9.99, &quot;net_yi&quot;: 1.5, &quot;ratio&quot;: 10.6, &quot;t1&quot;: 5.03, &quot;t5&quot;: 0.0}, {&quot;date&quot;: &quot;2026-07-20&quot;, &quot;code&quot;: &quot;600869&quot;, &quot;name&quot;: &quot;远东股份&quot;, &quot;chg&quot;: -10.02, &quot;net_yi&quot;: 4.42, &quot;ratio&quot;: 7.72, &quot;t1&quot;: 5.02, &quot;t5&quot;: 0.85}, {&quot;date&quot;: &quot;2026-07-30&quot;, &quot;code&quot;: &quot;000938&quot;, &quot;name&quot;: &quot;紫光股份&quot;, &quot;chg&quot;: -9.99, &quot;net_yi&quot;: 5.48, &quot;ratio&quot;: 6.26, &quot;t1&quot;: 3.84, &quot;t5&quot;: 12.92}, {&quot;date&quot;: &quot;2026-06-30&quot;, &quot;code&quot;: &quot;000636&quot;, &quot;name&quot;: &quot;风华高科&quot;, &quot;chg&quot;: -10.0, &quot;net_yi&quot;: 4.84, &quot;ratio&quot;: 14.97, &quot;t1&quot;: 2.99, &quot;t5&quot;: -15.2}]}, &quot;summary&quot;: {&quot;message&quot;: &quot;2026-08-03 弱转强候选 5 只（S级 5 / A级 0）；对照弱势出货 7 只&quot;, &quot;cluster_flag&quot;: true, &quot;playbook&quot;: [&quot;今日共振信号开启（5只），可提高试错优先级&quot;, &quot;✓ 大盘止跌/反弹环境：共振质量更接近 7/20、8/3 一类反击日&quot;, &quot;收盘拉取龙虎榜：筛选 涨跌幅≤-7% 且 净买额&gt;0，剔除 ST/退/债/B股&quot;, &quot;看净买占比：优先 ≥1.5%，更强信号看 ≥5%&quot;, &quot;看席位：机构≥2 或北向现身优先；游资单干需高换手+高占比（如万邦医药）&quot;, &quot;看上榜原因：单日跌幅偏离 &gt; 连续三日下跌偏离（后者修复更慢）&quot;, &quot;看共振：同日候选≥3 只时提高关注，但需排除持续瀑布杀跌日&quot;, &quot;次日验证：竞价不炸、高开2%~5%或平开回踩分时均线再接；大低开无承接则放弃&quot;, &quot;风控：跌破上榜日最低价，或开盘低开超3%且无力回抽，止损离场&quot;, &quot;重点池：雅克科技(002409)、通富微电(002156)、宏桥控股(002379)、万邦医药(301520)&quot;], &quot;index&quot;: {&quot;index&quot;: &quot;上证指数&quot;, &quot;idx_day_pct&quot;: -0.59, &quot;idx_next_pct&quot;: 0.33, &quot;cluster_regime&quot;: &quot;confirmed_bounce&quot;}}}</script>
+</body>
+</html>
