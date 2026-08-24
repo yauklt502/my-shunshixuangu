@@ -7,7 +7,8 @@
 ## 文档
 
 - [docs/qingkong_buy_points.md](docs/qingkong_buy_points.md)：作品画像 + 买入点详细拆解
-- [formulas/qingkong_tdx_xuangu.txt](formulas/qingkong_tdx_xuangu.txt)：通达信条件选股（B1–B4）
+- [formulas/qingkong_tdx_xuangu.txt](formulas/qingkong_tdx_xuangu.txt)：通达信条件选股宽松版（B1–B4，默认用这个）
+- [formulas/qingkong_tdx_xuangu_strict.txt](formulas/qingkong_tdx_xuangu_strict.txt)：通达信严格版
 - [formulas/qingkong_tdx_futu.txt](formulas/qingkong_tdx_futu.txt)：通达信副图打点
 - [formulas/qingkong_tdx_tchi.txt](formulas/qingkong_tdx_tchi.txt)：做 T 观察池（不是买点）
 
