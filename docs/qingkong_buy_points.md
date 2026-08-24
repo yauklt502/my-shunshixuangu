@@ -297,7 +297,6 @@ B1 错了可以按一成止损、主线还在还能等；B5 错了必须当天�
 | `src/qingkong/scorer.py` | 主题、位置、形态、风险加权 |
 | `scripts/run_buy_points.py` | 跑样本 |
 | `formulas/qingkong_tdx_*.txt` | 通达信选股 / 副图 / 做T池 |
-| `formulas/qingkong_tdx_*.txt` | 通达信选股 / 副图 / 做T池 |
 
 开仓建议：`score >= 70` 且环境允许且买点触发。打地鼠单独放宽到 60，但必须快进快出。
 
