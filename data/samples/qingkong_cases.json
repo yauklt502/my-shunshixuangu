@@ -1,0 +1,199 @@
+[
+  {
+    "id": "nengte_day_low_add",
+    "note": "对照：能特科技类「日低加仓」——已有底仓、主线、贴近当日低点",
+    "holding": true,
+    "regime": "BULL_DIP",
+    "basics": {
+      "code": "002102",
+      "name": "能特科技",
+      "theme_tags": ["科技", "算力"],
+      "holding_count": 8,
+      "total_position": 0.55
+    },
+    "snapshot": {
+      "day_change": -0.035,
+      "near_day_low": true,
+      "recent_max_drop": -0.06,
+      "mainline": true,
+      "quality_tech": true,
+      "has_core": true
+    }
+  },
+  {
+    "id": "liou_wait_stabilize",
+    "note": "对照：利欧股份「企稳确认中，不跌不动」",
+    "holding": true,
+    "regime": "BULL_GRIND",
+    "basics": {
+      "code": "002131",
+      "name": "利欧股份",
+      "theme_tags": ["科技"],
+      "holding_count": 8,
+      "total_position": 0.5
+    },
+    "snapshot": {
+      "day_change": -0.01,
+      "consolidating": true,
+      "stabilize_ok": false,
+      "mainline": true,
+      "low_position": true,
+      "quality_tech": true,
+      "has_core": true
+    }
+  },
+  {
+    "id": "jintongling_whack",
+    "note": "对照：金通灵类打地鼠——预判脉冲，大仓快进快出",
+    "holding": false,
+    "regime": "ROTATION",
+    "basics": {
+      "code": "300091",
+      "name": "金通灵",
+      "theme_tags": ["科技"],
+      "holding_count": 6,
+      "total_position": 0.4
+    },
+    "snapshot": {
+      "day_change": 0.01,
+      "start_seed": true,
+      "whack_a_mole": true,
+      "quality_tech": true,
+      "low_position": false
+    }
+  },
+  {
+    "id": "nengte_flag_wait",
+    "note": "对照：能特「形成飘旗，有加速动能，待涨」——未突破只等待",
+    "holding": true,
+    "regime": "BULL_GRIND",
+    "basics": {
+      "code": "002102",
+      "name": "能特科技",
+      "theme_tags": ["科技", "算力"],
+      "holding_count": 8,
+      "total_position": 0.5
+    },
+    "snapshot": {
+      "day_change": 0.005,
+      "flag_pattern": true,
+      "flag_breakout": false,
+      "mainline": true,
+      "has_core": true
+    }
+  },
+  {
+    "id": "dead_stock_exit",
+    "note": "对照：看好就是不涨的股暂时离场，等启动苗头",
+    "holding": true,
+    "regime": "ROTATION",
+    "basics": {
+      "code": "000000",
+      "name": "示例不涨票",
+      "theme_tags": ["科技"],
+      "holding_count": 5,
+      "total_position": 0.4
+    },
+    "snapshot": {
+      "day_change": 0.0,
+      "liked_but_dead": true,
+      "has_core": true
+    }
+  },
+  {
+    "id": "full_position_forbid",
+    "note": "对照：反复提醒不要满仓",
+    "holding": false,
+    "regime": "BULL_DIP",
+    "basics": {
+      "code": "603881",
+      "name": "数据港",
+      "theme_tags": ["数据中心", "科技"],
+      "full_position": true,
+      "total_position": 1.0
+    },
+    "snapshot": {
+      "day_change": -0.04,
+      "near_day_low": true,
+      "mainline": true
+    }
+  },
+  {
+    "id": "chase_forbid",
+    "note": "对照：尽量少追涨、多低吸",
+    "holding": false,
+    "regime": "BULL_GRIND",
+    "basics": {
+      "code": "600103",
+      "name": "青山纸业",
+      "theme_tags": ["造纸"],
+      "chasing": true,
+      "total_position": 0.3
+    },
+    "snapshot": {
+      "day_change": 0.07,
+      "stretched_up": true
+    }
+  },
+  {
+    "id": "t0_on_core",
+    "note": "对照：回天/百傲/数据港「持股做T」",
+    "holding": true,
+    "regime": "BULL_GRIND",
+    "basics": {
+      "code": "002709",
+      "name": "回天新材",
+      "theme_tags": ["科技"],
+      "holding_count": 8,
+      "total_position": 0.5
+    },
+    "snapshot": {
+      "day_change": 0.012,
+      "has_core": true,
+      "t0_setup": true,
+      "mainline": true
+    }
+  },
+  {
+    "id": "probe_fail_exit",
+    "note": "对照：恒信试盘，不符预期可离场",
+    "holding": true,
+    "regime": "BULL_GRIND",
+    "basics": {
+      "code": "300081",
+      "name": "恒信东方",
+      "theme_tags": ["科技"],
+      "holding_count": 7,
+      "total_position": 0.45
+    },
+    "snapshot": {
+      "day_change": -0.02,
+      "probe": true,
+      "probe_failed": true
+    }
+  },
+  {
+    "id": "event_window_no_new",
+    "note": "对照：阅兵等事件前减仓、不新开",
+    "holding": false,
+    "regime": {
+      "index_change": 0.005,
+      "volume_change": -0.05,
+      "down_count": 1800,
+      "up_count": 2500,
+      "is_bull_bias": true,
+      "event_risk": true
+    },
+    "basics": {
+      "code": "600000",
+      "name": "事件窗口新票",
+      "theme_tags": ["科技"],
+      "total_position": 0.3
+    },
+    "snapshot": {
+      "day_change": -0.02,
+      "near_day_low": true,
+      "mainline": true
+    }
+  }
+]
