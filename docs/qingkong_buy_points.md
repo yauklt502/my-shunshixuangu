@@ -308,8 +308,8 @@ B1 错了可以按一成止损、主线还在还能等；B5 错了必须当天�
 
 | 文件 | 用途 |
 |------|------|
-| `formulas/qingkong_tdx_xuangu.txt` | **实用版（默认）**：过滤 + 只选 B1 |
-| `formulas/qingkong_tdx_b1_only.txt` | B1 最简（无 CAPITAL，防报错） |
+| `formulas/qingkong_tdx_xuangu.txt` | **收敛版（默认）**：仅 B1，要求急跌+贴日低+回踩10/20日线 |
+| `formulas/qingkong_tdx_b1_only.txt` | 同上，无 CAPITAL |
 | `formulas/qingkong_tdx_xuangu_strict.txt` | 更严备选 |
 | `formulas/qingkong_tdx_futu.txt` | 副图打点 |
 | `formulas/qingkong_tdx_tchi.txt` | 做 T 观察池 |
@@ -318,10 +318,10 @@ B1 错了可以按一成止损、主线还在还能等；B5 错了必须当天�
 
 **数量怎么调**
 
-- 仍太多（>300）：`日急跌` 改 `0.96`（跌≥4%），或换手 `>1.5`
-- 太少（<10）：`日急跌` 改 `0.975`，`近深回` 改 `0.96`
-- 不要写 `B1 OR B2 OR B3 OR B4` 当默认，会再次上千只
-- 企稳/启动/飘旗改最后一行为 `选股:B2;` 等，分开跑
+- 仍太多（>150）：`日急跌` 改 `0.955`，换手 `>=3`，或贴日低改 `0.20`
+- 太少（<15）：`日急跌` 改 `0.97`，换手 `>=1.2`
+- 不要 `B1 OR B2 OR B3 OR B4`；也不要用“近5日回撤”代替当日急跌（会再次扩到几百只）
+- 过松版曾 2500+；仅日跌未回踩均线时约 482；收敛版应明显低于此
 
 **历史问题**
 
