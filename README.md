@@ -18,9 +18,18 @@ python scripts/smoke_test.py
 
 Never commit `.env` or paste the real key into tracked files.
 
-## Cursor MCP
+## Cursor MCP（一键配置）
 
-Fuyao exposes four hosted MCP servers (HTTP + `X-api-key`):
+```bash
+cp .env.example .env          # 填入 FUYAO_API_KEY
+bash scripts/setup-fuyao-mcp.sh
+# 重启 Cursor → Settings → MCP，确认 fuyao-* Connected
+```
+
+脚本会写入（含真实 key，已 gitignore）：
+
+- 项目：`.cursor/mcp.json`
+- 用户：`~/.cursor/mcp.json`
 
 | Server | Endpoint | Use |
 |---|---|---|
@@ -29,16 +38,7 @@ Fuyao exposes four hosted MCP servers (HTTP + `X-api-key`):
 | `fuyao-fund` | `/mcp/fund` | 公募基金 |
 | `fuyao-meta` | `/mcp/meta` | 标的检索（建议常开） |
 
-```bash
-cp .cursor/mcp.json.example ~/.cursor/mcp.json
-# replace every <FUYAO_API_KEY> with your key, then restart Cursor
-```
-
-Example prompts after MCP is connected:
-
-- 「贵州茅台今天涨多少？再拉近 1 个月日 K」
-- 「今天涨停连板天梯和龙虎榜给我」
-- 「搜一下宁德时代的 thscode」
+配好后直接对话即可，例如：「贵州茅台今天涨多少？再拉近 1 个月日 K」
 
 ## Python REST client
 
