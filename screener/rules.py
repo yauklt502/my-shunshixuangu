@@ -147,7 +147,7 @@ def score_quiet_rs(
     dd = max(0.0, 1.0 + max_dd_pct / MAX_WINDOW_DRAWDOWN_PCT) * 8  # max_dd is negative
     cons = max(0.0, min(up_day_ratio, 1.0)) * 8
     vol = 0.0 if vol_ratio > VOL_RATIO_MAX else max(0.0, 1.0 - (vol_ratio - 1.0) / VOL_RATIO_MAX) * 8
-    return round(rs + excess + grind + quiet + dd + cons + vol, 2)
+    return round(min(100.0, rs + excess + grind + quiet + dd + cons + vol), 2)
 
 
 def evaluate_quiet_rs(

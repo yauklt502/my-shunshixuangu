@@ -115,6 +115,18 @@ class QuietRsTest(unittest.TestCase):
         self.assertTrue(is_near_limit(9.7, 10.0))
         self.assertFalse(is_near_limit(3.0, 10.0))
 
+    def test_score_capped_at_100(self):
+        s = score_quiet_rs(
+            rs_up_rate=1.0,
+            rs_excess_pct=5.0,
+            avg_up_pct=1.5,
+            avg_turn_pct=0.2,
+            max_dd_pct=-0.1,
+            up_day_ratio=1.0,
+            vol_ratio=0.5,
+        )
+        self.assertLessEqual(s, 100.0)
+
     def test_score_prefers_higher_rs(self):
         a = score_quiet_rs(rs_up_rate=1.0, rs_excess_pct=2.0, avg_up_pct=1.5, avg_turn_pct=1.0, max_dd_pct=-1.0, up_day_ratio=0.7, vol_ratio=1.0)
         b = score_quiet_rs(rs_up_rate=0.6, rs_excess_pct=0.4, avg_up_pct=1.5, avg_turn_pct=1.0, max_dd_pct=-1.0, up_day_ratio=0.7, vol_ratio=1.0)

@@ -1,0 +1,3033 @@
+{
+  "index": "sh000300",
+  "window": 15,
+  "last_index_day": "2026-08-25",
+  "last_index_ret_pct": -0.24,
+  "universe": 4319,
+  "hits": [
+    {
+      "code": "600674",
+      "name": "川投能源",
+      "symbol": "sh600674",
+      "price": 15.54,
+      "today_pct": -0.321,
+      "nmc_yi": 757.51,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 100.0,
+      "window_ret_pct": 3.74,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.06,
+      "max_up_pct": 2.23,
+      "avg_turn_pct": 0.59,
+      "median_turn_pct": 0.57,
+      "last_turn_pct": 0.43,
+      "vol_ratio": 0.72,
+      "max_dd_pct": -1.93,
+      "rs_up_rate": 1.0,
+      "rs_mean_pct": 1.44,
+      "rs_excess_pct": 2.6,
+      "down_days": 5,
+      "up_on_down": 5,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.13,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.93,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.46,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.44,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.23,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601939",
+      "name": "建设银行",
+      "symbol": "sh601939",
+      "price": 10.66,
+      "today_pct": 0.0,
+      "nmc_yi": 1022.68,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 98.67,
+      "window_ret_pct": 7.03,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 0.83,
+      "max_up_pct": 1.51,
+      "avg_turn_pct": 1.42,
+      "median_turn_pct": 1.32,
+      "last_turn_pct": 1.32,
+      "vol_ratio": 0.93,
+      "max_dd_pct": -0.58,
+      "rs_up_rate": 1.0,
+      "rs_mean_pct": 1.04,
+      "rs_excess_pct": 2.21,
+      "down_days": 5,
+      "up_on_down": 5,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.99,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.59,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.26,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.15,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.23,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600795",
+      "name": "国电电力",
+      "symbol": "sh600795",
+      "price": 5.14,
+      "today_pct": -0.388,
+      "nmc_yi": 916.75,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 98.03,
+      "window_ret_pct": 2.8,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 0.84,
+      "max_up_pct": 1.99,
+      "avg_turn_pct": 0.7,
+      "median_turn_pct": 0.57,
+      "last_turn_pct": 0.69,
+      "vol_ratio": 0.99,
+      "max_dd_pct": -1.38,
+      "rs_up_rate": 1.0,
+      "rs_mean_pct": 0.99,
+      "rs_excess_pct": 2.16,
+      "down_days": 5,
+      "up_on_down": 5,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.8,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.6,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.6,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.99,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.98,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601088",
+      "name": "中国神华",
+      "symbol": "sh601088",
+      "price": 47.17,
+      "today_pct": 0.597,
+      "nmc_yi": 7778.82,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 95.4,
+      "window_ret_pct": 9.7,
+      "up_day_ratio": 0.733,
+      "avg_up_pct": 1.01,
+      "max_up_pct": 2.26,
+      "avg_turn_pct": 0.17,
+      "median_turn_pct": 0.16,
+      "last_turn_pct": 0.16,
+      "vol_ratio": 0.94,
+      "max_dd_pct": -1.41,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 1.1,
+      "rs_excess_pct": 2.27,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.04,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.61,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 2.03,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.79,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.03,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601077",
+      "name": "渝农商行",
+      "symbol": "sh601077",
+      "price": 6.87,
+      "today_pct": -2.415,
+      "nmc_yi": 607.19,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 94.04,
+      "window_ret_pct": 6.35,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.08,
+      "max_up_pct": 3.38,
+      "avg_turn_pct": 0.69,
+      "median_turn_pct": 0.68,
+      "last_turn_pct": 0.64,
+      "vol_ratio": 0.93,
+      "max_dd_pct": -2.41,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 1.5,
+      "rs_excess_pct": 2.66,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.77,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.0,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.38,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.96,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 3.38,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600926",
+      "name": "杭州银行",
+      "symbol": "sh600926",
+      "price": 16.62,
+      "today_pct": -1.189,
+      "nmc_yi": 1204.78,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 93.81,
+      "window_ret_pct": 2.91,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 0.85,
+      "max_up_pct": 1.91,
+      "avg_turn_pct": 0.49,
+      "median_turn_pct": 0.47,
+      "last_turn_pct": 0.41,
+      "vol_ratio": 0.85,
+      "max_dd_pct": -1.55,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 1.11,
+      "rs_excess_pct": 2.28,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.43,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 1.57,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.91,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.39,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.14,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601328",
+      "name": "交通银行",
+      "symbol": "sh601328",
+      "price": 7.16,
+      "today_pct": -0.556,
+      "nmc_yi": 1866.79,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 93.52,
+      "window_ret_pct": 3.32,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 0.73,
+      "max_up_pct": 2.0,
+      "avg_turn_pct": 0.56,
+      "median_turn_pct": 0.51,
+      "last_turn_pct": 0.55,
+      "vol_ratio": 0.99,
+      "max_dd_pct": -0.86,
+      "rs_up_rate": 1.0,
+      "rs_mean_pct": 1.06,
+      "rs_excess_pct": 2.22,
+      "down_days": 5,
+      "up_on_down": 5,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.29,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.29,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.59,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 2.0,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.12,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601229",
+      "name": "上海银行",
+      "symbol": "sh601229",
+      "price": 9.72,
+      "today_pct": -1.52,
+      "nmc_yi": 1381.12,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 92.67,
+      "window_ret_pct": 4.74,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 0.86,
+      "max_up_pct": 2.41,
+      "avg_turn_pct": 0.44,
+      "median_turn_pct": 0.43,
+      "last_turn_pct": 0.43,
+      "vol_ratio": 0.97,
+      "max_dd_pct": -1.52,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.96,
+      "rs_excess_pct": 2.13,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.43,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.43,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.06,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 2.41,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.33,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "002508",
+      "name": "老板电器",
+      "symbol": "sz002508",
+      "price": 16.56,
+      "today_pct": -0.06,
+      "nmc_yi": 154.6,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 91.82,
+      "window_ret_pct": 5.41,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 2.1,
+      "max_up_pct": 4.32,
+      "avg_turn_pct": 1.17,
+      "median_turn_pct": 1.17,
+      "last_turn_pct": 0.74,
+      "vol_ratio": 0.63,
+      "max_dd_pct": -2.93,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 1.6,
+      "rs_excess_pct": 2.77,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.89,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.37,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.77,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 4.32,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.41,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600968",
+      "name": "海油发展",
+      "symbol": "sh600968",
+      "price": 4.01,
+      "today_pct": -0.249,
+      "nmc_yi": 407.62,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 91.22,
+      "window_ret_pct": 3.89,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 0.96,
+      "max_up_pct": 2.83,
+      "avg_turn_pct": 0.36,
+      "median_turn_pct": 0.31,
+      "last_turn_pct": 0.32,
+      "vol_ratio": 0.89,
+      "max_dd_pct": -1.54,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.86,
+      "rs_excess_pct": 2.03,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.26,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.78,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 2.83,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.5,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.5,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600900",
+      "name": "长江电力",
+      "symbol": "sh600900",
+      "price": 28.21,
+      "today_pct": 0.213,
+      "nmc_yi": 6902.48,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 90.62,
+      "window_ret_pct": 1.62,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 0.76,
+      "max_up_pct": 1.08,
+      "avg_turn_pct": 0.39,
+      "median_turn_pct": 0.37,
+      "last_turn_pct": 0.37,
+      "vol_ratio": 0.95,
+      "max_dd_pct": -1.62,
+      "rs_up_rate": 1.0,
+      "rs_mean_pct": 0.81,
+      "rs_excess_pct": 1.97,
+      "down_days": 5,
+      "up_on_down": 5,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.93,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.79,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.57,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.07,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.68,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600177",
+      "name": "雅戈尔",
+      "symbol": "sh600177",
+      "price": 7.9,
+      "today_pct": -1.496,
+      "nmc_yi": 355.77,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 90.01,
+      "window_ret_pct": 4.36,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 0.93,
+      "max_up_pct": 1.65,
+      "avg_turn_pct": 0.6,
+      "median_turn_pct": 0.59,
+      "last_turn_pct": 0.58,
+      "vol_ratio": 0.98,
+      "max_dd_pct": -1.5,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.77,
+      "rs_excess_pct": 1.93,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.78,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 1.03,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.51,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.89,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.65,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "000333",
+      "name": "美的集团",
+      "symbol": "sz000333",
+      "price": 86.69,
+      "today_pct": 0.814,
+      "nmc_yi": 5968.48,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 89.54,
+      "window_ret_pct": 1.43,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.13,
+      "max_up_pct": 2.16,
+      "avg_turn_pct": 0.37,
+      "median_turn_pct": 0.33,
+      "last_turn_pct": 0.37,
+      "vol_ratio": 1.01,
+      "max_dd_pct": -3.52,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.95,
+      "rs_excess_pct": 2.11,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.38,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.18,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.17,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.36,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.0,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "002142",
+      "name": "宁波银行",
+      "symbol": "sz002142",
+      "price": 33.56,
+      "today_pct": -1.003,
+      "nmc_yi": 2214.75,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 88.85,
+      "window_ret_pct": 6.03,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.21,
+      "max_up_pct": 3.64,
+      "avg_turn_pct": 0.42,
+      "median_turn_pct": 0.39,
+      "last_turn_pct": 0.37,
+      "vol_ratio": 0.88,
+      "max_dd_pct": -1.81,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.64,
+      "rs_excess_pct": 1.8,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.44,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.78,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.84,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.6,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -0.47,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601665",
+      "name": "齐鲁银行",
+      "symbol": "sh601665",
+      "price": 6.52,
+      "today_pct": -0.61,
+      "nmc_yi": 401.23,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 88.08,
+      "window_ret_pct": 6.02,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.01,
+      "max_up_pct": 1.93,
+      "avg_turn_pct": 0.65,
+      "median_turn_pct": 0.65,
+      "last_turn_pct": 0.69,
+      "vol_ratio": 1.06,
+      "max_dd_pct": -0.61,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.56,
+      "rs_excess_pct": 1.73,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.16,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.64,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.95,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.78,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.61,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601963",
+      "name": "重庆银行",
+      "symbol": "sh601963",
+      "price": 11.16,
+      "today_pct": -0.446,
+      "nmc_yi": 227.0,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 86.78,
+      "window_ret_pct": 1.82,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 1.22,
+      "max_up_pct": 2.46,
+      "avg_turn_pct": 0.59,
+      "median_turn_pct": 0.6,
+      "last_turn_pct": 0.64,
+      "vol_ratio": 1.07,
+      "max_dd_pct": -2.0,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.62,
+      "rs_excess_pct": 1.79,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.27,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.55,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.65,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.86,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.08,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "002948",
+      "name": "青岛银行",
+      "symbol": "sz002948",
+      "price": 5.91,
+      "today_pct": -1.5,
+      "nmc_yi": 208.16,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 86.56,
+      "window_ret_pct": 3.14,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.04,
+      "max_up_pct": 2.43,
+      "avg_turn_pct": 0.99,
+      "median_turn_pct": 0.92,
+      "last_turn_pct": 1.13,
+      "vol_ratio": 1.15,
+      "max_dd_pct": -2.24,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.66,
+      "rs_excess_pct": 1.82,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.86,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.53,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.35,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 2.43,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.84,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "002003",
+      "name": "伟星股份",
+      "symbol": "sz002003",
+      "price": 10.89,
+      "today_pct": 1.302,
+      "nmc_yi": 111.31,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 86.09,
+      "window_ret_pct": 4.61,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.45,
+      "max_up_pct": 2.87,
+      "avg_turn_pct": 1.24,
+      "median_turn_pct": 1.22,
+      "last_turn_pct": 1.34,
+      "vol_ratio": 1.08,
+      "max_dd_pct": -5.56,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 1.03,
+      "rs_excess_pct": 2.19,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.87,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.88,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.7,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.58,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.87,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600028",
+      "name": "中国石化",
+      "symbol": "sh600028",
+      "price": 5.36,
+      "today_pct": 0.563,
+      "nmc_yi": 5078.73,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 85.96,
+      "window_ret_pct": 7.63,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.25,
+      "max_up_pct": 4.51,
+      "avg_turn_pct": 0.26,
+      "median_turn_pct": 0.22,
+      "last_turn_pct": 0.32,
+      "vol_ratio": 1.25,
+      "max_dd_pct": -2.54,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 1.22,
+      "rs_excess_pct": 2.38,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.2,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.19,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.0,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.98,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 4.51,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600997",
+      "name": "开滦股份",
+      "symbol": "sh600997",
+      "price": 5.66,
+      "today_pct": 0.0,
+      "nmc_yi": 89.87,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 85.8,
+      "window_ret_pct": 1.07,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 1.28,
+      "max_up_pct": 2.35,
+      "avg_turn_pct": 0.85,
+      "median_turn_pct": 0.89,
+      "last_turn_pct": 0.9,
+      "vol_ratio": 1.05,
+      "max_dd_pct": -3.39,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.8,
+      "rs_excess_pct": 1.96,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.1,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.45,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.92,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.09,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.35,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601825",
+      "name": "沪农商行",
+      "symbol": "sh601825",
+      "price": 8.81,
+      "today_pct": -1.122,
+      "nmc_yi": 830.99,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 84.11,
+      "window_ret_pct": 5.26,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 1.29,
+      "max_up_pct": 2.65,
+      "avg_turn_pct": 0.29,
+      "median_turn_pct": 0.28,
+      "last_turn_pct": 0.34,
+      "vol_ratio": 1.16,
+      "max_dd_pct": -1.55,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.99,
+      "rs_excess_pct": 2.16,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.24,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 2.65,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.7,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.05,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.71,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600919",
+      "name": "江苏银行",
+      "symbol": "sh600919",
+      "price": 12.04,
+      "today_pct": -0.742,
+      "nmc_yi": 2209.5,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 83.1,
+      "window_ret_pct": 3.79,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.25,
+      "max_up_pct": 2.05,
+      "avg_turn_pct": 0.49,
+      "median_turn_pct": 0.5,
+      "last_turn_pct": 0.5,
+      "vol_ratio": 1.01,
+      "max_dd_pct": -1.61,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.82,
+      "rs_excess_pct": 1.98,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.51,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.17,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.77,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 2.05,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.59,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601658",
+      "name": "邮储银行",
+      "symbol": "sh601658",
+      "price": 5.04,
+      "today_pct": 0.0,
+      "nmc_yi": 3655.4,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 82.09,
+      "window_ret_pct": 1.61,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 0.57,
+      "max_up_pct": 1.2,
+      "avg_turn_pct": 0.18,
+      "median_turn_pct": 0.16,
+      "last_turn_pct": 0.19,
+      "vol_ratio": 1.05,
+      "max_dd_pct": -1.21,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.61,
+      "rs_excess_pct": 1.77,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.0,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.41,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.41,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.01,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.2,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601225",
+      "name": "陕西煤业",
+      "symbol": "sh601225",
+      "price": 26.52,
+      "today_pct": 0.075,
+      "nmc_yi": 2571.11,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 81.63,
+      "window_ret_pct": 11.01,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.68,
+      "max_up_pct": 4.14,
+      "avg_turn_pct": 0.41,
+      "median_turn_pct": 0.41,
+      "last_turn_pct": 0.33,
+      "vol_ratio": 0.8,
+      "max_dd_pct": -3.69,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.7,
+      "rs_excess_pct": 1.87,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.42,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.48,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.07,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.35,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.99,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601919",
+      "name": "中远海控",
+      "symbol": "sh601919",
+      "price": 17.07,
+      "today_pct": -2.009,
+      "nmc_yi": 2143.4,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 80.58,
+      "window_ret_pct": 10.84,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 1.55,
+      "max_up_pct": 3.77,
+      "avg_turn_pct": 0.74,
+      "median_turn_pct": 0.76,
+      "last_turn_pct": 1.07,
+      "vol_ratio": 1.44,
+      "max_dd_pct": -2.49,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.78,
+      "rs_excess_pct": 1.94,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -1.02,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.1,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 2.13,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.47,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.41,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "000651",
+      "name": "格力电器",
+      "symbol": "sz000651",
+      "price": 41.62,
+      "today_pct": 0.41,
+      "nmc_yi": 2298.26,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 80.39,
+      "window_ret_pct": 3.35,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 0.88,
+      "max_up_pct": 3.15,
+      "avg_turn_pct": 0.74,
+      "median_turn_pct": 0.7,
+      "last_turn_pct": 0.88,
+      "vol_ratio": 1.19,
+      "max_dd_pct": -1.92,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.76,
+      "rs_excess_pct": 1.92,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.32,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.02,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.43,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 3.15,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.51,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601018",
+      "name": "宁波港",
+      "symbol": "sh601018",
+      "price": 3.45,
+      "today_pct": 0.583,
+      "nmc_yi": 671.18,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 80.07,
+      "window_ret_pct": 1.77,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 0.94,
+      "max_up_pct": 1.8,
+      "avg_turn_pct": 0.28,
+      "median_turn_pct": 0.27,
+      "last_turn_pct": 0.26,
+      "vol_ratio": 0.93,
+      "max_dd_pct": -2.06,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.54,
+      "rs_excess_pct": 1.7,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.88,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.0,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.3,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.8,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.48,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600803",
+      "name": "新奥股份",
+      "symbol": "sh600803",
+      "price": 17.86,
+      "today_pct": 1.593,
+      "nmc_yi": 548.61,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 79.7,
+      "window_ret_pct": 3.42,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.01,
+      "max_up_pct": 1.74,
+      "avg_turn_pct": 0.22,
+      "median_turn_pct": 0.21,
+      "last_turn_pct": 0.25,
+      "vol_ratio": 1.16,
+      "max_dd_pct": -2.18,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.48,
+      "rs_excess_pct": 1.64,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.34,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.06,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.14,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.13,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.4,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "605008",
+      "name": "长鸿高科",
+      "symbol": "sh605008",
+      "price": 12.91,
+      "today_pct": -2.271,
+      "nmc_yi": 83.39,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 79.41,
+      "window_ret_pct": 12.75,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 1.58,
+      "max_up_pct": 3.01,
+      "avg_turn_pct": 0.85,
+      "median_turn_pct": 0.56,
+      "last_turn_pct": 1.15,
+      "vol_ratio": 1.35,
+      "max_dd_pct": -2.27,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.61,
+      "rs_excess_pct": 1.77,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -1.02,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.25,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.2,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.03,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.09,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600377",
+      "name": "宁沪高速",
+      "symbol": "sh600377",
+      "price": 12.25,
+      "today_pct": 0.492,
+      "nmc_yi": 465.77,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 79.1,
+      "window_ret_pct": 2.6,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 0.83,
+      "max_up_pct": 2.27,
+      "avg_turn_pct": 0.23,
+      "median_turn_pct": 0.21,
+      "last_turn_pct": 0.3,
+      "vol_ratio": 1.29,
+      "max_dd_pct": -1.65,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.47,
+      "rs_excess_pct": 1.64,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.84,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.66,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.34,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.25,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.27,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600740",
+      "name": "山西焦化",
+      "symbol": "sh600740",
+      "price": 3.82,
+      "today_pct": 1.867,
+      "nmc_yi": 97.87,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 79.0,
+      "window_ret_pct": 7.91,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 2.12,
+      "max_up_pct": 4.18,
+      "avg_turn_pct": 1.91,
+      "median_turn_pct": 1.57,
+      "last_turn_pct": 3.0,
+      "vol_ratio": 1.58,
+      "max_dd_pct": -4.28,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 1.45,
+      "rs_excess_pct": 2.61,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.39,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -2.2,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.0,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 4.18,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 3.88,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600350",
+      "name": "山东高速",
+      "symbol": "sh600350",
+      "price": 10.9,
+      "today_pct": 1.584,
+      "nmc_yi": 526.97,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 78.87,
+      "window_ret_pct": 1.11,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 0.91,
+      "max_up_pct": 1.61,
+      "avg_turn_pct": 0.29,
+      "median_turn_pct": 0.29,
+      "last_turn_pct": 0.34,
+      "vol_ratio": 1.2,
+      "max_dd_pct": -4.54,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.69,
+      "rs_excess_pct": 1.85,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.5,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 1.29,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.75,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -0.19,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.61,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601128",
+      "name": "常熟银行",
+      "symbol": "sh601128",
+      "price": 6.33,
+      "today_pct": 0.317,
+      "nmc_yi": 230.93,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 78.79,
+      "window_ret_pct": 1.77,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 0.56,
+      "max_up_pct": 1.14,
+      "avg_turn_pct": 1.18,
+      "median_turn_pct": 1.24,
+      "last_turn_pct": 1.24,
+      "vol_ratio": 1.05,
+      "max_dd_pct": -2.09,
+      "rs_up_rate": 0.8,
+      "rs_mean_pct": 0.45,
+      "rs_excess_pct": 1.62,
+      "down_days": 5,
+      "up_on_down": 4,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.65,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.33,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.33,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.14,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.12,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600059",
+      "name": "古越龙山",
+      "symbol": "sh600059",
+      "price": 8.14,
+      "today_pct": 1.244,
+      "nmc_yi": 74.2,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 78.59,
+      "window_ret_pct": 0.12,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 2.02,
+      "max_up_pct": 4.86,
+      "avg_turn_pct": 1.8,
+      "median_turn_pct": 1.66,
+      "last_turn_pct": 1.1,
+      "vol_ratio": 0.61,
+      "max_dd_pct": -6.41,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 1.18,
+      "rs_excess_pct": 2.35,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.75,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 4.86,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.61,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -1.83,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.03,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601766",
+      "name": "中国中车",
+      "symbol": "sh601766",
+      "price": 6.13,
+      "today_pct": 0.822,
+      "nmc_yi": 1491.29,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 77.75,
+      "window_ret_pct": 3.03,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.02,
+      "max_up_pct": 1.64,
+      "avg_turn_pct": 0.58,
+      "median_turn_pct": 0.57,
+      "last_turn_pct": 0.41,
+      "vol_ratio": 0.71,
+      "max_dd_pct": -2.49,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.13,
+      "rs_excess_pct": 1.3,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.17,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -2.16,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.17,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.83,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.66,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600256",
+      "name": "广汇能源",
+      "symbol": "sh600256",
+      "price": 6.17,
+      "today_pct": 0.162,
+      "nmc_yi": 394.39,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 77.58,
+      "window_ret_pct": 14.9,
+      "up_day_ratio": 0.733,
+      "avg_up_pct": 1.62,
+      "max_up_pct": 4.1,
+      "avg_turn_pct": 1.96,
+      "median_turn_pct": 1.86,
+      "last_turn_pct": 1.86,
+      "vol_ratio": 0.95,
+      "max_dd_pct": -1.87,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.45,
+      "rs_excess_pct": 1.61,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.38,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.87,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 3.2,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.65,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -1.12,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "603116",
+      "name": "红蜻蜓",
+      "symbol": "sh603116",
+      "price": 6.57,
+      "today_pct": 1.233,
+      "nmc_yi": 37.86,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 77.14,
+      "window_ret_pct": 11.36,
+      "up_day_ratio": 0.733,
+      "avg_up_pct": 1.98,
+      "max_up_pct": 3.67,
+      "avg_turn_pct": 1.24,
+      "median_turn_pct": 1.18,
+      "last_turn_pct": 1.18,
+      "vol_ratio": 0.95,
+      "max_dd_pct": -3.88,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.41,
+      "rs_excess_pct": 1.58,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.82,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.13,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.57,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -3.88,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 3.67,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "symbol": "sh601318",
+      "price": 55.01,
+      "today_pct": 0.164,
+      "nmc_yi": 5864.1,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 76.72,
+      "window_ret_pct": 1.83,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 0.86,
+      "max_up_pct": 2.94,
+      "avg_turn_pct": 0.65,
+      "median_turn_pct": 0.6,
+      "last_turn_pct": 0.69,
+      "vol_ratio": 1.07,
+      "max_dd_pct": -5.0,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.49,
+      "rs_excess_pct": 1.65,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -1.44,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.38,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.93,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.48,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.94,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600123",
+      "name": "兰花科创",
+      "symbol": "sh600123",
+      "price": 7.26,
+      "today_pct": -0.548,
+      "nmc_yi": 106.96,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 76.7,
+      "window_ret_pct": 4.76,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.13,
+      "max_up_pct": 3.58,
+      "avg_turn_pct": 1.79,
+      "median_turn_pct": 1.72,
+      "last_turn_pct": 1.65,
+      "vol_ratio": 0.92,
+      "max_dd_pct": -1.64,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.44,
+      "rs_excess_pct": 1.61,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.97,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.14,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.96,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -0.68,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.83,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600348",
+      "name": "华阳股份",
+      "symbol": "sh600348",
+      "price": 8.97,
+      "today_pct": -1.211,
+      "nmc_yi": 323.59,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 76.34,
+      "window_ret_pct": 6.15,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.36,
+      "max_up_pct": 3.5,
+      "avg_turn_pct": 0.85,
+      "median_turn_pct": 0.84,
+      "last_turn_pct": 0.84,
+      "vol_ratio": 1.0,
+      "max_dd_pct": -2.61,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.2,
+      "rs_excess_pct": 1.36,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.92,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.38,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.9,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -0.78,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.34,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "301003",
+      "name": "江苏博云",
+      "symbol": "sz301003",
+      "price": 57.7,
+      "today_pct": 0.348,
+      "nmc_yi": 43.36,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 76.1,
+      "window_ret_pct": 17.28,
+      "up_day_ratio": 0.8,
+      "avg_up_pct": 2.41,
+      "max_up_pct": 6.08,
+      "avg_turn_pct": 2.76,
+      "median_turn_pct": 2.67,
+      "last_turn_pct": 2.67,
+      "vol_ratio": 0.97,
+      "max_dd_pct": -4.06,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.72,
+      "rs_excess_pct": 1.88,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 2.3,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.56,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 4.17,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -4.06,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 2.75,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601008",
+      "name": "连云港",
+      "symbol": "sh601008",
+      "price": 4.48,
+      "today_pct": 2.752,
+      "nmc_yi": 55.58,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 75.17,
+      "window_ret_pct": 1.59,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.55,
+      "max_up_pct": 3.86,
+      "avg_turn_pct": 1.26,
+      "median_turn_pct": 0.8,
+      "last_turn_pct": 2.12,
+      "vol_ratio": 1.69,
+      "max_dd_pct": -5.25,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.87,
+      "rs_excess_pct": 2.03,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.23,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.69,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.69,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 3.86,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.69,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600834",
+      "name": "申通地铁",
+      "symbol": "sh600834",
+      "price": 7.48,
+      "today_pct": 2.186,
+      "nmc_yi": 35.71,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 75.16,
+      "window_ret_pct": 2.05,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.01,
+      "max_up_pct": 2.72,
+      "avg_turn_pct": 0.5,
+      "median_turn_pct": 0.43,
+      "last_turn_pct": 0.5,
+      "vol_ratio": 0.99,
+      "max_dd_pct": -3.17,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.08,
+      "rs_excess_pct": 1.25,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.27,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.4,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.82,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.27,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -0.54,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600801",
+      "name": "华新建材",
+      "symbol": "sh600801",
+      "price": 23.3,
+      "today_pct": -1.229,
+      "nmc_yi": 312.62,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 75.14,
+      "window_ret_pct": 6.25,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 2.05,
+      "max_up_pct": 5.12,
+      "avg_turn_pct": 0.91,
+      "median_turn_pct": 0.91,
+      "last_turn_pct": 0.51,
+      "vol_ratio": 0.56,
+      "max_dd_pct": -6.6,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.34,
+      "rs_excess_pct": 1.5,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.5,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -2.06,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -0.39,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.88,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.77,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "000983",
+      "name": "山西焦煤",
+      "symbol": "sz000983",
+      "price": 7.32,
+      "today_pct": -1.613,
+      "nmc_yi": 415.56,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 74.53,
+      "window_ret_pct": 13.31,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 2.36,
+      "max_up_pct": 4.72,
+      "avg_turn_pct": 1.36,
+      "median_turn_pct": 1.29,
+      "last_turn_pct": 1.99,
+      "vol_ratio": 1.47,
+      "max_dd_pct": -3.06,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.47,
+      "rs_excess_pct": 1.64,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.48,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.48,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.0,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.73,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.64,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "603055",
+      "name": "台华新材",
+      "symbol": "sh603055",
+      "price": 9.15,
+      "today_pct": 3.977,
+      "nmc_yi": 81.3,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 74.3,
+      "window_ret_pct": 8.8,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.86,
+      "max_up_pct": 4.14,
+      "avg_turn_pct": 0.9,
+      "median_turn_pct": 0.76,
+      "last_turn_pct": 1.1,
+      "vol_ratio": 1.22,
+      "max_dd_pct": -3.44,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.24,
+      "rs_excess_pct": 1.4,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.12,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 2.05,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.33,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -2.33,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.03,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600018",
+      "name": "上港集团",
+      "symbol": "sh600018",
+      "price": 5.24,
+      "today_pct": 0.0,
+      "nmc_yi": 1218.13,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 72.68,
+      "window_ret_pct": 1.35,
+      "up_day_ratio": 0.4,
+      "avg_up_pct": 0.71,
+      "max_up_pct": 1.17,
+      "avg_turn_pct": 0.18,
+      "median_turn_pct": 0.18,
+      "last_turn_pct": 0.18,
+      "vol_ratio": 0.99,
+      "max_dd_pct": -2.5,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.43,
+      "rs_excess_pct": 1.59,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.19,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.39,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.39,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.17,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.16,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "301039",
+      "name": "中集车辆",
+      "symbol": "sz301039",
+      "price": 8.3,
+      "today_pct": 0.484,
+      "nmc_yi": 120.1,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 72.65,
+      "window_ret_pct": 1.47,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 1.46,
+      "max_up_pct": 3.51,
+      "avg_turn_pct": 1.14,
+      "median_turn_pct": 1.12,
+      "last_turn_pct": 1.78,
+      "vol_ratio": 1.56,
+      "max_dd_pct": -5.01,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.52,
+      "rs_excess_pct": 1.68,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -2.11,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -2.13,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.67,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.65,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 3.51,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "300826",
+      "name": "测绘股份",
+      "symbol": "sz300826",
+      "price": 14.94,
+      "today_pct": 0.403,
+      "nmc_yi": 32.8,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 72.38,
+      "window_ret_pct": 11.49,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 2.36,
+      "max_up_pct": 5.3,
+      "avg_turn_pct": 2.86,
+      "median_turn_pct": 2.64,
+      "last_turn_pct": 2.28,
+      "vol_ratio": 0.8,
+      "max_dd_pct": -3.68,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.33,
+      "rs_excess_pct": 1.49,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -1.86,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 2.99,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 3.32,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -3.68,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.88,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "600073",
+      "name": "光明肉业",
+      "symbol": "sh600073",
+      "price": 5.37,
+      "today_pct": 1.512,
+      "nmc_yi": 50.36,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 72.1,
+      "window_ret_pct": 4.27,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 2.02,
+      "max_up_pct": 3.23,
+      "avg_turn_pct": 1.46,
+      "median_turn_pct": 1.31,
+      "last_turn_pct": 1.31,
+      "vol_ratio": 0.89,
+      "max_dd_pct": -3.31,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.06,
+      "rs_excess_pct": 1.22,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -0.57,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 1.92,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.87,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -3.31,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.38,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "300498",
+      "name": "温氏股份",
+      "symbol": "sz300498",
+      "price": 14.14,
+      "today_pct": 3.514,
+      "nmc_yi": 840.75,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 71.86,
+      "window_ret_pct": 4.05,
+      "up_day_ratio": 0.533,
+      "avg_up_pct": 1.79,
+      "max_up_pct": 3.54,
+      "avg_turn_pct": 0.79,
+      "median_turn_pct": 0.63,
+      "last_turn_pct": 1.21,
+      "vol_ratio": 1.54,
+      "max_dd_pct": -4.06,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.15,
+      "rs_excess_pct": 1.31,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": -1.92,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 1.17,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 3.19,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -2.23,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.52,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "601985",
+      "name": "中国核电",
+      "symbol": "sh601985",
+      "price": 8.84,
+      "today_pct": 0.798,
+      "nmc_yi": 1669.28,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 71.04,
+      "window_ret_pct": 0.23,
+      "up_day_ratio": 0.467,
+      "avg_up_pct": 0.46,
+      "max_up_pct": 0.8,
+      "avg_turn_pct": 0.4,
+      "median_turn_pct": 0.34,
+      "last_turn_pct": 0.42,
+      "vol_ratio": 1.04,
+      "max_dd_pct": -1.91,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.21,
+      "rs_excess_pct": 1.37,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.34,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.11,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.57,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -0.68,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 0.69,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "301331",
+      "name": "恩威医药",
+      "symbol": "sz301331",
+      "price": 22.33,
+      "today_pct": 2.244,
+      "nmc_yi": 22.92,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 70.63,
+      "window_ret_pct": 7.0,
+      "up_day_ratio": 0.667,
+      "avg_up_pct": 1.26,
+      "max_up_pct": 2.24,
+      "avg_turn_pct": 1.85,
+      "median_turn_pct": 1.83,
+      "last_turn_pct": 2.12,
+      "vol_ratio": 1.14,
+      "max_dd_pct": -4.25,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.05,
+      "rs_excess_pct": 1.21,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.43,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.87,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": -1.16,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 0.41,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -1.31,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "605168",
+      "name": "三人行",
+      "symbol": "sh605168",
+      "price": 46.87,
+      "today_pct": -1.326,
+      "nmc_yi": 98.81,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 70.35,
+      "window_ret_pct": 19.05,
+      "up_day_ratio": 0.733,
+      "avg_up_pct": 2.6,
+      "max_up_pct": 4.83,
+      "avg_turn_pct": 2.99,
+      "median_turn_pct": 2.99,
+      "last_turn_pct": 2.67,
+      "vol_ratio": 0.89,
+      "max_dd_pct": -3.64,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.12,
+      "rs_excess_pct": 1.28,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 2.58,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -0.84,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.35,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -3.64,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.13,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "300787",
+      "name": "海能实业",
+      "symbol": "sz300787",
+      "price": 10.42,
+      "today_pct": 5.146,
+      "nmc_yi": 20.48,
+      "limit_pct": 20.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 67.44,
+      "window_ret_pct": 19.09,
+      "up_day_ratio": 0.733,
+      "avg_up_pct": 2.46,
+      "max_up_pct": 6.76,
+      "avg_turn_pct": 3.56,
+      "median_turn_pct": 2.68,
+      "last_turn_pct": 3.64,
+      "vol_ratio": 1.02,
+      "max_dd_pct": -5.71,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.25,
+      "rs_excess_pct": 1.42,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 1.35,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 5.39,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 0.38,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -4.57,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -1.29,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "000430",
+      "name": "张家界",
+      "symbol": "sz000430",
+      "price": 6.85,
+      "today_pct": 1.935,
+      "nmc_yi": 25.38,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 66.2,
+      "window_ret_pct": 4.26,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.27,
+      "max_up_pct": 2.63,
+      "avg_turn_pct": 2.26,
+      "median_turn_pct": 1.94,
+      "last_turn_pct": 4.15,
+      "vol_ratio": 1.84,
+      "max_dd_pct": -4.01,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.02,
+      "rs_excess_pct": 1.18,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.46,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": 0.15,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 1.82,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": -4.01,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": 1.66,
+          "index_pct": -1.21
+        }
+      ]
+    },
+    {
+      "code": "002852",
+      "name": "道道全",
+      "symbol": "sz002852",
+      "price": 8.06,
+      "today_pct": 3.069,
+      "nmc_yi": 23.04,
+      "limit_pct": 10.0,
+      "ok": true,
+      "reason": "ok",
+      "score": 62.53,
+      "window_ret_pct": 4.4,
+      "up_day_ratio": 0.6,
+      "avg_up_pct": 1.91,
+      "max_up_pct": 3.68,
+      "avg_turn_pct": 3.4,
+      "median_turn_pct": 2.69,
+      "last_turn_pct": 3.76,
+      "vol_ratio": 1.1,
+      "max_dd_pct": -7.89,
+      "rs_up_rate": 0.6,
+      "rs_mean_pct": 0.05,
+      "rs_excess_pct": 1.22,
+      "down_days": 5,
+      "up_on_down": 3,
+      "down_day_detail": [
+        {
+          "date": "2026-08-11",
+          "stock_pct": 0.38,
+          "index_pct": -0.81
+        },
+        {
+          "date": "2026-08-13",
+          "stock_pct": -1.89,
+          "index_pct": -0.57
+        },
+        {
+          "date": "2026-08-18",
+          "stock_pct": 3.05,
+          "index_pct": -0.32
+        },
+        {
+          "date": "2026-08-19",
+          "stock_pct": 1.11,
+          "index_pct": -2.9
+        },
+        {
+          "date": "2026-08-24",
+          "stock_pct": -2.37,
+          "index_pct": -1.21
+        }
+      ]
+    }
+  ],
+  "hit_count": 57,
+  "today_quiet_if_index_down": [],
+  "today_count": 0
+}

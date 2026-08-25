@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -156,6 +157,10 @@ def run(args: argparse.Namespace) -> int:
             ]},
             "down_day_detail": m.down_day_detail,
         }
+        if args.max_nmc_yi is not None and rec["nmc_yi"] > args.max_nmc_yi:
+            continue
+        if args.exclude_re and re.search(args.exclude_re, name):
+            continue
         if m.ok:
             hits.append(rec)
         try:
@@ -180,7 +185,7 @@ def run(args: argparse.Namespace) -> int:
         "last_index_day": last_index_d,
         "last_index_ret_pct": round(last_index_ret, 2),
         "universe": len(universe),
-        "hits": hits[: args.top],
+        "hits": hits,
         "hit_count": len(hits),
         "today_quiet_if_index_down": today_hits[: args.top],
         "today_count": len(today_hits),
@@ -217,6 +222,8 @@ def main() -> int:
     p.add_argument("--index", default="sh000300", help="sh000300 / sh000001 / sz399006")
     p.add_argument("--days", type=int, default=15)
     p.add_argument("--top", type=int, default=40)
+    p.add_argument("--max-nmc-yi", type=float, default=None, help="drop names with float cap above this (亿元)")
+    p.add_argument("--exclude-re", default="", help="regex on name, e.g. 银行|证券")
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--out", default=str(ROOT / "analysis" / "data"))
     p.add_argument("--snapshot-cache", default=str(ROOT / "analysis" / "data" / "cache" / "snapshot.json"))

@@ -4,9 +4,10 @@
 
 ```bash
 python3 -m screener --index sh000300 --days 15 --top 40
+python3 -m screener --max-nmc-yi 200 --exclude-re '银行|证券|保险'
 ```
 
-规则和读法见 [analysis/quiet-relative-strength.md](analysis/quiet-relative-strength.md)。单元测试：
+规则、读法和 2026-08-25 的一次扫描见 [analysis/quiet-relative-strength.md](analysis/quiet-relative-strength.md)。单元测试：
 
 ```bash
 python3 -m unittest tests.test_rules -v
