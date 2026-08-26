@@ -1,0 +1,67 @@
+{
+  "trade_date": "2026-08-26",
+  "snapshot": "09:25:00",
+  "zt_date": "20260825",
+  "zt_total": 65,
+  "first_total": 56,
+  "max_board": {"code": "002412", "name": "汉森制药", "lbc": 5},
+  "top3": [
+    {
+      "rank": 1,
+      "code": "002742",
+      "name": "冀衡医药",
+      "open_pct": 10.04,
+      "auction_zt": true,
+      "sealed": true,
+      "ratio_pct": 7.8,
+      "bid_yi": 1.86,
+      "seal_ratio_pct": 7.6,
+      "y_fbt": "09:43:06",
+      "y_zbc": 0,
+      "y_hs": 9.2,
+      "ltsz_yi": 24.5,
+      "theme": "仿制药 / 药监局局务会",
+      "score": 126
+    },
+    {
+      "rank": 2,
+      "code": "002418",
+      "name": "康盛股份",
+      "open_pct": 10.12,
+      "auction_zt": true,
+      "sealed": true,
+      "ratio_pct": 19.7,
+      "bid_yi": 4.94,
+      "seal_ratio_pct": 10.7,
+      "y_fbt": "10:00:09",
+      "y_zbc": 1,
+      "y_hs": 8.3,
+      "ltsz_yi": 46.0,
+      "theme": "液冷服务器 / 中金研报",
+      "score": 99
+    },
+    {
+      "rank": 3,
+      "code": "002855",
+      "name": "捷荣技术",
+      "open_pct": 10.0,
+      "auction_zt": true,
+      "sealed": true,
+      "ratio_pct": 22.6,
+      "bid_yi": 0.5,
+      "seal_ratio_pct": 1.9,
+      "y_fbt": "11:14:06",
+      "y_zbc": 0,
+      "y_hs": 1.9,
+      "ltsz_yi": 27.1,
+      "theme": "苹果折叠屏 / 果链",
+      "score": 98
+    }
+  ],
+  "runner_up": {
+    "code": "002686",
+    "name": "亿利达",
+    "open_pct": 7.48,
+    "note": "质量最好的未封死高开，确定性低于三只竞价封死"
+  }
+}
