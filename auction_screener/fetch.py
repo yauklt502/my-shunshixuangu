@@ -38,18 +38,18 @@ TREND_PATH = (
 )
 
 
-def http_json(url: str, *, retries: int = 4, referer: str = "https://quote.eastmoney.com/") -> Any:
+def http_json(url: str, *, retries: int = 3, referer: str = "https://quote.eastmoney.com/") -> Any:
     last: Exception | None = None
-    delay = 0.4
+    delay = 0.25
     for _ in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Referer": referer})
-            with urllib.request.urlopen(req, timeout=25, context=CTX) as resp:
+            with urllib.request.urlopen(req, timeout=12, context=CTX) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
             last = exc
             time.sleep(delay)
-            delay = min(delay * 2, 4.0)
+            delay = min(delay * 2, 2.0)
     raise RuntimeError(f"request failed: {url}") from last
 
 

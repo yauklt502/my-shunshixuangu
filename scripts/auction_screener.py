@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,6 @@ if str(ROOT) not in sys.path:
 from auction_screener.fetch import (  # noqa: E402
     CST,
     auction_from_trends,
-    fetch_free_float,
     fetch_trends,
     latest_zt_date,
 )
@@ -44,8 +44,9 @@ def enrich(zt: dict[str, Any]) -> dict[str, Any] | None:
     auction = auction_from_trends(payload)
     if not auction:
         return None
-    free = fetch_free_float(code)
     prev = auction["prev_close"] or zt_prev_close(zt)
+    ltsz = float(zt.get("ltsz") or 0)
+    free = (ltsz / prev) if prev else 0.0
     today = auction["today_auction"]
     yest = auction["yest_auction"]
     open_px = today["px"]
@@ -183,16 +184,21 @@ def main() -> int:
     cands = [x for x in pool if is_main_board(x["c"], x["n"])]
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
-    for i, zt in enumerate(cands, 1):
-        try:
-            row = enrich(zt)
-            if row:
-                rows.append(row)
-            else:
-                errors.append(f"{zt['c']} {zt['n']} no auction bar")
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"{zt['c']} {zt['n']} {exc}")
-        print(f"\rfetch {i}/{len(cands)} ok={len(rows)} err={len(errors)}", end="", file=sys.stderr)
+    done = 0
+    with ThreadPoolExecutor(max_workers=8) as pool_ex:
+        futs = {pool_ex.submit(enrich, zt): zt for zt in cands}
+        for fut in as_completed(futs):
+            zt = futs[fut]
+            done += 1
+            try:
+                row = fut.result()
+                if row:
+                    rows.append(row)
+                else:
+                    errors.append(f"{zt['c']} {zt['n']} no auction bar")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{zt['c']} {zt['n']} {exc}")
+            print(f"\rfetch {done}/{len(cands)} ok={len(rows)} err={len(errors)}", end="", file=sys.stderr)
     print(file=sys.stderr)
     picked = sequential_select(rows)
     trade_date = rows[0]["trade_date"] if rows else now.strftime("%Y-%m-%d")
