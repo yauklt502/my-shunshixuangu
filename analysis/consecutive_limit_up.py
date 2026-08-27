@@ -27,6 +27,7 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from kline_streaks import detect_streaks, fetch_all_klines, fetch_universe  # noqa: E402
 from seat_alias import classify_seat, short_seat_name  # noqa: E402
 
 CACHE = ROOT / "data" / "cache"
@@ -34,6 +35,12 @@ PROCESSED = ROOT / "data" / "processed"
 REPORTS = ROOT / "reports"
 CHARTS = REPORTS / "charts"
 LOOKBACK = 90
+CONCEPT_SKIP = {
+    "昨日涨停", "昨日连板", "昨日触板", "昨日高振幅", "当日涨停", "连板", "最近多板",
+    "题材股", "趋势股", "融资融券", "深股通", "沪股通", "转融券",
+    "ST股", "东方财富热股", "QFII重仓", "机构重仓", "富时罗素", "标准普尔",
+    "破发股", "破增发价股", "长期破净",
+}
 
 HEADERS = {
     "User-Agent": (
@@ -53,8 +60,23 @@ def log(msg: str) -> None:
 
 
 def ensure_dirs() -> None:
-    for p in (CACHE, PROCESSED, REPORTS, CHARTS, CACHE / "zt", CACHE / "seats", CACHE / "info"):
+    for p in (
+        CACHE,
+        PROCESSED,
+        REPORTS,
+        CHARTS,
+        CACHE / "zt",
+        CACHE / "seats",
+        CACHE / "info",
+        CACHE / "kline",
+    ):
         p.mkdir(parents=True, exist_ok=True)
+
+
+def new_session() -> requests.Session:
+    s = requests.Session()
+    s.headers.update(HEADERS)
+    return s
 
 
 def get_json(url: str, params: Optional[dict] = None, retries: int = 5, timeout: int = 25, referer: Optional[str] = None) -> Any:
@@ -284,7 +306,10 @@ def reconstruct_streaks(zt: pd.DataFrame, dates: list[str]) -> pd.DataFrame:
 def fetch_lhb_range(start: str, end: str) -> pd.DataFrame:
     fp = CACHE / f"lhb_{start}_{end}.csv"
     if fp.exists():
-        return pd.read_csv(fp, dtype={"代码": str})
+        df = pd.read_csv(fp, dtype={"代码": str})
+        df["代码"] = df["代码"].astype(str).str.zfill(6)
+        df["上榜日"] = pd.to_datetime(df["上榜日"].astype(str).str.replace("-", "").str.slice(0, 8), format="%Y%m%d", errors="coerce").dt.strftime("%Y%m%d")
+        return df
     start_d = f"{start[:4]}-{start[4:6]}-{start[6:]}"
     end_d = f"{end[:4]}-{end[4:6]}-{end[6:]}"
     url = "https://datacenter-web.eastmoney.com/api/data/v1/get"
@@ -403,28 +428,22 @@ def fetch_stock_info(code: str) -> dict:
     if fp.exists():
         return json.loads(fp.read_text(encoding="utf-8"))
     info: dict[str, Any] = {"code": code}
-    mkt = 1 if code.startswith(("6", "9")) else 0
-    try:
-        payload = get_json(
-            "https://push2.eastmoney.com/api/qt/stock/get",
-            params={"secid": f"{mkt}.{code}", "fields": "f57,f58,f116,f117,f127,f128,f129"},
-            referer="https://quote.eastmoney.com/",
-        )
-        d = payload.get("data") or {}
-        info["industry"] = d.get("f127")
-        info["region"] = d.get("f128")
-        info["concepts"] = d.get("f129")
-        info["name"] = d.get("f58")
-    except Exception as e:  # noqa: BLE001
-        info["quote_error"] = str(e)
-    prefix = "SH" if mkt == 1 else "SZ"
-    if code.startswith(("8", "4")):
+    if code.startswith(("600", "601", "603", "605", "688", "689")):
+        prefix = "SH"
+        secid = f"1.{code}"
+    elif code.startswith(("8", "4", "92")):
         prefix = "BJ"
+        secid = f"0.{code}"
+    else:
+        prefix = "SZ"
+        secid = f"0.{code}"
     try:
         payload = get_json(
             "https://emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/CompanySurveyAjax",
             params={"code": f"{prefix}{code}"},
             referer="https://emweb.securities.eastmoney.com/",
+            timeout=12,
+            retries=3,
         )
         fxxg = payload.get("fxxg") or {}
         jbzl = payload.get("jbzl") or {}
@@ -433,6 +452,71 @@ def fetch_stock_info(code: str) -> dict:
         info["province"] = jbzl.get("qy")
     except Exception as e:  # noqa: BLE001
         info["survey_error"] = str(e)
+    try:
+        payload = get_json(
+            "https://emweb.securities.eastmoney.com/PC_HSF10/CoreConception/PageAjax",
+            params={"code": f"{prefix}{code}"},
+            referer="https://emweb.securities.eastmoney.com/",
+            timeout=12,
+            retries=3,
+        )
+        ssbk = payload.get("ssbk") or []
+        gnbk = payload.get("gnbk") or payload.get("hxtc") or []
+        boards = [x.get("BOARD_NAME") for x in ssbk if x.get("BOARD_NAME")]
+        concepts = [x.get("BOARD_NAME") for x in gnbk if x.get("BOARD_NAME")] if isinstance(gnbk, list) else []
+        if boards and not info.get("industry"):
+            info["industry"] = boards[0]
+        if boards and not info.get("region"):
+            for b in boards:
+                if str(b).endswith("板块") or str(b).endswith("省") or str(b).endswith("市"):
+                    info["region"] = b
+                    break
+        if concepts:
+            info["concepts"] = ",".join(concepts[:12])
+        elif isinstance(payload.get("hxtc"), list):
+            info["concepts"] = ",".join(
+                [x.get("BOARD_NAME") or x.get("SECURITY_NAME") or "" for x in payload["hxtc"] if isinstance(x, dict)][:12]
+            )
+    except Exception as e:  # noqa: BLE001
+        info["concept_error"] = str(e)
+    try:
+        payload = get_json(
+            "https://datacenter.eastmoney.com/securities/api/data/get",
+            params={
+                "type": "RPT_F10_CORETHEME_BOARDTYPE",
+                "sty": "BOARD_NAME,IS_PRECISE,BOARD_RANK",
+                "filter": f'(SECURITY_CODE="{code}")',
+                "client": "APP",
+                "source": "SECURITIES",
+                "p": "1",
+                "ps": "40",
+            },
+            referer="https://emweb.securities.eastmoney.com/",
+            timeout=12,
+            retries=3,
+        )
+        skip = {
+            "昨日涨停", "昨日连板", "昨日触板", "昨日高振幅", "当日涨停", "连板", "最近多板",
+            "题材股", "趋势股", "融资融券", "深股通", "沪股通", "转融券",
+            "ST股", "东方财富热股", "QFII重仓", "机构重仓", "富时罗素", "标准普尔",
+            "破发股", "破增发价股", "长期破净",
+        }
+        rows = ((payload.get("result") or {}).get("data")) or []
+        names = []
+        for x in rows:
+            n = x.get("BOARD_NAME")
+            if not n or n in skip:
+                continue
+            if str(x.get("IS_PRECISE")) == "1" or n not in names:
+                names.append(n)
+        if names:
+            info["concepts"] = ",".join(names[:12])
+    except Exception as e:  # noqa: BLE001
+        info["theme_error"] = str(e)
+    if not info.get("industry"):
+        info["industry"] = info.get("company_industry")
+    if not info.get("region"):
+        info["region"] = info.get("province")
     fp.write_text(json.dumps(info, ensure_ascii=False), encoding="utf-8")
     return info
 
@@ -505,7 +589,7 @@ def save_bar(counter: Counter, title: str, filename: str, xlabel: str = "") -> O
     path = CHARTS / filename
     fig.savefig(path, dpi=140)
     plt.close(fig)
-    return str(path.relative_to(ROOT))
+    return str(path.relative_to(REPORTS))
 
 
 def build_report(
@@ -522,6 +606,14 @@ def build_report(
     end_h = f"{end[:4]}-{end[4:6]}-{end[6:]}"
     n_stock = target["code"].nunique()
     stocks = target.drop_duplicates("code")
+    if not lhb.empty:
+        lhb = lhb.copy()
+        lhb["代码"] = lhb["代码"].astype(str).str.zfill(6)
+        lhb["上榜日"] = pd.to_datetime(
+            lhb["上榜日"].astype(str).str.replace("-", "").str.slice(0, 8),
+            format="%Y%m%d",
+            errors="coerce",
+        ).dt.strftime("%Y%m%d")
 
     # stock-level features
     feat_rows = []
@@ -530,7 +622,11 @@ def build_report(
         info = infos.get(code) or {}
         name = r["name"]
         mkt = market_of(code, name)
-        concepts = [c.strip() for c in str(info.get("concepts") or "").split(",") if c.strip()]
+        concepts = [
+            c.strip()
+            for c in str(info.get("concepts") or "").split(",")
+            if c.strip() and c.strip() not in CONCEPT_SKIP
+        ]
         list_date = info.get("list_date") or ""
         list_age_years = None
         if list_date and len(str(list_date)) >= 8:
@@ -541,7 +637,12 @@ def build_report(
             except Exception:  # noqa: BLE001
                 list_age_years = None
         is_subnew = bool(list_age_years is not None and list_age_years < 1)
-        is_st = "ST" in str(name).upper()
+        is_st = ("ST" in str(name).upper()) or ("退" in str(name))
+        mv_raw = r.get("peak_float_mv")
+        try:
+            mv_val = float(mv_raw) if mv_raw is not None and str(mv_raw) not in {"", "nan", "None"} else 0.0
+        except (TypeError, ValueError):
+            mv_val = 0.0
         feat_rows.append(
             {
                 "code": code,
@@ -550,13 +651,13 @@ def build_report(
                 "start": r["start"],
                 "end": r["end"],
                 "days_in_window": int(r["days_in_window"]),
-                "industry": r.get("industry") or info.get("industry"),
-                "region": info.get("region"),
+                "industry": r.get("industry") or info.get("industry") or info.get("company_industry"),
+                "region": info.get("region") or info.get("province"),
                 "market": mkt,
                 "peak_price": r.get("peak_price"),
-                "peak_float_mv_yi": (r.get("peak_float_mv") or 0) / 1e8,
-                "cap_bucket": cap_bucket(r.get("peak_float_mv") or 0),
-                "price_bucket": price_bucket(r.get("peak_price") or 0),
+                "peak_float_mv_yi": mv_val / 1e8,
+                "cap_bucket": cap_bucket(mv_val),
+                "price_bucket": price_bucket(float(r.get("peak_price") or 0)),
                 "avg_turnover": r.get("avg_turnover"),
                 "yiziban_days": r.get("yiziban_days"),
                 "list_date": list_date,
@@ -580,10 +681,22 @@ def build_report(
             streak_days.add((r["code"], d))
     zt_t["in_streak"] = [(c, d) in streak_days for c, d in zip(zt_t["code"], zt_t["date"])]
     zt_s = zt_t[zt_t["in_streak"]].copy()
+    if "first_seal" not in zt_s.columns:
+        zt_s["first_seal"] = None
+    if "open_times" not in zt_s.columns:
+        zt_s["open_times"] = None
+    if "turnover" not in zt_s.columns:
+        zt_s["turnover"] = None
+    if "seal_amt" not in zt_s.columns:
+        zt_s["seal_amt"] = None
     zt_s["first_sec"] = zt_s["first_seal"].map(seconds_from_open)
-    zt_s["is_auction_seal"] = zt_s["first_seal"].fillna(0).astype(int).between(92500, 92559)
-    zt_s["is_yiziban"] = (zt_s["turnover"].fillna(99) < 2.0) & (zt_s["open_times"].fillna(99) == 0)
+    zt_s["is_auction_seal"] = pd.to_numeric(zt_s["first_seal"], errors="coerce").fillna(-1).astype(int).between(92500, 92559)
+    if "yiziban" in zt_s.columns:
+        zt_s["is_yiziban"] = zt_s["yiziban"].fillna(False).astype(bool)
+    else:
+        zt_s["is_yiziban"] = (zt_s["turnover"].fillna(99) < 2.0) & (zt_s["open_times"].fillna(99) == 0)
     zt_s["board"] = zt_s["lianban"]
+    em_cover = int(zt_s["first_seal"].notna().sum()) if len(zt_s) else 0
 
     # LHB join
     lhb_t = pd.DataFrame()
@@ -743,11 +856,12 @@ def build_report(
 
     # first seal on 5+ days
     high_zt = zt_s[zt_s["lianban"] >= 5]
-    auction_rate = float(high_zt["is_auction_seal"].mean()) if len(high_zt) else 0
+    em_high = high_zt[high_zt["first_seal"].notna()] if "first_seal" in high_zt.columns else high_zt.iloc[0:0]
+    auction_rate = float(em_high["is_auction_seal"].mean()) if len(em_high) else 0
     yizi_rate = float(high_zt["is_yiziban"].mean()) if len(high_zt) else 0
-    open_mean = float(high_zt["open_times"].mean()) if len(high_zt) else 0
-    turn_mean = float(high_zt["turnover"].mean()) if len(high_zt) else 0
-    turn_all = float(zt_s["turnover"].mean()) if len(zt_s) else 0
+    open_mean = float(pd.to_numeric(em_high.get("open_times"), errors="coerce").mean()) if len(em_high) else 0
+    turn_mean = float(pd.to_numeric(em_high.get("turnover"), errors="coerce").mean()) if len(em_high) else 0
+    turn_all = float(pd.to_numeric(zt_s.get("turnover"), errors="coerce").mean()) if len(zt_s) else 0
 
     # weekly cluster of peak dates
     week_c = Counter()
@@ -791,16 +905,42 @@ def build_report(
     lines.append("")
     lines.append(f"- 样本窗口：{start_h} 至 {end_h}（{len(dates)} 个交易日）")
     lines.append(f"- 数据截止：{end_h}（上证指数最近一根日 K）")
-    lines.append(f"- 筛选标准：窗口内最高连板天数（东方财富涨停池「连板数」）≥ 5")
+    lines.append(f"- 筛选标准：窗口内用不复权日 K 识别的最高连板天数 ≥ 5（10%/20%/30%/ST 5%）")
     lines.append(f"- 命中个股：**{n_stock}** 只；命中连板周期：**{len(target)}** 段")
-    lines.append(f"- 数据来源：东方财富涨停股池、龙虎榜、行情/F10")
+    lines.append(f"- 数据来源：腾讯财经日 K、东方财富龙虎榜/涨停池/F10")
     lines.append("")
-    lines.append("> 连板高度用涨停池「连板数」：若周期从窗口前延续进来，高度可能大于窗口内可见涨停天数。同一只股票多段 5 板+周期会分别统计，个股共性按「最高的一段」去重。")
+    lines.append("> 连板高度按不复权收盘价是否触及涨停价累计。若周期从窗口前延续进来，高度可能大于窗口内可见涨停天数。同一只股票多段 5 板+周期会分别统计，个股共性按「最高的一段」去重。")
     lines.append("")
     lines.append("## 1. 样本名单")
     lines.append("")
     lines.append(md_table(stock_tbl, max_rows=80))
     lines.append("")
+    n_st = int(feat["is_st"].sum())
+    n_norm = n_stock - n_st
+    lines.append("### 1.1 先把 ST/退市整理 和正常股分开")
+    lines.append("")
+    lines.append(
+        f"{n_stock} 只里 **ST/退市 {n_st} 只（{pct(n_st, n_stock)}）**，非 ST **{n_norm} 只**。"
+        "ST 是 5% 涨停，5 连板累计大约 28%，只相当于普通 10cm 票的 2～3 板；"
+        "后面的市值、龙虎榜、游资结论以非 ST 为主，ST 单独看成「壳/重组炒作」。"
+    )
+    lines.append("")
+    if n_norm:
+        norm = feat[~feat["is_st"]].sort_values(["height", "end"], ascending=[False, False])
+        lines.append(
+            f"非 ST 最高 {int(norm['height'].max())} 板（"
+            + "、".join(f"{a}({int(b)}板)" for a, b in zip(norm.head(3)['name'], norm.head(3)['height']))
+            + f"），流通市值中位数 {norm['peak_float_mv_yi'].median():.1f} 亿。"
+        )
+        lines.append("")
+    if n_st:
+        stf = feat[feat["is_st"]].sort_values(["height", "end"], ascending=[False, False])
+        lines.append(
+            f"ST 最高 {int(stf['height'].max())} 板（"
+            + "、".join(f"{a}({int(b)}板)" for a, b in zip(stf.head(3)['name'], stf.head(3)['height']))
+            + "），这是 5% 台阶堆出来的高度，和 10cm 龙头不是一类交易。"
+        )
+        lines.append("")
     lines.append("## 2. 个股共同特点")
     lines.append("")
 
@@ -825,8 +965,8 @@ def build_report(
     kcb_n = int(feat["market"].str.contains("科创板").sum())
     st_n = int(feat["is_st"].sum())
     lines.append(
-        f"主板 {main_n} 只（{pct(main_n, n_stock)}），创业板 {cyb_n} 只，科创板 {kcb_n} 只，名称含 ST {st_n} 只。"
-        "主板 10% 涨停约束下走出 5 板，比 20cm 板块更依赖封单和情绪接力。"
+        f"非 ST 主板 {main_n} 只（{pct(main_n, n_stock)}），创业板 {cyb_n} 只，科创板 {kcb_n} 只，ST/退市 {st_n} 只（{pct(st_n, n_stock)}）。"
+        "窗口里几乎没有 20cm 科创/创业板的 5 板龙头，空间板主要发生在 10cm 主板；ST 则贡献了四成以上的「连板计数」。"
     )
     lines.append("")
 
@@ -858,10 +998,18 @@ def build_report(
     lines.append(md_table(counter_df(concept_c, "概念", total=n_stock, top=20)))
     if industry_c:
         top_ind, top_ind_n = industry_c.most_common(1)[0]
-        lines.append(
-            f"行业最集中的是 **{top_ind}**（{top_ind_n} 只，{pct(top_ind_n, n_stock)}）。"
-            "5 板以上几乎都出现在当时的主线或支线抱团里，很少是孤立个股行情。"
-        )
+        top3 = industry_c.most_common(3)
+        top3_n = sum(v for _, v in top3)
+        if top_ind_n / max(n_stock, 1) >= 0.25:
+            lines.append(
+                f"行业最集中的是 **{top_ind}**（{top_ind_n} 只，{pct(top_ind_n, n_stock)}）。"
+                f"前三行业合计 {top3_n} 只（{pct(top3_n, n_stock)}），5 板更常出现在当时正在交易的主线里。"
+            )
+        else:
+            lines.append(
+                f"样本里行业并不高度集中（第一名 {top_ind} 仅 {pct(top_ind_n, n_stock)}）。"
+                "更明显的共性是时间扎堆：高潮周里不同行业的龙头各自走完 5 板，而不是同一细分子行业包圆。"
+            )
         lines.append("")
     if week_c:
         lines.append("按最高板所在周的分布（看高潮是否扎堆）：")
@@ -878,8 +1026,9 @@ def build_report(
     lines.append("")
     sub_n = int(feat["is_subnew"].sum())
     lines.append(
-        f"上市不满 1 年的次新 {sub_n} 只（{pct(sub_n, n_stock)}），ST {st_n} 只（{pct(st_n, n_stock)}）。"
-        "次新流通盘小、故事新，容易被当成连板载体；ST 是 5% 涨停，5 连板空间和 10cm 票不可比，名单里单独标注。"
+        f"上市不满 1 年的次新 {sub_n} 只（{pct(sub_n, n_stock)}），ST/退市 {st_n} 只（{pct(st_n, n_stock)}）。"
+        + ("本窗口次新并未成为 5 板主力。" if sub_n == 0 else "次新流通盘小，容易被当成连板载体。")
+        + "ST 是 5% 涨停，和 10cm 票的空间、龙虎榜参与者都不是一类。"
     )
     lines.append("")
 
@@ -887,11 +1036,12 @@ def build_report(
     lines.append("### 2.8 封板质量（涨停池微观）")
     lines.append("")
     lines.append(
-        f"5 板及以上交易日样本 {len(high_zt)} 条："
-        f"集合竞价（09:25）封板占比 **{auction_rate * 100:.1f}%**，"
-        f"一字板（换手<2% 且炸板 0 次）占比 **{yizi_rate * 100:.1f}%**，"
-        f"平均炸板次数 {open_mean:.1f}，平均换手率 {turn_mean:.1f}%。"
-        f"对照这些股票全部连板日的平均换手 {turn_all:.1f}%。"
+        f"5 板及以上交易日样本 {len(high_zt)} 条；其中东方财富涨停池能对上封单/炸板的约 {em_cover} 条"
+        f"（该接口大约只保留最近两周）。"
+        f"一字板占比 **{yizi_rate * 100:.1f}%**"
+        + (f"，集合竞价（09:25）封板占比 **{auction_rate * 100:.1f}%**" if em_cover else "")
+        + (f"，平均炸板次数 {open_mean:.1f}，平均换手率 {turn_mean:.1f}%" if em_cover else "")
+        + "。"
     )
     lines.append("")
     if len(zt_s):
@@ -930,6 +1080,7 @@ def build_report(
     lines.append(
         f"连板周期内股票-交易日共 {streak_n} 条，对得上龙虎榜（去重后）{lhb_n} 条，上榜率 **{appear_rate * 100:.1f}%**。"
         "主板首板不一定进「日涨幅偏离值达到 7% 的前 5 只」；3 板之后「连续三个交易日涨幅偏离值累计达到 20%」几乎必上榜。"
+        "ST 的偏离值门槛更低，上榜更勤，但席位含金量通常不如 10cm 龙头。"
     )
     lines.append("")
 
@@ -972,8 +1123,10 @@ def build_report(
             high = lhb_s[lhb_s["阶段"] == "高位(5板+)"]
             if len(low) and len(high):
                 lines.append(
-                    f"低位平均净买 {low['净买亿'].mean():.2f} 亿 vs 高位 {high['净买亿'].mean():.2f} 亿。"
-                    "这是 5 板行情里最稳定的龙虎榜结构：**低位抢筹、高位分歧/出货**，高位即使仍有游资买入，卖单往往同步放大。"
+                    f"低位平均净买 {low['净买亿'].mean():.2f} 亿（净买入占比 {(low['净买亿']>0).mean()*100:.0f}%），"
+                    f"高位平均净买 {high['净买亿'].mean():.2f} 亿（净买入占比 {(high['净买亿']>0).mean()*100:.0f}%）。"
+                    f"高位买额 {high['买亿'].mean():.2f} 亿、卖额 {high['卖亿'].mean():.2f} 亿，"
+                    "买卖同时放大；净额正负看龙头是否还有人愿意抬，均值会被个别大额净买拉偏，更宜看净买入占比和买卖总量。"
                 )
                 lines.append("")
 
@@ -1074,44 +1227,61 @@ def build_report(
     lines.append("## 4. 综合结论")
     lines.append("")
     bullets = []
+    n_st = int(feat["is_st"].sum())
+    n_norm = n_stock - n_st
+    bullets.append(
+        f"**ST 贡献了大量「连板计数」**：{n_st} / {n_stock}（{pct(n_st, n_stock)}）是 ST/退市整理，5% 台阶堆到 5～11 板。"
+        f"真正接近短线资金认知的 10cm/20cm 五板，是剩下的 {n_norm} 只。"
+    )
     if n_stock:
+        mv = feat["peak_float_mv_yi"]
         bullets.append(
-            f"**小盘题材股是绝对主角**：{n_stock} 只 5 板+里，流通市值中位数 {feat['peak_float_mv_yi'].median():.1f} 亿，"
-            f"主板+低价+单一行业/概念扎堆，而不是权重蓝筹独立走主升。"
+            f"**体量偏小、价格不高**：{n_stock} 只 5 板+的峰值流通市值中位数 {mv.median():.1f} 亿，"
+            f"主板 {int(feat['market'].isin(['沪市主板','深市主板']).sum())} 只；"
+            "权重蓝筹几乎不走这种 10cm 连板路径。"
         )
-    if industry_c:
+    if week_c:
+        w, wn = week_c.most_common(1)[0]
         bullets.append(
-            f"**强主线抱团**：行业/概念高度集中（首位 {industry_c.most_common(1)[0][0]}），"
-            "5 板是板块高潮的产物，单独基本面故事很难走到这一步。"
+            f"**时间比行业更集中**：最高板落在 {w} 的有 {wn} 只（{pct(wn, n_stock)}）。"
+            "5 板是市场情绪高潮的产物，散落在冷淡周里的独立 5 板很少。"
         )
     bullets.append(
-        f"**封板从「一致性」走向「分歧」**：5 板以上一字/早封占比 {yizi_rate * 100:.1f}% / {auction_rate * 100:.1f}%，"
-        f"换手抬到 {turn_mean:.1f}%，需要更大成交额才能续板。"
+        f"**越高越分歧**：5 板以上一字板占比 {yizi_rate * 100:.1f}%；"
+        "低位更容易封死，高位换手和炸板上升（涨停池能覆盖的日子里尤其明显）。"
     )
     if not lhb_s.empty and inst_high:
         bullets.append(
-            f"**龙虎榜低位净买、高位变差**：5 板+当日平均净买 {inst_high['net_mean']:.2f} 亿，"
-            f"净买入占比仅 {inst_high['net_pos'] * 100:.1f}%；机构在高位连板里不是主导力量。"
+            f"**龙虎榜低位更齐、高位更吵**：5 板+当日净买入占比 {inst_high['net_pos'] * 100:.1f}%，"
+            f"平均净买 {inst_high['net_mean']:.2f} 亿；机构会出现，但不是高位连板的定价核心。"
         )
     if not cat_df.empty:
+        tot_buy = float(cat_df["买入额(亿)"].sum() or 0)
+        yz = cat_df[cat_df["席位类型"] == "知名游资"]
+        dc = cat_df[cat_df["席位类型"] == "东财散户通道"]
+        yz_s = f"{float(yz['买入额(亿)'].iloc[0])/tot_buy*100:.1f}%" if len(yz) and tot_buy else "0%"
+        dc_s = f"{float(dc['买入额(亿)'].iloc[0])/tot_buy*100:.1f}%" if len(dc) and tot_buy else "0%"
         bullets.append(
-            "**席位以游资接力为主，东财通道是高潮标志**：知名游资和其他营业部贡献大部分买额；"
-            "拉萨东财席位密集出现在买五，更像散户情绪温度计，而不是锁仓主力。"
+            f"**席位以营业部/游资接力为主**：知名游资买入额占比 {yz_s}，东财拉萨通道 {dc_s}。"
+            "东财席位是散户通道温度计，出现不等于有主力锁仓。"
         )
     if not peak_ret_df.empty:
-        bullets.append(
-            "**最高板后收益不乐观**：把最高板当终点而不是起点，和「5 板以后博弈拥挤、龙虎榜卖盘增加」一致。"
-        )
+        s1 = pd.to_numeric(peak_ret_df["后1日%"], errors="coerce").dropna()
+        if len(s1):
+            bullets.append(
+                f"**最高板不是稳盈终点**：有样本的最高板次日平均 {s1.mean():.2f}%（n={len(s1)}），"
+                "继续连板和直接大面会把均值拉得很散，仓位应对的是分布而不是平均数。"
+            )
     bullets.append(
-        "**可复用的观察清单**：主线板块 + 流通市值偏小 + 低位龙虎榜净买且游资（非东财）主导 + 早封/封单还在；"
-        "一旦 5 板附近换手陡升、东财席位包办买五、净额转负，连续性往往结束。"
+        "**可复用的观察清单**：情绪高潮周 + 流通市值不是特别大 + 低位龙虎榜净买为正、游资（非东财）在买五；"
+        "5 板附近若换手陡升、买卖五重合、净额转负，连续性往往结束。"
     )
     for b in bullets:
         lines.append(f"- {b}")
     lines.append("")
     lines.append("## 5. 方法与局限")
     lines.append("")
-    lines.append("- 涨停判定以东方财富涨停股池为准（含 10cm/20cm/30cm/ST 5cm），连板数用接口字段 `lbc`。")
+    lines.append("- 连板识别用不复权日 K（腾讯财经）：收盘价触及涨停价（10%/20%/30%/ST 5%，1 分钱容差）。东方财富涨停池只能覆盖最近约 15 个交易日，仅用于封单/炸板/首次封板等微观字段。")
     lines.append("- 龙虎榜不是全市场成交，只覆盖上榜营业部前五买卖；未上榜不代表没有大资金。")
     lines.append("- 游资别名来自公开席位对照，存在分仓、量化混席、营业部更名，只能作统计标签。")
     lines.append("- 「上榜后 N 日」收益来自东方财富字段，窗口末尾的高位板可能尚未满 5/10 日。")
@@ -1123,43 +1293,130 @@ def build_report(
 
 def main() -> None:
     ensure_dirs()
-    log("1/6 交易日历")
+    log("1/7 交易日历")
     dates = fetch_trade_dates(LOOKBACK)
     log(f"   {dates[0]} -> {dates[-1]}  n={len(dates)}")
 
-    log("2/6 涨停池")
-    zt = fetch_all_zt(dates)
-    zt.to_csv(PROCESSED / "zt_pool_90d.csv", index=False)
-    log(f"   rows={len(zt)} stocks={zt['code'].nunique() if not zt.empty else 0}")
+    log("2/7 全市场日K（补东方财富涨停池历史不足）")
+    universe = fetch_universe(SESSION, CACHE)
+    log(f"   universe={len(universe)}")
+    codes = [x["code"] for x in universe]
+    name_map = {x["code"]: x["name"] for x in universe}
+    mv_map = {x["code"]: x.get("float_mv") for x in universe}
+    price_map = {x["code"]: x.get("price") for x in universe}
+    klines = fetch_all_klines(new_session, codes, CACHE / "kline", workers=16)
 
-    log("3/6 还原连板周期")
-    streaks = reconstruct_streaks(zt, dates)
-    streaks.to_csv(PROCESSED / "all_streaks.csv", index=False)
-    target = streaks[streaks["height"] >= 5].copy()
-    # 每只股票保留最高的一段用于「共同特点」
-    if not target.empty:
+    log("3/7 识别连板>=5")
+    streak_rows = []
+    daily_rows = []
+    for code, bars in klines.items():
+        found = detect_streaks(code, name_map.get(code, ""), bars, dates)
+        for st in found:
+            if st["height_in_window"] < 5:
+                continue
+            run = st.pop("run")
+            streak_rows.append(st)
+            for rec in run:
+                daily_rows.append(
+                    {
+                        "date": rec["date"],
+                        "code": code,
+                        "name": st["name"],
+                        "price": rec["close"],
+                        "pct": rec["pct"],
+                        "lianban": rec["lianban"],
+                        "yiziban": rec["yiziban"],
+                        "amount": None,
+                        "float_mv": None,
+                        "total_mv": None,
+                        "turnover": None,
+                        "first_seal": None,
+                        "last_seal": None,
+                        "seal_amt": None,
+                        "open_times": None,
+                        "industry": None,
+                    }
+                )
+    streaks = pd.DataFrame(streak_rows)
+    zt_k = pd.DataFrame(daily_rows)
+    if not streaks.empty:
+        streaks.to_csv(PROCESSED / "all_streaks.csv", index=False)
+        target = streaks[streaks["height_in_window"] >= 5].copy()
+        target["height"] = target["height_in_window"]
         uniq = target.sort_values(["height", "end"], ascending=[False, False]).drop_duplicates("code")
     else:
+        target = pd.DataFrame()
         uniq = target
-    uniq.to_csv(PROCESSED / "lianban5_stocks.csv", index=False)
-    target.to_csv(PROCESSED / "lianban5_streaks.csv", index=False)
-    log(f"   streaks>={5}: {len(target)}  unique stocks: {0 if uniq.empty else uniq['code'].nunique()}")
+    log(f"   streaks>=5: {len(target)}  unique stocks: {0 if uniq.empty else uniq['code'].nunique()}")
 
-    log("4/6 龙虎榜区间")
+    log("4/7 涨停池微观字段（近约15日）")
+    zt_em = fetch_all_zt(dates)
+    zt_em.to_csv(PROCESSED / "zt_pool_em_available.csv", index=False)
+    if not zt_k.empty and not zt_em.empty:
+        em = zt_em.rename(columns={"code": "code"})[
+            ["date", "code", "turnover", "first_seal", "last_seal", "seal_amt", "open_times", "industry", "float_mv", "total_mv", "amount"]
+        ]
+        zt = zt_k.merge(em, on=["date", "code"], how="left", suffixes=("", "_em"))
+        for col in ["turnover", "first_seal", "last_seal", "seal_amt", "open_times", "industry", "float_mv", "total_mv", "amount"]:
+            em_col = f"{col}_em"
+            if em_col in zt.columns:
+                zt[col] = zt[em_col].combine_first(zt[col])
+                zt.drop(columns=[em_col], inplace=True)
+    else:
+        zt = zt_k
+    if not zt.empty:
+        zt.to_csv(PROCESSED / "lianban5_daily.csv", index=False)
+
+    log("5/7 龙虎榜区间")
     lhb = fetch_lhb_range(dates[0], dates[-1])
     log(f"   lhb rows={len(lhb)}")
 
-    log("5/6 席位明细 + F10")
+    # 补流通市值：优先龙虎榜当日，其次用当前流通市值按价格粗略折算
+    if not uniq.empty:
+        extra = []
+        for _, r in uniq.iterrows():
+            code = r["code"]
+            peak_mv = None
+            if not lhb.empty:
+                sub = lhb[(lhb["代码"] == code) & (lhb["上榜日"] == r["end"])]
+                if not sub.empty:
+                    peak_mv = sub.iloc[0].get("流通市值")
+            if peak_mv is None and mv_map.get(code) and price_map.get(code) and r.get("peak_price"):
+                try:
+                    peak_mv = float(mv_map[code]) * float(r["peak_price"]) / float(price_map[code])
+                except Exception:  # noqa: BLE001
+                    peak_mv = mv_map.get(code)
+            extra.append(peak_mv)
+        uniq = uniq.copy()
+        uniq["dates"] = uniq["in_window_dates"]
+        uniq["peak_float_mv"] = extra
+        uniq["peak_total_mv"] = extra
+        uniq["peak_turnover"] = None
+        uniq["peak_seal_amt"] = None
+        uniq["peak_open_times"] = None
+        uniq["peak_first_seal"] = None
+        uniq["start_float_mv"] = extra
+        uniq["end_price"] = uniq["peak_price"]
+        uniq["avg_turnover"] = None
+        uniq["avg_open_times"] = None
+        uniq["industry"] = None
+        uniq.to_csv(PROCESSED / "lianban5_stocks.csv", index=False)
+        target.to_csv(PROCESSED / "lianban5_streaks.csv", index=False)
+
+    log("6/7 席位明细 + F10")
     jobs = []
     seen = set()
-    for _, r in target.iterrows():
-        for d in str(r["dates"]).split(","):
+    src = target if not target.empty else uniq
+    for _, r in src.iterrows():
+        days = str(r.get("in_window_dates") or r.get("dates") or "").split(",")
+        for d in days:
+            if not d:
+                continue
             key = (r["code"], d)
             if key not in seen:
                 seen.add(key)
                 jobs.append(key)
     seats_rows: list[dict] = []
-    # 只拉这些天的席位；未上榜接口会返回空数组
     done = 0
     with ThreadPoolExecutor(max_workers=5) as ex:
         futs = {ex.submit(fetch_seats, c, d): (c, d) for c, d in jobs}
@@ -1170,16 +1427,16 @@ def main() -> None:
                 c, d = futs[fut]
                 log(f"  seat fail {c} {d}: {e}")
             done += 1
-            if done % 30 == 0 or done == len(jobs):
+            if done % 40 == 0 or done == len(jobs):
                 log(f"  席位 {done}/{len(jobs)}")
     seats = pd.DataFrame(seats_rows)
     if not seats.empty:
         seats.to_csv(PROCESSED / "lianban5_seats.csv", index=False)
 
     infos = {}
-    codes = sorted(set(uniq["code"].tolist()) if not uniq.empty else [])
+    stock_codes = sorted(set(uniq["code"].tolist()) if not uniq.empty else [])
     with ThreadPoolExecutor(max_workers=5) as ex:
-        futs = {ex.submit(fetch_stock_info, c): c for c in codes}
+        futs = {ex.submit(fetch_stock_info, c): c for c in stock_codes}
         for fut in as_completed(futs):
             c = futs[fut]
             try:
@@ -1187,8 +1444,16 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 log(f"  info fail {c}: {e}")
                 infos[c] = {"code": c}
+    if not uniq.empty:
+        uniq = uniq.copy()
+        uniq["industry"] = [
+            (infos.get(c) or {}).get("industry")
+            or (infos.get(c) or {}).get("company_industry")
+            or n
+            for c, n in zip(uniq["code"], uniq.get("industry", [None] * len(uniq)))
+        ]
 
-    log("6/6 写报告")
+    log("7/7 写报告")
     report, feat, lhb_s, seats_s, peak_ret_df = build_report(dates, zt, streaks, uniq, lhb, seats, infos)
     (REPORTS / "lianban5_lhb_analysis.md").write_text(report, encoding="utf-8")
     feat.drop(columns=["concept_list"], errors="ignore").to_csv(PROCESSED / "lianban5_features.csv", index=False)
