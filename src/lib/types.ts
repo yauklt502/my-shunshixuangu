@@ -1,6 +1,6 @@
 export type Universe = "concept" | "industry" | "all";
 export type SectorSort = "change" | "limitUp" | "amount" | "inflow";
-export type DataSource = "eastmoney" | "ths";
+export type DataSource = "eastmoney" | "ths" | "tdx-local" | "tdx-hq";
 
 export type MarketSession =
   | "pre"

@@ -62,6 +62,8 @@ describe("snapshot query", () => {
     );
     assert.deepEqual(query, { universe: "concept", sort: "amount", source: "ths" });
     assert.equal(parseSnapshotQuery(new URLSearchParams("source=fuyao")).source, "ths");
+    assert.equal(parseSnapshotQuery(new URLSearchParams("source=tdx-hq")).source, "tdx-hq");
+    assert.equal(parseSnapshotQuery(new URLSearchParams("source=tongdaxin")).source, "tdx-local");
     assert.equal(parseSnapshotQuery(new URLSearchParams()).source, "eastmoney");
   });
 });

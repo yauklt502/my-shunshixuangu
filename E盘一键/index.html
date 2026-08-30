@@ -38,6 +38,16 @@
       padding: 6px 12px; cursor: pointer; font-size: 12px;
     }
     .pills button.on { background: var(--gold); color: #111; }
+    .srcpick {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--line); background: var(--elev);
+      border-radius: 999px; padding: 4px 10px 4px 12px; font-size: 12px; color: var(--muted);
+    }
+    .srcpick select {
+      border: 0; background: transparent; color: var(--text);
+      font-size: 12px; outline: none; cursor: pointer; max-width: 9.5em;
+      color-scheme: dark;
+    }
     .ghost {
       border: 1px solid var(--line); background: var(--elev); color: var(--muted);
       border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12px;
@@ -95,13 +105,15 @@
       <div>
         <div class="brand">SHUNSHI XUANGU</div>
         <h1>顺势选股 · 龙头盯盘</h1>
-        <p class="sub">自动锁定当天最强三个板块，再排出龙一、龙二、龙三。黑窗口不要关。右上角可切换东方财富 / 同花顺。</p>
+        <p class="sub">自动锁定当天最强三个板块，再排出龙一、龙二、龙三。黑窗口不要关。右上角下拉框切换数据源。</p>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end">
         <div class="status"><span id="dot" class="dot"></span><span id="status">正在打开</span><span id="clock" class="clock"></span></div>
         <div class="pills" id="universe"></div>
         <div class="pills" id="sort"></div>
-        <div class="pills" id="source"></div>
+        <label class="srcpick">数据源
+          <select id="source"></select>
+        </label>
         <button type="button" class="ghost" id="keyBtn" hidden>填写密匙</button>
       </div>
     </header>
@@ -123,7 +135,7 @@
         <li>不把「昨日连板、历史新高」这种统计池当成板块。</li>
         <li>板块里谁先涨停，谁就是龙一；同一时间看连板，再看封单。</li>
         <li>没有涨停就按涨幅排。ST 不参与。</li>
-        <li>右上角切换数据源：东方财富约 8 秒刷新；同花顺约 12 秒。同花顺暂无主力净流入，选「主力净流入」时按成交额排。</li>
+        <li>右上角下拉框切换数据源。东方财富约 8 秒；同花顺约 12 秒；通达信实时约 10 秒。通达信本地读 E:\new_tdx\vipdoc 日线，盘中请用实时。通达信/同花顺暂无主力净流入，选这个排序时按成交额排。</li>
       </ol>
     </details>
     <p class="foot" id="foot">数据来自东方财富公开行情，只供看盘，不构成投资建议。</p>
@@ -137,7 +149,12 @@
     const NOISE = /昨日|前日|连板|涨停|跌停|破板|炸板|打板|首板|二板|三板|历史新高|历史新低|近期新高|近期新低|近期解禁|公告|^ST|ST股|次新股|沪股通|深股通|融资融券|转融通|高开低走|低开高走|高换手|成交活跃|含一字|题材股|热股|多板|东方财富/;
     const UNIVERSE = [{ id: "all", label: "综合" }, { id: "concept", label: "概念" }, { id: "industry", label: "行业" }];
     const SORTS = [{ id: "change", label: "涨幅" }, { id: "limitUp", label: "涨停数" }, { id: "amount", label: "成交额" }, { id: "inflow", label: "主力净流入" }];
-    const SOURCES = [{ id: "eastmoney", label: "东方财富" }, { id: "ths", label: "同花顺" }];
+    const SOURCES = [
+      { id: "eastmoney", label: "东方财富" },
+      { id: "ths", label: "同花顺" },
+      { id: "tdx-local", label: "通达信本地" },
+      { id: "tdx-hq", label: "通达信实时" },
+    ];
     const INDEX_THS = [
       { thscode: "000001.SH", name: "上证指数" },
       { thscode: "399001.SZ", name: "深证成指" },
@@ -149,7 +166,9 @@
 
     let universe = "all";
     let sort = "change";
-    let source = localStorage.getItem(SOURCE_KEY) === "ths" ? "ths" : "eastmoney";
+    const SOURCE_OK = { eastmoney: 1, ths: 1, "tdx-local": 1, "tdx-hq": 1 };
+    let source = SOURCE_OK[localStorage.getItem(SOURCE_KEY)] ? localStorage.getItem(SOURCE_KEY) : "eastmoney";
+    const TDX_VIPDOC = "E:/new_tdx/vipdoc";
     let fuyaoKey = (localStorage.getItem(FUYAO_KEY) || "").trim();
     const catalogCache = { industry: null, concept: null, exp: 0 };
     const memberCache = new Map();
@@ -480,8 +499,55 @@
       };
     }
 
+    function sourceLabel() {
+      if (source === "ths") return "同花顺";
+      if (source === "tdx-local") return "通达信本地";
+      if (source === "tdx-hq") return "通达信实时";
+      return "东方财富";
+    }
+
+    function fromServerSnapshot(s) {
+      const badge = ["b1", "b2", "b3"];
+      return {
+        indices: s.indices || [],
+        ztCount: s.ztCount || 0,
+        zbCount: s.zbCount || 0,
+        tradeDate: s.tradeDate || "",
+        error: s.error || "",
+        sectors: (s.sectors || []).map((sec) => ({
+          ...sec,
+          leaders: (sec.leaders || []).map((l, i) => ({
+            ...l,
+            badge: badge[i] || "b3",
+            lbc: l.consecutiveBoards,
+            seal: l.sealAmount,
+          })),
+        })),
+      };
+    }
+
+    async function loadTdx(mode) {
+      const q = new URLSearchParams({
+        universe, sort, mode,
+        source: mode,
+        vipdoc: TDX_VIPDOC,
+      });
+      const res = await fetch("/tdx/snapshot?" + q.toString(), { cache: "no-store" });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); }
+      catch { throw new Error(res.ok ? "通达信返回无法解析" : "通达信服务错误 " + res.status); }
+      if (data && data.error && !(data.sectors || []).length) {
+        throw new Error(data.error);
+      }
+      return fromServerSnapshot(data);
+    }
+
     async function loadAll() {
-      return source === "ths" ? loadThs() : loadEastmoney();
+      if (source === "ths") return loadThs();
+      if (source === "tdx-hq") return loadTdx("hq");
+      if (source === "tdx-local") return loadTdx("local");
+      return loadEastmoney();
     }
 
     function pills(el, options, current, onPick) {
@@ -494,8 +560,10 @@
       document.getElementById("keyBtn").textContent = fuyaoKey ? "密匙已保存" : "填写密匙";
       document.getElementById("setup").hidden = !(source === "ths" && (document.getElementById("setup").dataset.open === "1" || !fuyaoKey));
       document.getElementById("keyInput").value = fuyaoKey;
-      document.getElementById("foot").textContent = source === "ths"
-        ? "数据来自同花顺扶摇 API，只供看盘，不构成投资建议。"
+      document.getElementById("foot").textContent =
+        source === "ths" ? "数据来自同花顺扶摇 API，只供看盘，不构成投资建议。"
+        : source === "tdx-local" ? "数据来自本机通达信 vipdoc 日线（E:\\new_tdx\\vipdoc），只供看盘，不构成投资建议。"
+        : source === "tdx-hq" ? "数据来自通达信行情服务器（7709），只供看盘，不构成投资建议。"
         : "数据来自东方财富公开行情，只供看盘，不构成投资建议。";
     }
 
@@ -517,7 +585,7 @@
           <div class="muted">涨停 / 炸板</div>
           <div style="margin-top:6px"><strong class="num up" style="font-size:20px">${data.ztCount}</strong>
           <span class="muted"> / </span><strong class="num warn" style="font-size:20px">${data.zbCount}</strong></div>
-          <div class="muted" style="margin-top:4px">全市场情绪 · ${source === "ths" ? "同花顺" : "东方财富"}</div>
+          <div class="muted" style="margin-top:4px">全市场情绪 · ${sourceLabel()}</div>
         </div>`;
       document.getElementById("indices").innerHTML = idx;
       const mark = ["①", "②", "③"];
@@ -559,26 +627,41 @@
         </section>`).join("") || `<div class="card">正在计算前三板块龙头…</div><div class="skel"></div><div class="skel"></div>`;
     }
 
-    function paintPills() {
-      pills(document.getElementById("universe"), UNIVERSE, universe, (id) => { universe = id; paintPills(); refresh(); });
-      pills(document.getElementById("sort"), SORTS, sort, (id) => { sort = id; paintPills(); refresh(); });
-      pills(document.getElementById("source"), SOURCES, source, (id) => {
-        source = id;
+    function paintSource() {
+      const sel = document.getElementById("source");
+      sel.innerHTML = SOURCES.map((o) => `<option value="${o.id}" ${o.id === source ? "selected" : ""}>${o.label}</option>`).join("");
+      sel.onchange = () => {
+        source = sel.value;
         localStorage.setItem(SOURCE_KEY, source);
         if (source === "ths" && !fuyaoKey) document.getElementById("setup").dataset.open = "1";
         syncChrome();
-        paintPills();
         startLoop();
-      });
+      };
+    }
+
+    function paintPills() {
+      pills(document.getElementById("universe"), UNIVERSE, universe, (id) => { universe = id; paintPills(); refresh(); });
+      pills(document.getElementById("sort"), SORTS, sort, (id) => { sort = id; paintPills(); refresh(); });
+      paintSource();
       syncChrome();
     }
 
+    let refreshTimer = 0;
+    let refreshing = false;
     async function refresh() {
+      if (refreshing) return;
+      refreshing = true;
       try {
         if (source === "ths" && !fuyaoKey) {
           syncChrome();
           document.getElementById("error").innerHTML = `<div class="err">请先填写同花顺密匙（右上角切换到同花顺后输入）</div>`;
           return;
+        }
+        if (source === "tdx-hq") {
+          document.getElementById("status").textContent = "正在连接通达信（第一次大约半分钟）";
+        }
+        if (source === "tdx-local") {
+          document.getElementById("status").textContent = "正在读取通达信本地日线";
         }
         render(await loadAll());
       } catch (e) {
@@ -587,6 +670,8 @@
           document.getElementById("setup").dataset.open = "1";
           syncChrome();
         }
+      } finally {
+        refreshing = false;
       }
     }
 
@@ -620,11 +705,18 @@
       } catch {}
     }
 
+    function pollMs() {
+      if (source === "ths") return 12000;
+      if (source === "tdx-hq") return 10000;
+      if (source === "tdx-local") return 20000;
+      return 8000;
+    }
+
     let refreshTimer = 0;
     function startLoop() {
       if (refreshTimer) clearInterval(refreshTimer);
       refresh();
-      refreshTimer = setInterval(refresh, source === "ths" ? 12000 : 8000);
+      refreshTimer = setInterval(refresh, pollMs());
     }
 
     paintPills();

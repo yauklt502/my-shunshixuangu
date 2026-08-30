@@ -42,6 +42,14 @@ export function pollIntervalMs(session: MarketSession, source: DataSource = "eas
     if (session === "lunch") return 20000;
     return 40000;
   }
+  if (source === "tdx-hq") {
+    if (live) return 10000;
+    if (session === "lunch") return 20000;
+    return 40000;
+  }
+  if (source === "tdx-local") {
+    return live ? 20000 : 45000;
+  }
   if (live) return 5000;
   if (session === "lunch") return 15000;
   return 30000;

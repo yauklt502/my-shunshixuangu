@@ -5,6 +5,28 @@ try {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 } catch {}
 
+$script:TdxReady = $false
+$script:TdxError = ""
+$tdxCs = Join-Path $root "TdxEngine.cs"
+if (Test-Path -LiteralPath $tdxCs) {
+  try {
+    $code = [IO.File]::ReadAllText($tdxCs, [Text.Encoding]::UTF8)
+    $refs = @("System.dll", "System.Core.dll")
+    $compDll = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) "System.IO.Compression.dll"
+    if (Test-Path -LiteralPath $compDll) { $refs += $compDll }
+    Add-Type -TypeDefinition $code -Language CSharp -ReferencedAssemblies $refs
+    $script:TdxReady = $true
+  } catch {
+    if ($_.Exception.Message -match "already exists") {
+      $script:TdxReady = $true
+    } else {
+      $script:TdxError = $_.Exception.Message
+    }
+  }
+} else {
+  $script:TdxError = "missing TdxEngine.cs"
+}
+
 function Get-Listener([int]$port) {
   $listener = [System.Net.HttpListener]::new()
   $listener.Prefixes.Add("http://127.0.0.1:$port/")
@@ -24,6 +46,43 @@ function Write-Bytes($ctx, [int]$status, [string]$contentType, [byte[]]$bytes) {
     $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
   }
   $ctx.Response.Close()
+}
+
+function Write-Json($ctx, [int]$status, [string]$json) {
+  Write-Bytes $ctx $status "application/json; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes($json))
+}
+
+function Invoke-Tdx($ctx) {
+  $req = $ctx.Request
+  if ($req.HttpMethod -eq "OPTIONS") {
+    Write-Bytes $ctx 204 "text/plain" ([byte[]]@())
+    return
+  }
+  if (-not $script:TdxReady) {
+    $msg = $script:TdxError
+    if ([string]::IsNullOrWhiteSpace($msg)) { $msg = "通达信引擎未加载" }
+    $json = '{"ok":false,"tradeDate":"","updatedAt":"","session":"closed","universe":"all","sort":"change","source":"tdx-hq","indices":[],"ztCount":0,"zbCount":0,"sectors":[],"error":' + ('通达信引擎加载失败：' + $msg | ConvertTo-Json -Compress) + '}'
+    Write-Json $ctx 200 $json
+    return
+  }
+  $path = $req.Url.LocalPath
+  try {
+    if ($path -eq "/tdx/status") {
+      Write-Json $ctx 200 ([ShunshiTdx.TdxApi]::Status())
+      return
+    }
+    $universe = $req.QueryString["universe"]
+    $sort = $req.QueryString["sort"]
+    $mode = $req.QueryString["mode"]
+    if ([string]::IsNullOrWhiteSpace($mode)) { $mode = $req.QueryString["source"] }
+    $vipdoc = $req.QueryString["vipdoc"]
+    if ([string]::IsNullOrWhiteSpace($vipdoc)) { $vipdoc = "E:\new_tdx\vipdoc" }
+    Write-Json $ctx 200 ([ShunshiTdx.TdxApi]::Snapshot($universe, $sort, $mode, $vipdoc))
+  } catch {
+    $err = $_.Exception.Message
+    $json = '{"ok":false,"tradeDate":"","indices":[],"ztCount":0,"zbCount":0,"sectors":[],"error":' + ($err | ConvertTo-Json -Compress) + '}'
+    Write-Json $ctx 200 $json
+  }
 }
 
 function Invoke-ThsProxy($ctx) {
@@ -117,6 +176,10 @@ try {
     $path = $ctx.Request.Url.LocalPath
     if ($path.StartsWith("/ths-api/")) {
       Invoke-ThsProxy $ctx
+      continue
+    }
+    if ($path.StartsWith("/tdx/")) {
+      Invoke-Tdx $ctx
       continue
     }
     if ([string]::IsNullOrWhiteSpace($path) -or $path -eq "/") {

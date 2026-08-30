@@ -1,5 +1,6 @@
 import { fetchBoards, fetchConstituents, fetchIndices, fetchTrendsMany, fetchZbPool, fetchZtPool } from "./eastmoney";
 import { buildThsSnapshot, fuyaoErrorMessage } from "./fuyao";
+import { buildTdxHqSnapshot, buildTdxLocalSnapshot } from "./tdx-snapshot";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard } from "./noise-boards";
 import { rankLeaders } from "./ranking";
@@ -20,6 +21,7 @@ export type SnapshotQuery = {
 
 export type SnapshotOptions = {
   fuyaoKey?: string;
+  tdxVipdoc?: string;
 };
 
 function sortBoards(boards: BoardQuote[], sort: SectorSort): BoardQuote[] {
@@ -71,7 +73,11 @@ export async function buildSnapshot(
     const snapshot =
       query.source === "ths"
         ? await assembleThsSnapshot(query, options.fuyaoKey)
-        : await assembleSnapshot(query);
+        : query.source === "tdx-hq"
+          ? await buildTdxHqSnapshot(query.universe, query.sort)
+          : query.source === "tdx-local"
+            ? await buildTdxLocalSnapshot(query.universe, query.sort, options.tdxVipdoc)
+            : await assembleSnapshot(query);
     if (snapshot.sectors.length) lastGood.set(key, snapshot);
     else {
       const prev = lastGood.get(key);
@@ -207,6 +213,12 @@ export function parseSnapshotQuery(searchParams: URLSearchParams): SnapshotQuery
       ? sortRaw
       : "change";
   const source: DataSource =
-    sourceRaw === "ths" || sourceRaw === "tonghuashun" || sourceRaw === "fuyao" ? "ths" : "eastmoney";
+    sourceRaw === "ths" || sourceRaw === "tonghuashun" || sourceRaw === "fuyao"
+      ? "ths"
+      : sourceRaw === "tdx-hq" || sourceRaw === "tdx-realtime" || sourceRaw === "tongdaxin-hq"
+        ? "tdx-hq"
+        : sourceRaw === "tdx-local" || sourceRaw === "tdx" || sourceRaw === "tongdaxin"
+          ? "tdx-local"
+          : "eastmoney";
   return { universe, sort, source };
 }

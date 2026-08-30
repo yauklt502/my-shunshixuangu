@@ -25,6 +25,8 @@ const SORT_OPTIONS: { id: SectorSort; label: string }[] = [
 const SOURCE_OPTIONS: { id: DataSource; label: string }[] = [
   { id: "eastmoney", label: "东方财富" },
   { id: "ths", label: "同花顺" },
+  { id: "tdx-local", label: "通达信本地" },
+  { id: "tdx-hq", label: "通达信实时" },
 ];
 
 const SOURCE_KEY = "shunshi.source";
@@ -32,7 +34,9 @@ const FUYAO_KEY = "shunshi.fuyaoKey";
 
 function readStoredSource(): DataSource {
   if (typeof window === "undefined") return "eastmoney";
-  return window.localStorage.getItem(SOURCE_KEY) === "ths" ? "ths" : "eastmoney";
+  const raw = window.localStorage.getItem(SOURCE_KEY);
+  if (raw === "ths" || raw === "tdx-local" || raw === "tdx-hq" || raw === "eastmoney") return raw;
+  return "eastmoney";
 }
 
 function readStoredKey(): string {
@@ -46,10 +50,13 @@ async function loadSnapshot(
   source: DataSource,
   fuyaoKey: string,
 ): Promise<MarketSnapshot> {
-  const response = await fetch(`/api/snapshot?universe=${universe}&sort=${sort}&source=${source}`, {
-    cache: "no-store",
-    headers: source === "ths" && fuyaoKey ? { "X-Fuyao-Key": fuyaoKey } : undefined,
-  });
+  const response = await fetch(
+    `/api/snapshot?universe=${universe}&sort=${sort}&source=${source}${source === "tdx-local" ? "&vipdoc=" + encodeURIComponent("E:/new_tdx/vipdoc") : ""}`,
+    {
+      cache: "no-store",
+      headers: source === "ths" && fuyaoKey ? { "X-Fuyao-Key": fuyaoKey } : undefined,
+    },
+  );
   const text = await response.text();
   try {
     return JSON.parse(text) as MarketSnapshot;
@@ -201,7 +208,20 @@ export function Dashboard() {
           </div>
           <Pill value={universe} options={UNIVERSE_OPTIONS} onChange={setUniverse} />
           <Pill value={sort} options={SORT_OPTIONS} onChange={setSort} />
-          <Pill value={source} options={SOURCE_OPTIONS} onChange={changeSource} />
+          <label className="inline-flex items-center gap-1.5 rounded-full border border-line bg-elev px-3 py-1.5 text-xs text-muted">
+            数据源
+            <select
+              className="source-select"
+              value={source}
+              onChange={(event) => changeSource(event.target.value as DataSource)}
+            >
+              {SOURCE_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
           {source === "ths" ? (
             <button
               type="button"
@@ -276,7 +296,10 @@ export function Dashboard() {
           <li>剔除「昨日连板、历史新高」这类统计池，避免假热点。</li>
           <li>板块内涨停股优先：谁先封谁就是龙一，时间相同看连板，再看封单。</li>
           <li>没有涨停时，按涨幅、成交额排龙一龙二龙三。ST 不参与。</li>
-          <li>右上角可切换东方财富 / 同花顺。同花顺来自扶摇 API，盘中约 12 秒刷新；东方财富约 5 秒。同花顺暂无主力净流入。</li>
+          <li>
+            右上角下拉框切换数据源。东方财富约 5 秒刷新；同花顺约 12 秒；通达信实时约 10 秒。通达信本地读
+            E:\new_tdx\vipdoc 日线，盘中请用实时。同花顺/通达信暂无主力净流入。
+          </li>
         </ol>
       </details>
 

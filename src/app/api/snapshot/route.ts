@@ -33,7 +33,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = parseSnapshotQuery(url.searchParams);
   try {
-    const snapshot = await buildSnapshot(query, { fuyaoKey: readFuyaoKey(request) });
+    const snapshot = await buildSnapshot(query, {
+      fuyaoKey: readFuyaoKey(request),
+      tdxVipdoc: url.searchParams.get("vipdoc") || process.env.TDX_VIPDOC || "",
+    });
     return NextResponse.json(snapshot, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

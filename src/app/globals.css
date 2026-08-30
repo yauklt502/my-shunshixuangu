@@ -73,3 +73,14 @@ body {
 .broken-glow {
   box-shadow: inset 3px 0 0 var(--warn);
 }
+
+.source-select {
+  color-scheme: dark;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  max-width: 9.5em;
+  font-size: 12px;
+}

@@ -17,6 +17,8 @@ describe("market hours", () => {
   it("slows Tonghuashun polling versus Eastmoney", () => {
     assert.equal(pollIntervalMs("morning", "eastmoney"), 5000);
     assert.equal(pollIntervalMs("morning", "ths"), 12000);
+    assert.equal(pollIntervalMs("morning", "tdx-hq"), 10000);
+    assert.equal(pollIntervalMs("closed", "tdx-local"), 45000);
     assert.equal(pollIntervalMs("closed", "ths"), 40000);
   });
 
