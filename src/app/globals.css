@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #07080c;
+  --bg-elev: #10131a;
+  --bg-elev-2: #171c27;
+  --line: #2a3140;
+  --text: #e9eef7;
+  --muted: #8b95a8;
+  --up: #ff4d57;
+  --down: #2ecf8f;
+  --gold: #e7b84c;
+  --silver: #c5cdd8;
+  --bronze: #c4844a;
+  --warn: #f0a14a;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elev: var(--bg-elev);
+  --color-elev-2: var(--bg-elev-2);
+  --color-line: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-gold: var(--gold);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
+  --color-warn: var(--warn);
+  --font-sans: var(--font-noto), var(--font-geist-sans), "PingFang SC",
+    "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-image:
+    radial-gradient(1200px 500px at 12% -10%, rgba(231, 184, 76, 0.08), transparent 55%),
+    radial-gradient(900px 420px at 90% 0%, rgba(255, 77, 87, 0.07), transparent 50%),
+    linear-gradient(180deg, #0b0d13 0%, #07080c 40%);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.pulse-live {
+  box-shadow: 0 0 0 0 rgba(46, 207, 143, 0.55);
+  animation: live 1.8s ease-out infinite;
+}
+
+@keyframes live {
+  70% {
+    box-shadow: 0 0 0 8px rgba(46, 207, 143, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 207, 143, 0);
+  }
+}
+
+.zt-glow {
+  box-shadow: inset 3px 0 0 var(--up), 0 0 24px rgba(255, 77, 87, 0.08);
+}
+
+.broken-glow {
+  box-shadow: inset 3px 0 0 var(--warn);
+}
