@@ -22,16 +22,15 @@ foreach ($port in 3000, 3001, 3002, 5173) {
 }
 
 if (-not $listener) {
-  Write-Host "打不开：3000 等端口都被占用了。"
-  Read-Host "按回车退出"
+  Write-Host "Cannot start. Ports 3000-3002 are busy."
+  Read-Host "Press Enter to exit"
   exit 1
 }
 
 $url = "http://127.0.0.1:$usedPort/"
 Start-Process $url
-Write-Host "龙头盯盘已打开：$url"
-Write-Host "请不要关闭这个窗口。关窗口 = 关盯盘。"
-Write-Host "想退出时，在这里按 Ctrl+C，或直接关掉窗口。"
+Write-Host "Opened $url"
+Write-Host "Keep this window open. Close window = stop the board."
 
 $mime = @{
   ".html" = "text/html; charset=utf-8"
