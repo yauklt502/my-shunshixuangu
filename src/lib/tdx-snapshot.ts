@@ -1,7 +1,7 @@
 import { beijingYmd } from "./format";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard, isStStock } from "./noise-boards";
-import { rankLeaders } from "./ranking";
+import { rankLeaders, rankMarketLeaders } from "./ranking";
 import {
   connectTdxHq,
   tdxHqAllSecurities,
@@ -216,6 +216,39 @@ function assembleFromQuotes(args: {
   const allZt = new Set(ranked.flatMap((item) => [...item.ztByCode.keys()]));
   const allZb = new Set(ranked.flatMap((item) => [...item.zbByCode.keys()]));
 
+  const marketZt: ZtInfo[] = [];
+  const marketStocks = new Map<string, StockQuote>();
+  for (const item of ranked) {
+    for (const [code, zt] of item.ztByCode) {
+      marketZt.push({ ...zt, industry: zt.industry || item.board.name });
+    }
+    for (const leader of item.leaders) {
+      if (!leader.isLimitUp) continue;
+      marketStocks.set(leader.code, {
+        code: leader.code,
+        name: leader.name,
+        market: leader.market,
+        price: leader.price,
+        changePercent: leader.changePercent,
+        amount: leader.amount,
+        turnoverRate: leader.turnoverRate,
+        speed: leader.speed,
+        mainNetInflow: leader.mainNetInflow,
+        high: null,
+        low: null,
+        open: null,
+      });
+    }
+  }
+  const marketLeaders = rankMarketLeaders(marketZt, marketStocks).map((leader) => ({
+    ...leader,
+    reason:
+      source === "tdx-local" || source === "tdx-hq"
+        ? `${leader.sectorName ? `${leader.sectorName} · ` : "全市场 · "}通达信按涨停价判定（无先封时间）`
+        : leader.reason,
+    trend: [] as number[],
+  }));
+
   const sectors: SectorSnapshot[] = top.map((item, index) => ({
     rank: index + 1,
     code: item.board.code,
@@ -258,6 +291,7 @@ function assembleFromQuotes(args: {
     indices,
     ztCount: allZt.size,
     zbCount: allZb.size,
+    marketLeaders,
     sectors,
     error:
       sort === "inflow"
@@ -380,6 +414,7 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
       indices: [],
       ztCount: 0,
       zbCount: 0,
+      marketLeaders: [],
       sectors: [],
       error: avail.message,
     };
@@ -396,6 +431,7 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
       indices: [],
       ztCount: 0,
       zbCount: 0,
+      marketLeaders: [],
       sectors: [],
       error: `找到了 vipdoc，但板块文件不在 ${paths.hqCache}。请确认 T0002\\hq_cache\\block_gn.dat 存在，或改用「通达信实时」。`,
     };

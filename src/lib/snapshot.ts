@@ -3,7 +3,7 @@ import { buildThsSnapshot, fuyaoErrorMessage } from "./fuyao";
 import { buildTdxHqSnapshot, buildTdxLocalSnapshot } from "./tdx-snapshot";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard } from "./noise-boards";
-import { rankLeaders } from "./ranking";
+import { rankLeaders, rankMarketLeaders } from "./ranking";
 import type {
   BoardQuote,
   DataSource,
@@ -59,6 +59,7 @@ function emptySnapshot(query: SnapshotQuery, error: string): MarketSnapshot {
     indices: [],
     ztCount: 0,
     zbCount: 0,
+    marketLeaders: [],
     sectors: [],
     error,
   };
@@ -186,6 +187,8 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
     })),
   }));
 
+  const marketLeaders = rankMarketLeaders(ztPool.pool).map((leader) => ({ ...leader, trend: [] }));
+
   return {
     tradeDate: ztPool.qdate || zbPool.qdate,
     updatedAt: new Date().toISOString(),
@@ -196,6 +199,7 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
     indices,
     ztCount: ztPool.tc,
     zbCount: zbPool.tc,
+    marketLeaders,
     sectors,
   };
 }

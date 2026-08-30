@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EventFeed } from "@/components/EventFeed";
 import { IndexBar } from "@/components/IndexBar";
+import { MarketLeadersBar } from "@/components/MarketLeadersBar";
 import { SectorColumn } from "@/components/SectorColumn";
 import { diffSnapshots } from "@/lib/events";
 import { beijingClock } from "@/lib/format";
@@ -258,6 +259,12 @@ export function Dashboard() {
           </div>
         </div>
       ) : null}
+
+      {snapshot ? (
+        <MarketLeadersBar leaders={snapshot.marketLeaders ?? []} />
+      ) : (
+        <div className="h-[120px] animate-pulse rounded-2xl border border-line bg-elev/70" />
+      )}
 
       {snapshot ? (
         <IndexBar indices={snapshot.indices} ztCount={snapshot.ztCount} zbCount={snapshot.zbCount} />

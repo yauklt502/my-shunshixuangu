@@ -1,6 +1,6 @@
 import { asNumber, asString, parseHhMmToFbt } from "./format";
 import { isNoiseBoard, isStStock } from "./noise-boards";
-import { rankLeaders } from "./ranking";
+import { rankLeaders, rankMarketLeaders } from "./ranking";
 import { getMarketSession } from "./market-hours";
 import type {
   BoardKind,
@@ -444,6 +444,8 @@ export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string):
     leaders: item.leaders.map((leader) => ({ ...leader, trend: [] })),
   }));
 
+  const marketLeaders = rankMarketLeaders(ztPool).map((leader) => ({ ...leader, trend: [] }));
+
   const tradeDate = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
@@ -463,6 +465,7 @@ export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string):
     indices,
     ztCount: ztPage.total,
     zbCount: zbPage.total,
+    marketLeaders,
     sectors,
     error:
       sort === "inflow"

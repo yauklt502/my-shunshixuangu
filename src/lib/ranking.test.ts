@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { isNoiseBoard, isStStock } from "./noise-boards";
-import { rankLeaders } from "./ranking";
+import { rankLeaders, rankMarketLeaders } from "./ranking";
 import type { StockQuote, ZbInfo, ZtInfo } from "./types";
 
 function stock(partial: Partial<StockQuote> & Pick<StockQuote, "code" | "name">): StockQuote {
@@ -154,5 +154,43 @@ describe("leader ranking", () => {
     const ranked = rankLeaders(stocks, zt, new Map(), 1);
     assert.equal(ranked[0]?.sealKind, "竞价封");
     assert.match(ranked[0]?.reason ?? "", /竞价封/);
+  });
+
+  it("ranks market-wide leaders from the limit-up pool", () => {
+    const ztPool: ZtInfo[] = [
+      {
+        code: "000003",
+        name: "总龙",
+        firstSealTime: 92500,
+        lastSealTime: 92500,
+        consecutiveBoards: 5,
+        sealAmount: 2e8,
+        openCount: 0,
+        ztDays: 5,
+        ztBoards: 5,
+        industry: "种业",
+      },
+      {
+        code: "000002",
+        name: "龙二",
+        firstSealTime: 93100,
+        lastSealTime: 93100,
+        consecutiveBoards: 2,
+        sealAmount: 3e8,
+        openCount: 0,
+        ztDays: 2,
+        ztBoards: 2,
+        industry: "染料",
+      },
+    ];
+    const market = rankMarketLeaders(ztPool);
+    assert.deepEqual(
+      market.map((item) => [item.rank, item.name]),
+      [
+        ["总龙头", "总龙"],
+        ["龙二", "龙二"],
+      ],
+    );
+    assert.match(market[0]?.reason ?? "", /种业/);
   });
 });

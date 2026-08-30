@@ -1,7 +1,10 @@
 import { formatFbt } from "./format";
 import { isStStock } from "./noise-boards";
+import { eastmoneyMarket } from "./tdx-codec";
 import type {
   LeaderRank,
+  MarketLeader,
+  MarketLeaderRank,
   RankedLeader,
   StockQuote,
   ZbInfo,
@@ -9,6 +12,7 @@ import type {
 } from "./types";
 
 const RANKS: LeaderRank[] = ["龙一", "龙二", "龙三"];
+const MARKET_RANKS: MarketLeaderRank[] = ["总龙头", "龙二", "龙三"];
 
 type Scored = {
   stock: StockQuote;
@@ -111,6 +115,50 @@ export function rankLeaders(
       sealKind: sealKindOf(zt),
       reason: leaderReason(item),
       trend: [],
+    };
+  });
+}
+
+function stockFromZt(zt: ZtInfo, stockByCode: Map<string, StockQuote>): StockQuote {
+  const hit = stockByCode.get(zt.code);
+  if (hit) return hit;
+  return {
+    code: zt.code,
+    name: zt.name,
+    market: eastmoneyMarket(zt.code),
+    price: 0,
+    changePercent: 10,
+    amount: zt.sealAmount,
+    turnoverRate: null,
+    high: null,
+    low: null,
+    open: null,
+    speed: null,
+    mainNetInflow: null,
+  };
+}
+
+export function rankMarketLeaders(
+  ztPool: ZtInfo[],
+  stockByCode: Map<string, StockQuote> = new Map(),
+  limit = 3,
+): MarketLeader[] {
+  const ztByCode = new Map<string, ZtInfo>();
+  for (const zt of ztPool) {
+    if (isStStock(zt.name)) continue;
+    if (!ztByCode.has(zt.code)) ztByCode.set(zt.code, zt);
+  }
+  const stocks = [...ztByCode.values()].map((zt) => stockFromZt(zt, stockByCode));
+  const ranked = rankLeaders(stocks, ztByCode, new Map(), limit);
+  return ranked.map((leader, index) => {
+    const zt = ztByCode.get(leader.code);
+    const sectorName = zt?.industry?.trim() || null;
+    const prefix = sectorName ? `${sectorName} · ` : "全市场 · ";
+    return {
+      ...leader,
+      rank: MARKET_RANKS[index] ?? "龙三",
+      sectorName,
+      reason: `${prefix}${leader.reason}`,
     };
   });
 }

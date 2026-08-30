@@ -277,14 +277,47 @@ namespace ShunshiTdx
                 zbCount += enriched[i].Zb;
             }
             List<Enriched> top = TakeEnriched(enriched, 3);
+            List<MarketLeaderEntry> marketLeaders = RankMarketLeaders(enriched);
             string note = extraError;
             if (sort == "inflow")
                 note = MergeNote(note, "通达信没有主力净流入，已按成交额排序");
-            return RenderSnap(universe, sort, source, qmap, top, ztCount, zbCount, note);
+            return RenderSnap(universe, sort, source, qmap, top, marketLeaders, ztCount, zbCount, note);
+        }
+
+        static List<MarketLeaderEntry> RankMarketLeaders(List<Enriched> enriched)
+        {
+            Dictionary<string, MarketLeaderEntry> byCode = new Dictionary<string, MarketLeaderEntry>();
+            for (int i = 0; i < enriched.Count; i++)
+            {
+                Enriched en = enriched[i];
+                string sector = en.Block == null ? "" : en.Block.Name;
+                for (int j = 0; j < en.Members.Count; j++)
+                {
+                    Member m = en.Members[j];
+                    if (!IsLimitUp(m.Code, m.Name, m.Price, m.LastClose)) continue;
+                    if (IsSt(m.Name)) continue;
+                    if (!byCode.ContainsKey(m.Code))
+                    {
+                        MarketLeaderEntry entry = new MarketLeaderEntry();
+                        entry.Member = m;
+                        entry.Sector = sector;
+                        byCode[m.Code] = entry;
+                    }
+                }
+            }
+            List<MarketLeaderEntry> list = new List<MarketLeaderEntry>(byCode.Values);
+            list.Sort(delegate(MarketLeaderEntry a, MarketLeaderEntry b)
+            {
+                int c = b.Member.Change.CompareTo(a.Member.Change);
+                if (c != 0) return c;
+                return b.Member.Amount.CompareTo(a.Member.Amount);
+            });
+            if (list.Count > 3) list = list.GetRange(0, 3);
+            return list;
         }
 
         static string RenderSnap(string universe, string sort, string source, Dictionary<string, Quote> qmap,
-            List<Enriched> top, int ztCount, int zbCount, string error)
+            List<Enriched> top, List<MarketLeaderEntry> marketLeaders, int ztCount, int zbCount, string error)
         {
             DateTime bj = DateTime.UtcNow.AddHours(8);
             StringBuilder sb = new StringBuilder();
@@ -316,7 +349,33 @@ namespace ShunshiTdx
                 sb.Append(",\"upCount\":null,\"downCount\":null,\"flatCount\":null}");
             }
             sb.Append("],\"ztCount\":").Append(ztCount).Append(",\"zbCount\":").Append(zbCount);
-            sb.Append(",\"sectors\":[");
+            sb.Append(",\"marketLeaders\":[");
+            string[] mktRanks = new string[] { "总龙头", "龙二", "龙三" };
+            for (int i = 0; i < marketLeaders.Count; i++)
+            {
+                if (i > 0) sb.Append(",");
+                MarketLeaderEntry entry = marketLeaders[i];
+                Member m = entry.Member;
+                string reason = "全市场 · 通达信按涨停价判定（无先封时间）";
+                if (!string.IsNullOrEmpty(entry.Sector))
+                    reason = entry.Sector + " · " + reason;
+                sb.Append("{\"rank\":").Append(JStr(mktRanks[i]));
+                sb.Append(",\"code\":").Append(JStr(m.Code));
+                sb.Append(",\"name\":").Append(JStr(m.Name));
+                sb.Append(",\"market\":").Append(m.Market);
+                sb.Append(",\"price\":").Append(JNum(m.Price));
+                sb.Append(",\"changePercent\":").Append(JNum(m.Change));
+                sb.Append(",\"amount\":").Append(JNum(m.Amount));
+                sb.Append(",\"turnoverRate\":null,\"speed\":null,\"mainNetInflow\":null");
+                sb.Append(",\"isLimitUp\":true,\"isBroken\":false");
+                sb.Append(",\"consecutiveBoards\":1");
+                sb.Append(",\"firstSealTime\":null,\"lastSealTime\":null,\"sealAmount\":null");
+                sb.Append(",\"openCount\":0,\"sealKind\":null");
+                sb.Append(",\"sectorName\":").Append(JStr(entry.Sector));
+                sb.Append(",\"reason\":").Append(JStr(reason));
+                sb.Append(",\"trend\":[]}");
+            }
+            sb.Append("],\"sectors\":[");
             string[] ranks = new string[] { "龙一", "龙二", "龙三" };
             for (int i = 0; i < top.Count; i++)
             {
@@ -377,7 +436,7 @@ namespace ShunshiTdx
             sb.Append(",\"universe\":").Append(JStr(universe));
             sb.Append(",\"sort\":").Append(JStr(sort));
             sb.Append(",\"source\":").Append(JStr(source));
-            sb.Append(",\"indices\":[],\"ztCount\":0,\"zbCount\":0,\"sectors\":[]");
+            sb.Append(",\"indices\":[],\"ztCount\":0,\"zbCount\":0,\"marketLeaders\":[],\"sectors\":[]");
             sb.Append(",\"error\":").Append(JStr(error)).Append("}");
             return sb.ToString();
         }
@@ -1242,6 +1301,12 @@ namespace ShunshiTdx
         public double Amount;
         public int Up;
         public int Down;
+    }
+
+    sealed class MarketLeaderEntry
+    {
+        public Member Member;
+        public string Sector;
     }
 
     sealed class Member

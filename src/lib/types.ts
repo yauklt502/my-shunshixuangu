@@ -15,6 +15,8 @@ export type BoardKind = "concept" | "industry";
 
 export type LeaderRank = "龙一" | "龙二" | "龙三";
 
+export type MarketLeaderRank = "总龙头" | "龙二" | "龙三";
+
 export type IndexQuote = {
   code: string;
   name: string;
@@ -104,6 +106,11 @@ export type RankedLeader = {
   trend: number[];
 };
 
+export type MarketLeader = Omit<RankedLeader, "rank"> & {
+  rank: MarketLeaderRank;
+  sectorName: string | null;
+};
+
 export type SectorSnapshot = {
   rank: number;
   code: string;
@@ -143,6 +150,7 @@ export type MarketSnapshot = {
   indices: IndexQuote[];
   ztCount: number;
   zbCount: number;
+  marketLeaders: MarketLeader[];
   sectors: SectorSnapshot[];
   error?: string;
 };

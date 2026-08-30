@@ -97,6 +97,27 @@
     .foot { text-align: center; color: var(--muted); font-size: 11px; padding: 16px 0; }
     .skel { height: 84px; border-radius: 12px; background: var(--elev); animation: pulse 1.2s infinite; }
     @keyframes pulse { 50% { opacity: .55; } }
+    .mkt-leaders {
+      border: 1px solid rgba(231,184,76,.28);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, rgba(231,184,76,.12), rgba(16,19,26,.85) 55%);
+    }
+    .mkt-leaders h2 { margin: 2px 0 0; font-size: 18px; }
+    .mkt-leaders .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .mkt-grid { display: grid; gap: 8px; margin-top: 10px; }
+    @media (min-width: 900px) { .mkt-grid { grid-template-columns: 1fr 1fr 1fr; } }
+    .mkt-card {
+      display: block; text-decoration: none; color: inherit;
+      border: 1px solid var(--line); background: rgba(16,19,26,.92);
+      border-radius: 12px; padding: 10px 12px;
+    }
+    .mkt-card.hero { border-color: rgba(231,184,76,.45); box-shadow: 0 0 24px rgba(231,184,76,.1); }
+    .mkt-empty {
+      border: 1px dashed var(--line); border-radius: 12px; padding: 18px;
+      text-align: center; color: var(--muted); font-size: 13px; margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -126,6 +147,7 @@
       </div>
     </div>
     <div id="error"></div>
+    <div id="marketLeaders" class="mkt-leaders"></div>
     <div class="idx" id="indices"></div>
     <div class="sectors" id="sectors"></div>
     <details>
@@ -400,6 +422,83 @@
       });
     }
 
+    function rankMarketFromPool(pool) {
+      const ranks = ["总龙头", "龙二", "龙三"];
+      const badges = ["b1", "b2", "b3"];
+      const ztMap = new Map();
+      for (const x of pool || []) {
+        const code = x.c || x.code;
+        const name = x.n || x.name || code;
+        if (!code || isSt(String(name))) continue;
+        ztMap.set(code, {
+          firstSealTime: x.fbt || x.firstSealTime || 0,
+          lbc: x.lbc || 1,
+          fund: x.fund ?? x.seal_money ?? null,
+          zbc: x.zbc || 0,
+          industry: x.hybk || x.industry || "",
+        });
+      }
+      const members = [...ztMap.keys()].map((code) => {
+        const row = (pool || []).find((p) => (p.c || p.code) === code) || {};
+        const zt = ztMap.get(code);
+        return {
+          code,
+          name: row.n || row.name || code,
+          market: code.startsWith("6") ? 1 : 0,
+          changePercent: 10,
+          price: null,
+          amount: zt?.fund ?? null,
+        };
+      });
+      return rankLeaders(members, ztMap, new Map()).map((l, i) => {
+        const ind = ztMap.get(l.code)?.industry || "";
+        return {
+          ...l,
+          rank: ranks[i],
+          badge: badges[i],
+          sectorName: ind || null,
+          reason: (ind ? ind + " · " : "全市场 · ") + l.reason,
+        };
+      });
+    }
+
+    function rankMarketFromThsItems(items) {
+      const pool = [];
+      for (const x of items || []) {
+        if (x.is_st || isSt(x.name || "")) continue;
+        const parsed = parseThs(x.thscode) || (x.ticker ? { code: x.ticker, market: 0 } : null);
+        if (!parsed) continue;
+        pool.push({
+          c: parsed.code,
+          n: x.name || parsed.code,
+          fbt: parseHhMm(x.limit_up_time),
+          lbc: x.continue_day_cnt || 1,
+          fund: x.seal_money,
+        });
+      }
+      return rankMarketFromPool(pool);
+    }
+
+    function ensureMarketLeaders(data) {
+      if (data.marketLeaders && data.marketLeaders.length) return data.marketLeaders;
+      const seen = new Set();
+      const pool = [];
+      for (const sec of data.sectors || []) {
+        for (const l of sec.leaders || []) {
+          if (!l.isLimitUp || seen.has(l.code)) continue;
+          seen.add(l.code);
+          pool.push({
+            c: l.code,
+            n: l.name,
+            lbc: l.lbc || 1,
+            fund: l.seal,
+            hybk: sec.name,
+          });
+        }
+      }
+      return rankMarketFromPool(pool);
+    }
+
     async function loadEastmoney() {
       const date = beijingYmd();
       const [indices, concepts, industries, zt, zb] = await Promise.all([
@@ -430,7 +529,14 @@
         };
       }));
       if (sort === "limitUp") enriched.sort((a, b) => b.limitUpCount - a.limitUpCount || (b.changePercent || 0) - (a.changePercent || 0));
-      return { indices, ztCount: zt.tc || 0, zbCount: zb.tc || 0, sectors: enriched.slice(0, 3), tradeDate: String(zt.qdate || date) };
+      return {
+        indices,
+        ztCount: zt.tc || 0,
+        zbCount: zb.tc || 0,
+        marketLeaders: rankMarketFromPool(zt.pool || []),
+        sectors: enriched.slice(0, 3),
+        tradeDate: String(zt.qdate || date),
+      };
     }
 
     async function loadThs() {
@@ -497,6 +603,7 @@
         indices,
         ztCount: ztPage.total || 0,
         zbCount: zbPage.total || 0,
+        marketLeaders: rankMarketFromThsItems(ztPage.items || []),
         sectors: enriched.slice(0, 3),
         tradeDate: beijingYmd(),
         error: sort === "inflow" ? "同花顺快照暂无主力净流入，已按成交额排序" : "",
@@ -512,12 +619,18 @@
 
     function fromServerSnapshot(s) {
       const badge = ["b1", "b2", "b3"];
-      return {
+      const data = {
         indices: s.indices || [],
         ztCount: s.ztCount || 0,
         zbCount: s.zbCount || 0,
         tradeDate: s.tradeDate || "",
         error: s.error || "",
+        marketLeaders: (s.marketLeaders || []).map((l, i) => ({
+          ...l,
+          badge: l.rank === "总龙头" ? "b1" : l.rank === "龙二" ? "b2" : "b3",
+          lbc: l.consecutiveBoards,
+          seal: l.sealAmount,
+        })),
         sectors: (s.sectors || []).map((sec) => ({
           ...sec,
           leaders: (sec.leaders || []).map((l, i) => ({
@@ -528,6 +641,8 @@
           })),
         })),
       };
+      data.marketLeaders = ensureMarketLeaders(data);
+      return data;
     }
 
     async function loadTdx(mode) {
@@ -582,11 +697,39 @@
         : "数据来自东方财富公开行情，只供看盘，不构成投资建议。";
     }
 
+    function renderMarketLeaders(leaders) {
+      const box = document.getElementById("marketLeaders");
+      const head = `<div class="brand">MARKET LEADERS</div><h2>今日全市场龙头</h2><p class="sub">情绪资金自选 · 全市场涨停池按先封时间 → 连板 → 封单排出</p>`;
+      if (!leaders || !leaders.length) {
+        box.innerHTML = head + `<div class="mkt-empty">盘中出现涨停后，这里会自动排出总龙头、龙二、龙三</div>`;
+        return;
+      }
+      box.innerHTML = head + `<div class="mkt-grid">${leaders.map((l, i) => `
+        <a class="mkt-card ${i === 0 ? "hero" : ""} ${l.isLimitUp ? "zt" : ""}" href="https://quote.eastmoney.com/unify/r/${l.market}.${l.code}" target="_blank" rel="noreferrer">
+          <div class="row">
+            <div>
+              <span class="badge ${l.badge}">${l.rank}</span>
+              ${l.isLimitUp ? '<span class="tag tag-up">涨停</span>' : ""}
+              ${l.lbc > 1 ? `<span class="gold" style="font-size:11px;margin-left:6px">${l.lbc}连板</span>` : ""}
+              <div style="margin-top:6px"><strong>${l.name}</strong> <span class="muted">${l.code}</span></div>
+              ${l.sectorName ? `<div class="muted" style="font-size:11px;margin-top:2px">${l.sectorName}</div>` : ""}
+            </div>
+            <div style="text-align:right">
+              <div class="num ${tone(l.changePercent)}" style="font-size:18px;font-weight:700">${pct(l.changePercent)}</div>
+              <div class="muted num">${px(l.price)}</div>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:6px;font-size:12px">${l.reason}</div>
+          <div class="muted" style="margin-top:4px;font-size:11px">封单 ${yi(l.seal)}</div>
+        </a>`).join("")}</div>`;
+    }
+
     function render(data) {
       const [sid, label, live] = sessionNow();
       document.getElementById("status").textContent = label;
       document.getElementById("dot").className = "dot" + (live ? " live" : "");
       document.getElementById("error").innerHTML = data.error ? `<div class="err">${data.error}</div>` : "";
+      renderMarketLeaders(ensureMarketLeaders(data));
       const idx = (data.indices || []).map((x) => `
         <div class="card">
           <div class="row muted"><span>${x.name}</span><span>涨${x.upCount ?? "--"} / 跌${x.downCount ?? "--"}</span></div>
@@ -662,6 +805,8 @@
     }
 
     function bootSkeleton() {
+      document.getElementById("marketLeaders").innerHTML =
+        '<div class="brand">MARKET LEADERS</div><h2>今日全市场龙头</h2><div class="skel" style="height:96px;margin-top:10px"></div>';
       document.getElementById("indices").innerHTML =
         Array.from({ length: 5 }).map(() => '<div class="skel"></div>').join("");
       document.getElementById("sectors").innerHTML =

@@ -38,6 +38,7 @@ function snapshot(sectors: SectorSnapshot[]): MarketSnapshot {
     indices: [],
     ztCount: 1,
     zbCount: 0,
+    marketLeaders: [],
     sectors,
   };
 }

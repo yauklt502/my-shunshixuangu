@@ -15,6 +15,7 @@ function emptySnapshot(query: ReturnType<typeof parseSnapshotQuery>, error: stri
     indices: [],
     ztCount: 0,
     zbCount: 0,
+    marketLeaders: [],
     sectors: [],
     error,
   };
