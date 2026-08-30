@@ -59,6 +59,14 @@
       border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12px;
     }
     .ghost:hover { color: var(--text); }
+    .ghost:disabled { opacity: .55; cursor: wait; }
+    .shot-toast {
+      position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+      max-width: min(420px, calc(100vw - 32px));
+      border: 1px solid rgba(110,181,255,.45); background: rgba(16,19,26,.96);
+      color: var(--text); border-radius: 12px; padding: 10px 14px; font-size: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
     .status {
       display: flex; align-items: center; gap: 8px;
       border: 1px solid var(--line); background: var(--elev); border-radius: 999px;
@@ -79,8 +87,12 @@
     .sectors { display: grid; gap: 12px; grid-template-columns: 1fr; min-height: 420px; }
     @media (min-width: 1024px) { .sectors { grid-template-columns: 1fr 1fr 1fr; } }
     .sector { border: 1px solid var(--line); background: rgba(16,19,26,.9); border-radius: 16px; padding: 12px; }
-    .sector h2 { margin: 4px 0 0; color: var(--board); font-weight: 600; }
-    .sector-name { color: var(--board); font-size: 11px; margin-top: 2px; }
+    .sector h2.board-name {
+      margin: 4px 0 0;
+      color: #6eb5ff !important;
+      font-weight: 600;
+    }
+    .sector-name { color: #6eb5ff !important; font-size: 11px; margin-top: 2px; }
     .leader { display: block; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--elev2); border-radius: 12px; padding: 12px; margin-top: 8px; }
     .leader strong, .mkt-card strong { color: var(--up); font-weight: 600; }
     .leader.zt { box-shadow: inset 3px 0 0 var(--up); }
@@ -148,6 +160,7 @@
         <label class="srcpick">数据源
           <select id="source"></select>
         </label>
+        <button type="button" class="ghost" id="shotBtn" title="保存当前页面截图到本机 screenshots 文件夹">截屏保存</button>
         <button type="button" class="ghost" id="keyBtn" hidden>填写密匙</button>
       </div>
     </header>
@@ -174,6 +187,7 @@
       </ol>
     </details>
     <p class="foot" id="foot">数据来自东方财富公开行情，只供看盘，不构成投资建议。</p>
+    <div id="shotToast" class="shot-toast" hidden></div>
   </div>
   <script>
     const PUSH2 = "https://push2delay.eastmoney.com/api/qt";
@@ -266,7 +280,100 @@
       return Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3] || 0);
     };
     const isSt = (name) => /(?:\*?ST|S\*ST)/i.test(String(name).replaceAll(" ", ""));
-    const clock = () => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(new Date());
+    function beijingStamp() {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      }).format(new Date()).replace(/:/g, "");
+    }
+
+    function showShotToast(message, ms = 5000) {
+      const box = document.getElementById("shotToast");
+      box.textContent = message;
+      box.hidden = false;
+      clearTimeout(showShotToast._timer);
+      showShotToast._timer = setTimeout(() => { box.hidden = true; }, ms);
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+          resolve();
+          return;
+        }
+        const tag = document.createElement("script");
+        tag.src = src;
+        tag.onload = () => resolve();
+        tag.onerror = () => reject(new Error("截屏组件加载失败，请检查网络"));
+        document.head.appendChild(tag);
+      });
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    async function saveScreenshot() {
+      const btn = document.getElementById("shotBtn");
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const oldText = btn.textContent;
+      btn.textContent = "截屏中…";
+      try {
+        await loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+        const target = document.querySelector(".wrap");
+        if (!target) throw new Error("找不到页面内容");
+        const canvas = await html2canvas(target, {
+          backgroundColor: "#07080c",
+          scale: Math.min(2, window.devicePixelRatio || 1),
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+        });
+        const dataUrl = canvas.toDataURL("image/png");
+        const filename = `shunshi_${tradeDate}_${source}_${universe}_${sort}_${beijingStamp()}.png`;
+        let savedPath = "";
+        try {
+          const res = await fetch("/save-screenshot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename, data: dataUrl }),
+          });
+          const result = await res.json();
+          if (result && result.ok) savedPath = result.path || "";
+          else throw new Error((result && result.error) || "本地保存失败");
+        } catch (err) {
+          downloadDataUrl(dataUrl, filename);
+          showShotToast(`已下载 ${filename}（未能写入 screenshots 文件夹：${err.message || err}）`, 7000);
+          return;
+        }
+        downloadDataUrl(dataUrl, filename);
+        showShotToast(savedPath ? `已保存到 ${savedPath}` : `已保存 ${filename}`, 6000);
+      } catch (err) {
+        showShotToast(`截屏失败：${err.message || err}`, 6000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    }
+
+    function clock() {
+      return new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      }).format(new Date());
+    }
     const chunk = (arr, size) => {
       const out = [];
       for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -813,7 +920,7 @@
           <div class="row">
             <div>
               <div class="muted">${mark[i]} ${sec.kind === "concept" ? "概念" : "行业"} · ${sec.code}</div>
-              <h2>${sec.name}</h2>
+              <h2 class="board-name">${sec.name}</h2>
             </div>
             <div style="text-align:right">
               <div class="num ${tone(sec.changePercent)}" style="font-size:24px;font-weight:700">${pct(sec.changePercent)}</div>
@@ -959,6 +1066,7 @@
       syncChrome();
       startLoop();
     };
+    document.getElementById("shotBtn").onclick = () => { void saveScreenshot(); };
 
     paintPills();
     bootSkeleton();

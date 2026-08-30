@@ -52,7 +52,7 @@ function Write-Bytes($ctx, [int]$status, [string]$contentType, [byte[]]$bytes) {
   $ctx.Response.AddHeader("Cache-Control", "no-store")
   $ctx.Response.AddHeader("Access-Control-Allow-Origin", "*")
   $ctx.Response.AddHeader("Access-Control-Allow-Headers", "X-api-key, Content-Type")
-  $ctx.Response.AddHeader("Access-Control-Allow-Methods", "GET, OPTIONS")
+  $ctx.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
   $ctx.Response.ContentLength64 = $bytes.Length
   if ($bytes.Length -gt 0) {
     $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
@@ -153,6 +153,61 @@ function Invoke-ThsProxy($ctx) {
   }
 }
 
+function Invoke-SaveScreenshot($ctx) {
+  $req = $ctx.Request
+  if ($req.HttpMethod -eq "OPTIONS") {
+    Write-Bytes $ctx 204 "text/plain" ([byte[]]@())
+    return
+  }
+  if ($req.HttpMethod -ne "POST") {
+    Write-Json $ctx 405 '{"ok":false,"error":"method not allowed"}'
+    return
+  }
+  try {
+    $reader = New-Object System.IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
+    $body = $reader.ReadToEnd()
+    $reader.Close()
+    if ([string]::IsNullOrWhiteSpace($body)) {
+      Write-Json $ctx 400 '{"ok":false,"error":"empty body"}'
+      return
+    }
+    $obj = $body | ConvertFrom-Json
+    $data = [string]$obj.data
+    $filename = [string]$obj.filename
+    if ([string]::IsNullOrWhiteSpace($data)) {
+      Write-Json $ctx 400 '{"ok":false,"error":"missing image data"}'
+      return
+    }
+    $b64 = $data
+    if ($b64 -match "^data:image/png;base64,(.+)$") {
+      $b64 = $matches[1]
+    }
+    $filename = [IO.Path]::GetFileName(($filename -replace "[\\/:*?\"<>|]", "_"))
+    if ([string]::IsNullOrWhiteSpace($filename)) {
+      $filename = "shunshi_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".png"
+    }
+    if (-not $filename.ToLowerInvariant().EndsWith(".png")) {
+      $filename += ".png"
+    }
+    $day = $null
+    if ($filename -match "(\d{8})") { $day = $matches[1] }
+    if ([string]::IsNullOrWhiteSpace($day)) { $day = Get-Date -Format "yyyyMMdd" }
+    $dir = Join-Path $root "screenshots"
+    $dayDir = Join-Path $dir $day
+    if (-not (Test-Path -LiteralPath $dayDir)) {
+      New-Item -ItemType Directory -Path $dayDir -Force | Out-Null
+    }
+    $full = Join-Path $dayDir $filename
+    [IO.File]::WriteAllBytes($full, [Convert]::FromBase64String($b64))
+    $payload = @{ ok = $true; path = $full; filename = $filename } | ConvertTo-Json -Compress
+    Write-Json $ctx 200 $payload
+  } catch {
+    $msg = $_.Exception.Message
+    $json = '{"ok":false,"error":' + ($msg | ConvertTo-Json -Compress) + '}'
+    Write-Json $ctx 500 $json
+  }
+}
+
 $listener = $null
 $usedPort = 0
 foreach ($port in 3000, 3001, 3002, 5173) {
@@ -190,6 +245,10 @@ try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()
     $path = $ctx.Request.Url.LocalPath
+    if ($path -eq "/save-screenshot") {
+      Invoke-SaveScreenshot $ctx
+      continue
+    }
     if ($path.StartsWith("/ths-api/")) {
       Invoke-ThsProxy $ctx
       continue
