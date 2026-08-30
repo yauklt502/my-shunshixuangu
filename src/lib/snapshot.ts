@@ -1,9 +1,11 @@
 import { fetchBoards, fetchConstituents, fetchIndices, fetchTrendsMany, fetchZbPool, fetchZtPool } from "./eastmoney";
+import { buildThsSnapshot, fuyaoErrorMessage } from "./fuyao";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard } from "./noise-boards";
 import { rankLeaders } from "./ranking";
 import type {
   BoardQuote,
+  DataSource,
   MarketSnapshot,
   SectorSort,
   SectorSnapshot,
@@ -13,6 +15,11 @@ import type {
 export type SnapshotQuery = {
   universe: Universe;
   sort: SectorSort;
+  source: DataSource;
+};
+
+export type SnapshotOptions = {
+  fuyaoKey?: string;
 };
 
 function sortBoards(boards: BoardQuote[], sort: SectorSort): BoardQuote[] {
@@ -32,31 +39,71 @@ function memberFloor(board: BoardQuote): number {
 const lastGood = new Map<string, MarketSnapshot>();
 
 function queryKey(query: SnapshotQuery): string {
-  return `${query.universe}:${query.sort}`;
+  return `${query.source}:${query.universe}:${query.sort}`;
 }
 
-export async function buildSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
+function isKeyError(message: string | undefined): boolean {
+  return Boolean(message && message.includes("密匙"));
+}
+
+function emptySnapshot(query: SnapshotQuery, error: string): MarketSnapshot {
+  return {
+    tradeDate: "",
+    updatedAt: new Date().toISOString(),
+    session: getMarketSession(),
+    universe: query.universe,
+    sort: query.sort,
+    source: query.source,
+    indices: [],
+    ztCount: 0,
+    zbCount: 0,
+    sectors: [],
+    error,
+  };
+}
+
+export async function buildSnapshot(
+  query: SnapshotQuery,
+  options: SnapshotOptions = {},
+): Promise<MarketSnapshot> {
   const key = queryKey(query);
   try {
-    const snapshot = await assembleSnapshot(query);
+    const snapshot =
+      query.source === "ths"
+        ? await assembleThsSnapshot(query, options.fuyaoKey)
+        : await assembleSnapshot(query);
     if (snapshot.sectors.length) lastGood.set(key, snapshot);
     else {
       const prev = lastGood.get(key);
-      if (prev) {
-        return { ...prev, updatedAt: new Date().toISOString(), error: "行情暂无新数据，显示上次结果" };
+      if (prev && !isKeyError(snapshot.error)) {
+        return { ...prev, updatedAt: new Date().toISOString(), error: snapshot.error || "行情暂无新数据，显示上次结果" };
       }
     }
     return snapshot;
   } catch (error) {
+    const message = error instanceof Error ? error.message : "行情刷新失败，显示上次数据";
     const prev = lastGood.get(key);
-    if (prev) {
+    if (prev && !isKeyError(message)) {
       return {
         ...prev,
         updatedAt: new Date().toISOString(),
-        error: error instanceof Error ? `行情刷新失败，显示上次数据：${error.message}` : "行情刷新失败，显示上次数据",
+        error: `行情刷新失败，显示上次数据：${message}`,
       };
     }
+    if (isKeyError(message)) return emptySnapshot(query, message);
     throw error;
+  }
+}
+
+async function assembleThsSnapshot(query: SnapshotQuery, fuyaoKey?: string): Promise<MarketSnapshot> {
+  const apiKey = (fuyaoKey ?? process.env.FUYAO_API_KEY ?? "").trim();
+  if (!apiKey) {
+    return emptySnapshot(query, "请先填写同花顺密匙（右上角切换到同花顺后输入，只保存在本机）");
+  }
+  try {
+    return await buildThsSnapshot(query, apiKey);
+  } catch (error) {
+    throw new Error(fuyaoErrorMessage(error));
   }
 }
 
@@ -139,6 +186,7 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
     session,
     universe,
     sort,
+    source: "eastmoney",
     indices,
     ztCount: ztPool.tc,
     zbCount: zbPool.tc,
@@ -149,6 +197,7 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
 export function parseSnapshotQuery(searchParams: URLSearchParams): SnapshotQuery {
   const universeRaw = searchParams.get("universe") ?? "all";
   const sortRaw = searchParams.get("sort") ?? "change";
+  const sourceRaw = searchParams.get("source") ?? "eastmoney";
   const universe: Universe =
     universeRaw === "concept" || universeRaw === "industry" || universeRaw === "all"
       ? universeRaw
@@ -157,5 +206,7 @@ export function parseSnapshotQuery(searchParams: URLSearchParams): SnapshotQuery
     sortRaw === "limitUp" || sortRaw === "amount" || sortRaw === "inflow" || sortRaw === "change"
       ? sortRaw
       : "change";
-  return { universe, sort };
+  const source: DataSource =
+    sourceRaw === "ths" || sourceRaw === "tonghuashun" || sourceRaw === "fuyao" ? "ths" : "eastmoney";
+  return { universe, sort, source };
 }

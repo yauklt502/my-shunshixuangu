@@ -17,6 +17,7 @@ if not exist "%DEST%" mkdir "%DEST%"
 copy /Y "%SRC%\index.html" "%DEST%\index.html" >nul
 copy /Y "%SRC%\start-server.ps1" "%DEST%\start-server.ps1" >nul
 copy /Y "%SRC%\open.bat" "%DEST%\open.bat" >nul
+if exist "%SRC%\fuyao-key.txt" copy /Y "%SRC%\fuyao-key.txt" "%DEST%\fuyao-key.txt" >nul
 
 echo.
 echo Copied to %DEST%

@@ -4,13 +4,14 @@ import { parseSnapshotQuery, buildSnapshot } from "@/lib/snapshot";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-function emptySnapshot(universe: ReturnType<typeof parseSnapshotQuery>["universe"], sort: ReturnType<typeof parseSnapshotQuery>["sort"], error: string) {
+function emptySnapshot(query: ReturnType<typeof parseSnapshotQuery>, error: string) {
   return {
     tradeDate: "",
     updatedAt: new Date().toISOString(),
     session: "closed" as const,
-    universe,
-    sort,
+    universe: query.universe,
+    sort: query.sort,
+    source: query.source,
     indices: [],
     ztCount: 0,
     zbCount: 0,
@@ -19,18 +20,27 @@ function emptySnapshot(universe: ReturnType<typeof parseSnapshotQuery>["universe
   };
 }
 
+function readFuyaoKey(request: Request): string {
+  return (
+    request.headers.get("x-fuyao-key") ||
+    request.headers.get("x-api-key") ||
+    process.env.FUYAO_API_KEY ||
+    ""
+  ).trim();
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = parseSnapshotQuery(url.searchParams);
   try {
-    const snapshot = await buildSnapshot(query);
+    const snapshot = await buildSnapshot(query, { fuyaoKey: readFuyaoKey(request) });
     return NextResponse.json(snapshot, {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "行情暂时不可用";
-    return NextResponse.json(emptySnapshot(query.universe, query.sort, message), {
+    return NextResponse.json(emptySnapshot(query, message), {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });

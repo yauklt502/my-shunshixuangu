@@ -1,5 +1,6 @@
 export type Universe = "concept" | "industry" | "all";
 export type SectorSort = "change" | "limitUp" | "amount" | "inflow";
+export type DataSource = "eastmoney" | "ths";
 
 export type MarketSession =
   | "pre"
@@ -138,6 +139,7 @@ export type MarketSnapshot = {
   session: MarketSession;
   universe: Universe;
   sort: SectorSort;
+  source: DataSource;
   indices: IndexQuote[];
   ztCount: number;
   zbCount: number;

@@ -1,4 +1,4 @@
-import type { MarketSession } from "./types";
+import type { DataSource, MarketSession } from "./types";
 
 function beijingWeekday(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -35,8 +35,14 @@ export function isLiveSession(session: MarketSession): boolean {
   return session === "auction" || session === "morning" || session === "afternoon";
 }
 
-export function pollIntervalMs(session: MarketSession): number {
-  if (isLiveSession(session)) return 5000;
+export function pollIntervalMs(session: MarketSession, source: DataSource = "eastmoney"): number {
+  const live = isLiveSession(session);
+  if (source === "ths") {
+    if (live) return 12000;
+    if (session === "lunch") return 20000;
+    return 40000;
+  }
+  if (live) return 5000;
   if (session === "lunch") return 15000;
   return 30000;
 }

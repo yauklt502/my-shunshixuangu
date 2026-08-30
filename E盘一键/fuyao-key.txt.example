@@ -1,0 +1,4 @@
+# Copy this file to fuyao-key.txt (same folder as index.html) and paste your key on one line.
+# The file is ignored by git. The board reads it automatically on first open.
+# Example:
+# sk-fuyao-your-key-here

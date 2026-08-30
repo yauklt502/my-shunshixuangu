@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local Tonghuashun / Fuyao API key (never commit)
+fuyao-key.txt
+**/fuyao-key.txt
 
 # vercel
 .vercel

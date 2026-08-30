@@ -34,6 +34,7 @@ function snapshot(sectors: SectorSnapshot[]): MarketSnapshot {
     session: "morning",
     universe: "all",
     sort: "change",
+    source: "eastmoney",
     indices: [],
     ztCount: 1,
     zbCount: 0,

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getMarketSession, isLiveSession, sessionLabel } from "./market-hours";
+import { getMarketSession, isLiveSession, pollIntervalMs, sessionLabel } from "./market-hours";
 
 function atShanghai(isoLocal: string): Date {
   return new Date(`${isoLocal}+08:00`);
@@ -12,6 +12,12 @@ describe("market hours", () => {
     assert.equal(session, "weekend");
     assert.equal(isLiveSession(session), false);
     assert.equal(sessionLabel(session), "周末休市");
+  });
+
+  it("slows Tonghuashun polling versus Eastmoney", () => {
+    assert.equal(pollIntervalMs("morning", "eastmoney"), 5000);
+    assert.equal(pollIntervalMs("morning", "ths"), 12000);
+    assert.equal(pollIntervalMs("closed", "ths"), 40000);
   });
 
   it("detects Friday morning auction and continuous trading", () => {

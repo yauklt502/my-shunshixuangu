@@ -38,6 +38,11 @@
       padding: 6px 12px; cursor: pointer; font-size: 12px;
     }
     .pills button.on { background: var(--gold); color: #111; }
+    .ghost {
+      border: 1px solid var(--line); background: var(--elev); color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12px;
+    }
+    .ghost:hover { color: var(--text); }
     .status {
       display: flex; align-items: center; gap: 8px;
       border: 1px solid var(--line); background: var(--elev); border-radius: 999px;
@@ -71,6 +76,12 @@
     .row { display: flex; justify-content: space-between; gap: 8px; }
     .meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 8px; }
     .err { border: 1px solid rgba(255,77,87,.3); background: rgba(255,77,87,.1); color: var(--up); border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+    .setup { border: 1px solid var(--line); background: rgba(16,19,26,.85); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
+    .setup input {
+      flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--elev2); color: var(--text);
+      border-radius: 10px; padding: 8px 10px; font-size: 14px;
+    }
+    .setup .save { border: 0; background: var(--gold); color: #111; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
     details { border: 1px solid var(--line); background: rgba(16,19,26,.6); border-radius: 16px; padding: 12px 16px; color: var(--muted); font-size: 14px; margin-top: 12px; }
     summary { color: var(--text); cursor: pointer; }
     .foot { text-align: center; color: var(--muted); font-size: 11px; padding: 16px 0; }
@@ -84,14 +95,24 @@
       <div>
         <div class="brand">SHUNSHI XUANGU</div>
         <h1>顺势选股 · 龙头盯盘</h1>
-        <p class="sub">自动锁定当天最强三个板块，再排出龙一、龙二、龙三。黑窗口不要关。</p>
+        <p class="sub">自动锁定当天最强三个板块，再排出龙一、龙二、龙三。黑窗口不要关。右上角可切换东方财富 / 同花顺。</p>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end">
         <div class="status"><span id="dot" class="dot"></span><span id="status">正在打开</span><span id="clock" class="clock"></span></div>
         <div class="pills" id="universe"></div>
         <div class="pills" id="sort"></div>
+        <div class="pills" id="source"></div>
+        <button type="button" class="ghost" id="keyBtn" hidden>填写密匙</button>
       </div>
     </header>
+    <div id="setup" class="setup" hidden>
+      <div style="font-size:14px;margin-bottom:6px">同花顺密匙只保存在这台电脑的浏览器里，不会上传。</div>
+      <div class="muted" style="margin-bottom:10px">到 https://fuyao.aicubes.cn/admin/ 签发。请求头是 X-api-key。周末涨停池可能是空的，板块涨幅仍可看。</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="keyInput" type="password" placeholder="sk-fuyao-..." autocomplete="off" />
+        <button type="button" class="save" id="keySave">保存并刷新</button>
+      </div>
+    </div>
     <div id="error"></div>
     <div class="idx" id="indices"></div>
     <div class="sectors" id="sectors"></div>
@@ -102,21 +123,36 @@
         <li>不把「昨日连板、历史新高」这种统计池当成板块。</li>
         <li>板块里谁先涨停，谁就是龙一；同一时间看连板，再看封单。</li>
         <li>没有涨停就按涨幅排。ST 不参与。</li>
+        <li>右上角切换数据源：东方财富约 8 秒刷新；同花顺约 12 秒。同花顺暂无主力净流入，选「主力净流入」时按成交额排。</li>
       </ol>
     </details>
-    <p class="foot">数据来自东方财富公开行情，只供看盘，不构成投资建议。</p>
+    <p class="foot" id="foot">数据来自东方财富公开行情，只供看盘，不构成投资建议。</p>
   </div>
   <script>
     const PUSH2 = "https://push2delay.eastmoney.com/api/qt";
     const PUSH2EX = "https://push2ex.eastmoney.com";
+    const FUYAO = "https://fuyao.aicubes.cn";
     const UT = "bd1d9ddb04089700cf9c27f6f7426281";
     const ZT_UT = "7eea3edcaed734bea9cbfc24409ed989";
     const NOISE = /昨日|前日|连板|涨停|跌停|破板|炸板|打板|首板|二板|三板|历史新高|历史新低|近期新高|近期新低|近期解禁|公告|^ST|ST股|次新股|沪股通|深股通|融资融券|转融通|高开低走|低开高走|高换手|成交活跃|含一字|题材股|热股|多板|东方财富/;
     const UNIVERSE = [{ id: "all", label: "综合" }, { id: "concept", label: "概念" }, { id: "industry", label: "行业" }];
     const SORTS = [{ id: "change", label: "涨幅" }, { id: "limitUp", label: "涨停数" }, { id: "amount", label: "成交额" }, { id: "inflow", label: "主力净流入" }];
+    const SOURCES = [{ id: "eastmoney", label: "东方财富" }, { id: "ths", label: "同花顺" }];
+    const INDEX_THS = [
+      { thscode: "000001.SH", name: "上证指数" },
+      { thscode: "399001.SZ", name: "深证成指" },
+      { thscode: "399006.SZ", name: "创业板指" },
+      { thscode: "000688.SH", name: "科创50" },
+    ];
+    const SOURCE_KEY = "shunshi.source";
+    const FUYAO_KEY = "shunshi.fuyaoKey";
 
     let universe = "all";
     let sort = "change";
+    let source = localStorage.getItem(SOURCE_KEY) === "ths" ? "ths" : "eastmoney";
+    let fuyaoKey = (localStorage.getItem(FUYAO_KEY) || "").trim();
+    const catalogCache = { industry: null, concept: null, exp: 0 };
+    const memberCache = new Map();
 
     const num = (v) => (v === "-" || v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
     const str = (v) => (v == null || v === "-" ? "" : String(v).trim());
@@ -136,9 +172,24 @@
       const s = String(Math.trunc(v)).padStart(6, "0");
       return s.slice(0, 2) + ":" + s.slice(2, 4) + ":" + s.slice(4, 6);
     };
+    const parseHhMm = (v) => {
+      const m = String(v || "").trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+      if (!m) return 0;
+      return Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3] || 0);
+    };
     const isSt = (name) => /(?:\*?ST|S\*ST)/i.test(String(name).replaceAll(" ", ""));
     const beijingYmd = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).replaceAll("-", "");
     const clock = () => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(new Date());
+    const chunk = (arr, size) => {
+      const out = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
+    };
+    const parseThs = (code) => {
+      const m = String(code || "").trim().toUpperCase().match(/^(\d{6})\.(SH|SZ|BJ)$/);
+      if (!m) return null;
+      return { code: m[1], market: m[2] === "SH" ? 1 : 0 };
+    };
 
     function sessionNow() {
       const wd = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Shanghai", weekday: "short" }).format(new Date());
@@ -208,6 +259,93 @@
       } catch { return []; }
     }
 
+    function unwrapFuyao(json) {
+      if (!json || typeof json !== "object") throw new Error("同花顺返回无法解析");
+      if (json.code === 2001) throw new Error("同花顺密匙无效或未填写，请在右上角重新输入");
+      if (json.code === 2003) throw new Error("同花顺密匙没有这个数据权限，请到扶摇后台开通 A 股能力");
+      if (json.code !== 0) throw new Error(json.message || ("同花顺接口错误 " + json.code));
+      return json.data || {};
+    }
+
+    async function thsGet(path) {
+      if (!fuyaoKey) throw new Error("请先填写同花顺密匙（右上角切换到同花顺后输入）");
+      const opts = { cache: "no-store", headers: { "X-api-key": fuyaoKey, Accept: "application/json" } };
+      try {
+        const res = await fetch(FUYAO + path, opts);
+        if (!res.ok) throw new Error("http " + res.status);
+        return unwrapFuyao(await res.json());
+      } catch (err) {
+        const res = await fetch("/ths-api" + path, opts);
+        if (!res.ok) throw new Error(err.message || "同花顺行情暂时连不上");
+        return unwrapFuyao(await res.json());
+      }
+    }
+
+    async function thsCatalog(kind) {
+      const tag = kind === "concept" ? "cn_concept" : "industry";
+      const cacheKey = kind === "concept" ? "concept" : "industry";
+      if (catalogCache[cacheKey] && catalogCache.exp > Date.now()) return catalogCache[cacheKey];
+      const data = await thsGet("/api/a-share-index/catalog/ths-index-list?tag=" + tag);
+      const items = (data.item || []).filter((x) => x.thscode && x.name && !NOISE.test(x.name));
+      catalogCache[cacheKey] = items;
+      catalogCache.exp = Date.now() + 60 * 60 * 1000;
+      return items;
+    }
+
+    async function thsIndexSnaps(codes) {
+      const items = [];
+      for (const part of chunk([...new Set(codes.filter(Boolean))], 250)) {
+        const q = new URLSearchParams({ thscodes: part.join(",") });
+        const data = await thsGet("/api/a-share-index/prices/snapshot?" + q.toString());
+        items.push(...(data.item || []));
+      }
+      return items;
+    }
+
+    async function thsStockSnaps(codes) {
+      const items = [];
+      for (const part of chunk([...new Set(codes.filter(Boolean))], 120)) {
+        const q = new URLSearchParams({ thscodes: part.join(",") });
+        const data = await thsGet("/api/a-share/prices/snapshot?" + q.toString());
+        items.push(...(data.item || []));
+      }
+      return items;
+    }
+
+    async function thsMembers(thscode) {
+      const hit = memberCache.get(thscode);
+      if (hit && hit.exp > Date.now()) return hit.value;
+      const data = await thsGet("/api/a-share-index/constituents/ths-stock-list?thscode=" + encodeURIComponent(thscode));
+      const value = (data.item || []).filter((x) => x.thscode);
+      memberCache.set(thscode, { value, exp: Date.now() + 8 * 60 * 1000 });
+      return value;
+    }
+
+    async function thsPaged(path, extra) {
+      const first = await thsGet(path + "?" + extra + "&page=1&size=200");
+      const items = [...(first.item || [])];
+      const pages = (first.pagination && first.pagination.pages) || 1;
+      for (let p = 2; p <= pages; p++) {
+        const next = await thsGet(path + "?" + extra + "&page=" + p + "&size=200");
+        items.push(...(next.item || []));
+      }
+      return { items, total: (first.pagination && first.pagination.total) || items.length };
+    }
+
+    async function thsBoards(kind) {
+      const catalog = await thsCatalog(kind);
+      const snaps = await thsIndexSnaps(catalog.map((x) => x.thscode));
+      const map = new Map(snaps.map((x) => [x.thscode, x]));
+      return catalog.map((x) => {
+        const s = map.get(x.thscode) || {};
+        return {
+          code: x.thscode, name: x.name, kind,
+          changePercent: num(s.price_change_ratio_pct), amount: num(s.turnover), mainNetInflow: null,
+          upCount: null, downCount: null,
+        };
+      }).filter((b) => b.changePercent != null);
+    }
+
     function rankLeaders(stocks, ztMap, zbMap) {
       const scored = stocks.map((s) => {
         const zt = ztMap.get(s.code);
@@ -231,7 +369,7 @@
         if (item.ztYes) {
           reason = fbt(item.zt.firstSealTime) + kind + " · " + (item.zt.lbc > 1 ? item.zt.lbc + "连板" : "首板") + (item.zt.zbc > 0 ? " · 开板" + item.zt.zbc + "次" : " · 未开板");
         } else if (item.zbYes) {
-          reason = fbt(item.zb.fbt) + "曾封 · 炸板" + (item.zb.zbc || 1) + "次";
+          reason = (fbt(item.zb.fbt) || "炸板") + (item.zb.fbt ? "曾封 · " : " · ") + "炸板" + (item.zb.zbc || 1) + "次";
         } else if (item.s.changePercent != null) {
           reason = "板块内涨幅 " + pct(item.s.changePercent);
         }
@@ -239,7 +377,7 @@
       });
     }
 
-    async function loadAll() {
+    async function loadEastmoney() {
       const date = beijingYmd();
       const [indices, concepts, industries, zt, zb] = await Promise.all([
         fetchIndices(),
@@ -272,10 +410,95 @@
       return { indices, ztCount: zt.tc || 0, zbCount: zb.tc || 0, sectors: enriched.slice(0, 3), tradeDate: String(zt.qdate || date) };
     }
 
+    async function loadThs() {
+      if (!fuyaoKey) throw new Error("请先填写同花顺密匙（右上角切换到同花顺后输入）");
+      const [concepts, industries, indexSnaps, ztPage, zbPage] = await Promise.all([
+        universe === "industry" ? [] : thsBoards("concept"),
+        universe === "concept" ? [] : thsBoards("industry"),
+        thsIndexSnaps(INDEX_THS.map((x) => x.thscode)),
+        thsPaged("/api/a-share/special-data/limit-up-pool", "sort_field=limit_up_time&sort_dir=asc"),
+        thsPaged("/api/a-share/special-data/limit-break-pool", "sort_field=open_times&sort_dir=desc"),
+      ]);
+      const indexMap = new Map(indexSnaps.map((x) => [x.thscode, x]));
+      const indices = INDEX_THS.map((meta) => {
+        const s = indexMap.get(meta.thscode) || {};
+        return { code: meta.thscode, name: meta.name, price: num(s.last_price), changePercent: num(s.price_change_ratio_pct), amount: num(s.turnover), upCount: null, downCount: null };
+      });
+      const ztMap = new Map();
+      for (const x of ztPage.items || []) {
+        if (x.is_st || isSt(x.name || "")) continue;
+        const parsed = parseThs(x.thscode) || (x.ticker ? { code: x.ticker } : null);
+        if (!parsed) continue;
+        ztMap.set(parsed.code, { firstSealTime: parseHhMm(x.limit_up_time), lbc: x.continue_day_cnt || 1, fund: x.seal_money, zbc: 0 });
+      }
+      const zbMap = new Map();
+      for (const x of zbPage.items || []) {
+        const parsed = parseThs(x.thscode) || (x.ticker ? { code: x.ticker } : null);
+        if (!parsed) continue;
+        zbMap.set(parsed.code, { fbt: 0, zbc: x.open_times || 1 });
+      }
+      let boards = [...concepts, ...industries];
+      const sortKey = sort === "inflow" ? "amount" : sort;
+      boards.sort((a, b) => {
+        if (sortKey === "amount") return (b.amount || 0) - (a.amount || 0);
+        return (b.changePercent || -999) - (a.changePercent || -999);
+      });
+      const take = sort === "limitUp" ? 14 : 10;
+      const cand = boards.slice(0, take);
+      const enriched = [];
+      for (const b of cand) {
+        const meta = await thsMembers(b.code);
+        const snaps = await thsStockSnaps(meta.map((x) => x.thscode));
+        const snapMap = new Map(snaps.map((x) => [x.thscode, x]));
+        const members = meta.map((x) => {
+          const parsed = parseThs(x.thscode);
+          const s = snapMap.get(x.thscode) || {};
+          if (!parsed || isSt(x.name || s.name || "")) return null;
+          return {
+            code: parsed.code, name: x.name || s.name || parsed.code, market: parsed.market,
+            price: num(s.last_price), changePercent: num(s.price_change_ratio_pct), amount: num(s.turnover),
+            turnoverRate: null, mainNetInflow: null,
+          };
+        }).filter((s) => s && s.price != null);
+        if (members.length < 4) continue;
+        enriched.push({
+          ...b,
+          memberCount: members.length,
+          limitUpCount: members.filter((m) => ztMap.has(m.code)).length,
+          brokenCount: members.filter((m) => !ztMap.has(m.code) && zbMap.has(m.code)).length,
+          leaders: rankLeaders(members, ztMap, zbMap),
+        });
+      }
+      if (sort === "limitUp") enriched.sort((a, b) => b.limitUpCount - a.limitUpCount || (b.changePercent || 0) - (a.changePercent || 0));
+      return {
+        indices,
+        ztCount: ztPage.total || 0,
+        zbCount: zbPage.total || 0,
+        sectors: enriched.slice(0, 3),
+        tradeDate: beijingYmd(),
+        error: sort === "inflow" ? "同花顺快照暂无主力净流入，已按成交额排序" : "",
+      };
+    }
+
+    async function loadAll() {
+      return source === "ths" ? loadThs() : loadEastmoney();
+    }
+
     function pills(el, options, current, onPick) {
       el.innerHTML = options.map((o) => `<button data-id="${o.id}" class="${o.id === current ? "on" : ""}">${o.label}</button>`).join("");
       el.querySelectorAll("button").forEach((btn) => btn.onclick = () => onPick(btn.dataset.id));
     }
+
+    function syncChrome() {
+      document.getElementById("keyBtn").hidden = source !== "ths";
+      document.getElementById("keyBtn").textContent = fuyaoKey ? "密匙已保存" : "填写密匙";
+      document.getElementById("setup").hidden = !(source === "ths" && (document.getElementById("setup").dataset.open === "1" || !fuyaoKey));
+      document.getElementById("keyInput").value = fuyaoKey;
+      document.getElementById("foot").textContent = source === "ths"
+        ? "数据来自同花顺扶摇 API，只供看盘，不构成投资建议。"
+        : "数据来自东方财富公开行情，只供看盘，不构成投资建议。";
+    }
+
     function render(data) {
       const [sid, label, live] = sessionNow();
       document.getElementById("status").textContent = label;
@@ -294,7 +517,7 @@
           <div class="muted">涨停 / 炸板</div>
           <div style="margin-top:6px"><strong class="num up" style="font-size:20px">${data.ztCount}</strong>
           <span class="muted"> / </span><strong class="num warn" style="font-size:20px">${data.zbCount}</strong></div>
-          <div class="muted" style="margin-top:4px">全市场情绪</div>
+          <div class="muted" style="margin-top:4px">全市场情绪 · ${source === "ths" ? "同花顺" : "东方财富"}</div>
         </div>`;
       document.getElementById("indices").innerHTML = idx;
       const mark = ["①", "②", "③"];
@@ -339,21 +562,78 @@
     function paintPills() {
       pills(document.getElementById("universe"), UNIVERSE, universe, (id) => { universe = id; paintPills(); refresh(); });
       pills(document.getElementById("sort"), SORTS, sort, (id) => { sort = id; paintPills(); refresh(); });
+      pills(document.getElementById("source"), SOURCES, source, (id) => {
+        source = id;
+        localStorage.setItem(SOURCE_KEY, source);
+        if (source === "ths" && !fuyaoKey) document.getElementById("setup").dataset.open = "1";
+        syncChrome();
+        paintPills();
+        startLoop();
+      });
+      syncChrome();
     }
 
     async function refresh() {
       try {
+        if (source === "ths" && !fuyaoKey) {
+          syncChrome();
+          document.getElementById("error").innerHTML = `<div class="err">请先填写同花顺密匙（右上角切换到同花顺后输入）</div>`;
+          return;
+        }
         render(await loadAll());
       } catch (e) {
         document.getElementById("error").innerHTML = `<div class="err">${e.message || "行情获取失败"}</div>`;
+        if (String(e.message || "").includes("密匙")) {
+          document.getElementById("setup").dataset.open = "1";
+          syncChrome();
+        }
       }
+    }
+
+    document.getElementById("keyBtn").onclick = () => {
+      const box = document.getElementById("setup");
+      box.dataset.open = box.dataset.open === "1" ? "0" : "1";
+      syncChrome();
+    };
+    document.getElementById("keySave").onclick = () => {
+      fuyaoKey = document.getElementById("keyInput").value.trim();
+      if (fuyaoKey) localStorage.setItem(FUYAO_KEY, fuyaoKey);
+      else localStorage.removeItem(FUYAO_KEY);
+      document.getElementById("setup").dataset.open = "0";
+      catalogCache.industry = null;
+      catalogCache.concept = null;
+      memberCache.clear();
+      syncChrome();
+      startLoop();
+    };
+
+    async function tryLocalKeyFile() {
+      if (fuyaoKey) return;
+      try {
+        const res = await fetch("/fuyao-key.txt", { cache: "no-store" });
+        if (!res.ok) return;
+        const text = (await res.text()).trim().split(/\r?\n/).find((line) => line && !line.startsWith("#")) || "";
+        if (text.startsWith("sk-")) {
+          fuyaoKey = text.trim();
+          localStorage.setItem(FUYAO_KEY, fuyaoKey);
+        }
+      } catch {}
+    }
+
+    let refreshTimer = 0;
+    function startLoop() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refresh();
+      refreshTimer = setInterval(refresh, source === "ths" ? 12000 : 8000);
     }
 
     paintPills();
     setInterval(() => { document.getElementById("clock").textContent = clock(); }, 1000);
     document.getElementById("clock").textContent = clock();
-    refresh();
-    setInterval(refresh, 8000);
+    tryLocalKeyFile().finally(() => {
+      syncChrome();
+      startLoop();
+    });
   </script>
 </body>
 </html>

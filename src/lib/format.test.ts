@@ -6,6 +6,7 @@ import {
   formatAmount,
   formatFbt,
   formatPercent,
+  parseHhMmToFbt,
   signedClass,
 } from "./format";
 
@@ -28,6 +29,14 @@ describe("format", () => {
     assert.equal(formatFbt(92500), "09:25:00");
     assert.equal(formatFbt(112530), "11:25:30");
     assert.equal(formatFbt(0), null);
+  });
+
+  it("parses Tonghuashun HH:MM seal times", () => {
+    assert.equal(parseHhMmToFbt("09:34"), 93400);
+    assert.equal(parseHhMmToFbt("9:25"), 92500);
+    assert.equal(parseHhMmToFbt("09:25:02"), 92502);
+    assert.equal(parseHhMmToFbt(""), 0);
+    assert.equal(formatFbt(parseHhMmToFbt("09:34")), "09:34:00");
   });
 
   it("maps signed colors and downsamples sparklines", () => {

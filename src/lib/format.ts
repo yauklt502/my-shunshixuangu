@@ -43,6 +43,25 @@ export function formatFbt(value: number | null | undefined): string | null {
   return `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
 }
 
+/** Convert `HH:MM` or `HH:MM:SS` (同花顺涨停时间) to eastmoney-style HHMMSS integer. */
+export function parseHhMmToFbt(value: string | number | null | undefined): number {
+  if (value == null || value === "") return 0;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const n = Math.trunc(value);
+    if (n > 235959) return 0;
+    if (n < 10000) return n * 100;
+    return n;
+  }
+  const raw = String(value).trim();
+  const match = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) return 0;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const second = Number(match[3] ?? 0);
+  if (hour > 23 || minute > 59 || second > 59) return 0;
+  return hour * 10000 + minute * 100 + second;
+}
+
 export function formatYmd(value: string | number | null | undefined): string {
   const raw = String(value ?? "").replaceAll("-", "");
   if (raw.length !== 8) return "--";
