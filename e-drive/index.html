@@ -196,6 +196,15 @@
     const FUYAO_KEY = "shunshi.fuyaoKey";
     const DATE_KEY = "shunshi.tradeDate";
 
+    function beijingYmd() {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date()).replaceAll("-", "");
+    }
+
     let universe = "all";
     let sort = "change";
     const SOURCE_OK = { eastmoney: 1, ths: 1, "tdx-local": 1, "tdx-hq": 1 };
@@ -253,7 +262,6 @@
       return Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3] || 0);
     };
     const isSt = (name) => /(?:\*?ST|S\*ST)/i.test(String(name).replaceAll(" ", ""));
-    const beijingYmd = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).replaceAll("-", "");
     const clock = () => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(new Date());
     const chunk = (arr, size) => {
       const out = [];
