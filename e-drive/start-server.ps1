@@ -92,7 +92,8 @@ function Invoke-Tdx($ctx) {
     if ([string]::IsNullOrWhiteSpace($mode)) { $mode = $req.QueryString["source"] }
     $vipdoc = $req.QueryString["vipdoc"]
     if ([string]::IsNullOrWhiteSpace($vipdoc)) { $vipdoc = "E:\new_tdx\vipdoc" }
-    Write-Json $ctx 200 ([ShunshiTdx.TdxApi]::Snapshot($universe, $sort, $mode, $vipdoc))
+    $date = $req.QueryString["date"]
+    Write-Json $ctx 200 ([ShunshiTdx.TdxApi]::Snapshot($universe, $sort, $mode, $vipdoc, $date))
   } catch {
     $err = $_.Exception.Message
     $json = '{"ok":false,"tradeDate":"","indices":[],"ztCount":0,"zbCount":0,"sectors":[],"error":' + ($err | ConvertTo-Json -Compress) + '}'

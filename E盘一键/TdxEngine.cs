@@ -43,7 +43,7 @@ namespace ShunshiTdx
             }
         }
 
-        public static string Snapshot(string universe, string sort, string mode, string vipdoc)
+        public static string Snapshot(string universe, string sort, string mode, string vipdoc, string date)
         {
             lock (Gate)
             {
@@ -52,19 +52,42 @@ namespace ShunshiTdx
                     if (string.IsNullOrEmpty(universe)) universe = "all";
                     if (string.IsNullOrEmpty(sort)) sort = "change";
                     if (string.IsNullOrEmpty(mode)) mode = "hq";
+                    string tradeDate = NormalizeYmd(date);
                     if (mode == "local" || mode == "tdx-local")
-                        return BuildLocal(universe, sort, vipdoc);
-                    return BuildHq(universe, sort);
+                        return BuildLocal(universe, sort, vipdoc, tradeDate);
+                    return BuildHq(universe, sort, tradeDate);
                 }
                 catch (Exception ex)
                 {
-                    return EmptySnap(universe, sort, mode == "local" || mode == "tdx-local" ? "tdx-local" : "tdx-hq", UserMsg(ex));
+                    return EmptySnap(universe, sort, mode == "local" || mode == "tdx-local" ? "tdx-local" : "tdx-hq", UserMsg(ex), NormalizeYmd(date));
                 }
             }
         }
 
-        static string BuildHq(string universe, string sort)
+        static string NormalizeYmd(string raw)
         {
+            if (string.IsNullOrEmpty(raw)) return BeijingYmd();
+            string s = raw.Replace("-", "").Trim();
+            if (s.Length != 8) return BeijingYmd();
+            return s;
+        }
+
+        static string BeijingYmd()
+        {
+            return DateTime.UtcNow.AddHours(8).ToString("yyyyMMdd");
+        }
+
+        static bool IsTodayYmd(string ymd)
+        {
+            return NormalizeYmd(ymd) == BeijingYmd();
+        }
+
+        static string BuildHq(string universe, string sort, string tradeDate)
+        {
+            if (!IsTodayYmd(tradeDate))
+            {
+                return EmptySnap(universe, sort, "tdx-hq", "复盘模式：通达信实时仅支持当日，请改选东方财富或通达信本地", tradeDate);
+            }
             EnsureHq();
             List<Block> concepts = DownloadBlocks("block_gn.dat", "concept");
             List<Block> industries = universe == "concept" ? new List<Block>() : DownloadBlocks("block.dat", "industry");
@@ -110,7 +133,7 @@ namespace ShunshiTdx
             List<Block> useBlocks = UniqueBlocks(seedBoards, take);
             if (useBlocks.Count < 6)
                 useBlocks = UniqueBlocks(RankBySample(wanted, sort), take);
-            return Assemble(universe, sort, "tdx-hq", useBlocks, names, Quotes(MemberAndIndex(useBlocks)), null);
+            return Assemble(universe, sort, "tdx-hq", useBlocks, names, Quotes(MemberAndIndex(useBlocks)), null, tradeDate);
         }
 
         static List<SeedBoard> RankBySample(List<Block> wanted, string sort)
@@ -147,7 +170,7 @@ namespace ShunshiTdx
             return seeded;
         }
 
-        static string BuildLocal(string universe, string sort, string vipdoc)
+        static string BuildLocal(string universe, string sort, string vipdoc, string tradeDate)
         {
             string doc = string.IsNullOrEmpty(vipdoc) ? @"E:\new_tdx\vipdoc" : vipdoc;
             doc = doc.Replace("/", "\\").TrimEnd('\\');
@@ -157,7 +180,7 @@ namespace ShunshiTdx
             if (!Directory.Exists(doc))
             {
                 return EmptySnap(universe, sort, "tdx-local",
-                    "找不到通达信本地库 " + doc + "。请确认 E:\\new_tdx\\vipdoc 存在。");
+                    "找不到通达信本地库 " + doc + "。请确认 E:\\new_tdx\\vipdoc 存在。", tradeDate);
             }
             List<Block> blocks = new List<Block>();
             byte[] gn = ReadFile(Path.Combine(hqCache, "block_gn.dat"));
@@ -169,10 +192,10 @@ namespace ShunshiTdx
             if (blocks.Count == 0)
             {
                 return EmptySnap(universe, sort, "tdx-local",
-                    "找到了 vipdoc，但板块文件不在 " + hqCache + "。请确认 T0002\\hq_cache\\block_gn.dat 存在，或改用「通达信实时」。");
+                    "找到了 vipdoc，但板块文件不在 " + hqCache + "。请确认 T0002\\hq_cache\\block_gn.dat 存在，或改用「通达信实时」。", tradeDate);
             }
             List<Block> wanted = FilterBlocks(blocks, universe);
-            Dictionary<string, Quote> seedMap = ReadManyDays(doc, SampleCodes(wanted, 16));
+            Dictionary<string, Quote> seedMap = ReadManyDays(doc, SampleCodes(wanted, 16), tradeDate);
             List<SeedBoard> seeded = new List<SeedBoard>();
             for (int i = 0; i < wanted.Count; i++)
             {
@@ -198,14 +221,16 @@ namespace ShunshiTdx
                 return b.Change.CompareTo(a.Change);
             });
             List<Block> useBlocks = UniqueBlocks(seeded, sort == "limitUp" ? 14 : 10);
-            Dictionary<string, Quote> qmap = ReadManyDays(doc, ConcatCodes(MemberCodes(useBlocks), IndexCodes()));
+            Dictionary<string, Quote> qmap = ReadManyDays(doc, ConcatCodes(MemberCodes(useBlocks), IndexCodes()), tradeDate);
             Dictionary<string, string> names = new Dictionary<string, string>();
-            return Assemble(universe, sort, "tdx-local", useBlocks, names, ToList(qmap),
-                "通达信本地用的是 vipdoc 日线（最后两根K线），不是盘中 tick。盘中请选「通达信实时」。");
+            string note = IsTodayYmd(tradeDate)
+                ? "通达信本地用的是 vipdoc 日线（最后两根K线），不是盘中 tick。盘中请选「通达信实时」。"
+                : "复盘模式：通达信本地按所选交易日 vipdoc 日线回放";
+            return Assemble(universe, sort, "tdx-local", useBlocks, names, ToList(qmap), note, tradeDate);
         }
 
         static string Assemble(string universe, string sort, string source, List<Block> useBlocks,
-            Dictionary<string, string> names, List<Quote> quotes, string extraError)
+            Dictionary<string, string> names, List<Quote> quotes, string extraError, string tradeDate)
         {
             Dictionary<string, Quote> qmap = IndexQuotes(quotes);
             List<Enriched> enriched = new List<Enriched>();
@@ -281,7 +306,7 @@ namespace ShunshiTdx
             string note = extraError;
             if (sort == "inflow")
                 note = MergeNote(note, "通达信没有主力净流入，已按成交额排序");
-            return RenderSnap(universe, sort, source, qmap, top, marketLeaders, ztCount, zbCount, note);
+            return RenderSnap(universe, sort, source, qmap, top, marketLeaders, ztCount, zbCount, note, tradeDate);
         }
 
         static List<MarketLeaderEntry> RankMarketLeaders(List<Enriched> enriched)
@@ -317,13 +342,15 @@ namespace ShunshiTdx
         }
 
         static string RenderSnap(string universe, string sort, string source, Dictionary<string, Quote> qmap,
-            List<Enriched> top, List<MarketLeaderEntry> marketLeaders, int ztCount, int zbCount, string error)
+            List<Enriched> top, List<MarketLeaderEntry> marketLeaders, int ztCount, int zbCount, string error, string tradeDate)
         {
             DateTime bj = DateTime.UtcNow.AddHours(8);
+            string snapDate = string.IsNullOrEmpty(tradeDate) ? bj.ToString("yyyyMMdd") : NormalizeYmd(tradeDate);
+            bool replay = !IsTodayYmd(snapDate);
             StringBuilder sb = new StringBuilder();
-            sb.Append("{\"tradeDate\":").Append(JStr(bj.ToString("yyyyMMdd")));
+            sb.Append("{\"tradeDate\":").Append(JStr(snapDate));
             sb.Append(",\"updatedAt\":").Append(JStr(DateTime.UtcNow.ToString("o")));
-            sb.Append(",\"session\":").Append(JStr(SessionOf(bj)));
+            sb.Append(",\"session\":").Append(JStr(replay ? "closed" : SessionOf(bj)));
             sb.Append(",\"universe\":").Append(JStr(universe));
             sb.Append(",\"sort\":").Append(JStr(sort));
             sb.Append(",\"source\":").Append(JStr(source));
@@ -427,12 +454,14 @@ namespace ShunshiTdx
             return sb.ToString();
         }
 
-        static string EmptySnap(string universe, string sort, string source, string error)
+        static string EmptySnap(string universe, string sort, string source, string error, string tradeDate)
         {
             DateTime bj = DateTime.UtcNow.AddHours(8);
+            string snapDate = string.IsNullOrEmpty(tradeDate) ? "" : NormalizeYmd(tradeDate);
             StringBuilder sb = new StringBuilder();
-            sb.Append("{\"tradeDate\":\"\",\"updatedAt\":").Append(JStr(DateTime.UtcNow.ToString("o")));
-            sb.Append(",\"session\":").Append(JStr(SessionOf(bj)));
+            sb.Append("{\"tradeDate\":").Append(JStr(snapDate));
+            sb.Append(",\"updatedAt\":").Append(JStr(DateTime.UtcNow.ToString("o")));
+            sb.Append(",\"session\":").Append(JStr("closed"));
             sb.Append(",\"universe\":").Append(JStr(universe));
             sb.Append(",\"sort\":").Append(JStr(sort));
             sb.Append(",\"source\":").Append(JStr(source));
@@ -697,18 +726,18 @@ namespace ShunshiTdx
             return list;
         }
 
-        static Dictionary<string, Quote> ReadManyDays(string vipdoc, List<string> codes)
+        static Dictionary<string, Quote> ReadManyDays(string vipdoc, List<string> codes, string dateYmd)
         {
             Dictionary<string, Quote> map = new Dictionary<string, Quote>();
             for (int i = 0; i < codes.Count; i++)
             {
-                Quote q = ReadDay(vipdoc, codes[i]);
+                Quote q = ReadDay(vipdoc, codes[i], dateYmd);
                 if (q != null && !map.ContainsKey(q.Code)) map.Add(q.Code, q);
             }
             return map;
         }
 
-        static Quote ReadDay(string vipdoc, string code)
+        static Quote ReadDay(string vipdoc, string code, string dateYmd)
         {
             int market = MarketFromCode(code);
             string dir = market == 1 ? "sh" : market == 2 ? "bj" : "sz";
@@ -716,6 +745,37 @@ namespace ShunshiTdx
             if (!File.Exists(file)) return null;
             FileInfo fi = new FileInfo(file);
             if (fi.Length < 32) return null;
+            string normalized = NormalizeYmd(dateYmd);
+            if (!IsTodayYmd(normalized))
+            {
+                int target;
+                if (!int.TryParse(normalized, out target)) return null;
+                byte[] all = File.ReadAllBytes(file);
+                int bars = all.Length / 32;
+                int idx = -1;
+                for (int i = 0; i < bars; i++)
+                {
+                    if (BitConverter.ToInt32(all, i * 32) == target)
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx < 0) return null;
+                int last = idx * 32;
+                int prev = idx > 0 ? (idx - 1) * 32 : last;
+                Quote q = new Quote();
+                q.Market = market;
+                q.Code = code;
+                q.Price = TdxPrice(BitConverter.ToInt32(all, last + 16));
+                q.LastClose = TdxPrice(BitConverter.ToInt32(all, prev + 16));
+                q.Open = TdxPrice(BitConverter.ToInt32(all, last + 4));
+                q.High = TdxPrice(BitConverter.ToInt32(all, last + 8));
+                q.Low = TdxPrice(BitConverter.ToInt32(all, last + 12));
+                q.Amount = BitConverter.ToSingle(all, last + 20);
+                q.Volume = BitConverter.ToInt32(all, last + 24);
+                return q;
+            }
             int take = fi.Length >= 64 ? 64 : 32;
             byte[] buf = new byte[take];
             FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -732,20 +792,20 @@ namespace ShunshiTdx
                 }
             }
             finally { fs.Close(); }
-            int bars = buf.Length / 32;
-            int last = (bars - 1) * 32;
-            int prev = bars >= 2 ? (bars - 2) * 32 : last;
-            Quote q = new Quote();
-            q.Market = market;
-            q.Code = code;
-            q.Price = TdxPrice(BitConverter.ToInt32(buf, last + 16));
-            q.LastClose = TdxPrice(BitConverter.ToInt32(buf, prev + 16));
-            q.Open = TdxPrice(BitConverter.ToInt32(buf, last + 4));
-            q.High = TdxPrice(BitConverter.ToInt32(buf, last + 8));
-            q.Low = TdxPrice(BitConverter.ToInt32(buf, last + 12));
-            q.Amount = BitConverter.ToSingle(buf, last + 20);
-            q.Volume = BitConverter.ToInt32(buf, last + 24);
-            return q;
+            int barCount = buf.Length / 32;
+            int lastOff = (barCount - 1) * 32;
+            int prevOff = barCount >= 2 ? (barCount - 2) * 32 : lastOff;
+            Quote latest = new Quote();
+            latest.Market = market;
+            latest.Code = code;
+            latest.Price = TdxPrice(BitConverter.ToInt32(buf, lastOff + 16));
+            latest.LastClose = TdxPrice(BitConverter.ToInt32(buf, prevOff + 16));
+            latest.Open = TdxPrice(BitConverter.ToInt32(buf, lastOff + 4));
+            latest.High = TdxPrice(BitConverter.ToInt32(buf, lastOff + 8));
+            latest.Low = TdxPrice(BitConverter.ToInt32(buf, lastOff + 12));
+            latest.Amount = BitConverter.ToSingle(buf, lastOff + 20);
+            latest.Volume = BitConverter.ToInt32(buf, lastOff + 24);
+            return latest;
         }
 
         static byte[] ReadFile(string path)

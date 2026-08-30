@@ -1,4 +1,4 @@
-import { beijingYmd } from "./format";
+import { beijingYmd, isTodayYmd } from "./format";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard, isStStock } from "./noise-boards";
 import { rankLeaders, rankMarketLeaders } from "./ranking";
@@ -126,9 +126,11 @@ function assembleFromQuotes(args: {
   names: Map<string, string>;
   indexQuotes: TdxHqQuote[];
   quoteOf: (codes: string[]) => Map<string, TdxHqQuote>;
+  tradeDate: string;
   error?: string;
 }): MarketSnapshot {
-  const { universe, sort, source, blocks, names, indexQuotes, quoteOf, error } = args;
+  const { universe, sort, source, blocks, names, indexQuotes, quoteOf, tradeDate, error } = args;
+  const replay = !isTodayYmd(tradeDate);
   const filtered = blocks.filter((block) => {
     if (isNoiseBoard(block.name)) return false;
     if (universe === "concept" && block.kind !== "concept") return false;
@@ -282,9 +284,9 @@ function assembleFromQuotes(args: {
   });
 
   return {
-    tradeDate: beijingYmd(),
+    tradeDate,
     updatedAt: new Date().toISOString(),
-    session: getMarketSession(),
+    session: replay ? "closed" : getMarketSession(),
     universe,
     sort,
     source,
@@ -294,13 +296,35 @@ function assembleFromQuotes(args: {
     marketLeaders,
     sectors,
     error:
-      sort === "inflow"
-        ? "通达信没有主力净流入，已按成交额排序"
-        : error,
+      replay && source === "tdx-local"
+        ? "复盘模式：通达信本地按所选交易日 vipdoc 日线回放"
+        : sort === "inflow"
+          ? "通达信没有主力净流入，已按成交额排序"
+          : error,
   };
 }
 
-export async function buildTdxHqSnapshot(universe: Universe, sort: SectorSort): Promise<MarketSnapshot> {
+export async function buildTdxHqSnapshot(
+  universe: Universe,
+  sort: SectorSort,
+  date = beijingYmd(),
+): Promise<MarketSnapshot> {
+  if (!isTodayYmd(date)) {
+    return {
+      tradeDate: date,
+      updatedAt: new Date().toISOString(),
+      session: "closed",
+      universe,
+      sort,
+      source: "tdx-hq",
+      indices: [],
+      ztCount: 0,
+      zbCount: 0,
+      marketLeaders: [],
+      sectors: [],
+      error: "复盘模式：通达信实时仅支持当日，请改选东方财富或通达信本地",
+    };
+  }
   await connectTdxHq();
   const concepts = await tdxHqDownloadBlock("block_gn.dat");
   const industries = universe === "concept" ? [] : await tdxHqDownloadBlock("block.dat");
@@ -389,6 +413,7 @@ export async function buildTdxHqSnapshot(universe: Universe, sort: SectorSort): 
     blocks: useBlocks,
     names,
     indexQuotes: quotes.filter((item) => INDEXES.some((idx) => idx.code === item.code && idx.market === item.market)),
+    tradeDate: date,
     quoteOf: (codes) => {
       const map = new Map<string, TdxHqQuote>();
       for (const code of codes) {
@@ -400,8 +425,14 @@ export async function buildTdxHqSnapshot(universe: Universe, sort: SectorSort): 
   });
 }
 
-export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort, vipdoc?: string): Promise<MarketSnapshot> {
+export async function buildTdxLocalSnapshot(
+  universe: Universe,
+  sort: SectorSort,
+  vipdoc?: string,
+  date = beijingYmd(),
+): Promise<MarketSnapshot> {
   const paths = resolveTdxPaths(vipdoc || process.env.TDX_VIPDOC);
+  const replay = !isTodayYmd(date);
   const avail = tdxLocalAvailable(paths);
   if (!avail.ok) {
     return {
@@ -443,7 +474,7 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
     return block.codes.length >= 4;
   });
   const seedCodes = [...new Set(wanted.flatMap((block) => block.codes.slice(0, 16)))];
-  const seedMap = readManyDayQuotes(seedCodes, paths);
+  const seedMap = readManyDayQuotes(seedCodes, paths, date);
   const seeded = wanted
     .map((block) => {
       const quotes = block.codes.slice(0, 16).map((code) => seedMap.get(code)).filter((item): item is TdxHqQuote => Boolean(item));
@@ -458,8 +489,11 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
   const take = sort === "limitUp" ? 14 : 10;
   const useBlocks = seeded.slice(0, take).map((item) => item.block);
   const memberCodes = [...new Set(useBlocks.flatMap((block) => block.codes))];
-  const qmap = readManyDayQuotes([...memberCodes, ...INDEXES.map((item) => item.code)], paths);
+  const qmap = readManyDayQuotes([...memberCodes, ...INDEXES.map((item) => item.code)], paths, date);
   const names = new Map<string, string>();
+  const localNote = replay
+    ? undefined
+    : "通达信本地用的是 vipdoc 日线（最后两根K线），不是盘中 tick。盘中请选「通达信实时」。";
   return assembleFromQuotes({
     universe,
     sort,
@@ -467,6 +501,7 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
     blocks: useBlocks,
     names,
     indexQuotes: INDEXES.map((item) => qmap.get(item.code)).filter((item): item is TdxHqQuote => Boolean(item)),
+    tradeDate: date,
     quoteOf: (codes) => {
       const map = new Map<string, TdxHqQuote>();
       for (const code of codes) {
@@ -475,7 +510,7 @@ export async function buildTdxLocalSnapshot(universe: Universe, sort: SectorSort
       }
       return map;
     },
-    error: "通达信本地用的是 vipdoc 日线（最后两根K线），不是盘中 tick。盘中请选「通达信实时」。",
+    error: localNote,
   });
 }
 

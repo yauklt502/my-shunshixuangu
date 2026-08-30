@@ -1,4 +1,4 @@
-import { asNumber, asString, parseHhMmToFbt } from "./format";
+import { asNumber, asString, isTodayYmd, parseHhMmToFbt, ymdToShanghaiMs } from "./format";
 import { isNoiseBoard, isStStock } from "./noise-boards";
 import { rankLeaders, rankMarketLeaders } from "./ranking";
 import { getMarketSession } from "./market-hours";
@@ -355,11 +355,16 @@ function sortBoards(boards: BoardQuote[], sort: SectorSort): BoardQuote[] {
 export type ThsSnapshotQuery = {
   universe: Universe;
   sort: SectorSort;
+  date: string;
 };
 
 export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string): Promise<MarketSnapshot> {
-  const { universe, sort } = query;
-  const session = getMarketSession();
+  const { universe, sort, date } = query;
+  const replay = !isTodayYmd(date);
+  const session = replay ? "closed" : getMarketSession();
+  const dateMs = ymdToShanghaiMs(date);
+  const poolQuery = `date_ms=${dateMs}&sort_field=limit_up_time&sort_dir=asc`;
+  const breakQuery = `date_ms=${dateMs}&sort_field=open_times&sort_dir=desc`;
   const [conceptBoards, industryBoards, indexSnaps, ztPage, zbPage] = await Promise.all([
     universe === "industry" ? Promise.resolve([] as BoardQuote[]) : loadThsBoards("concept", apiKey),
     universe === "concept" ? Promise.resolve([] as BoardQuote[]) : loadThsBoards("industry", apiKey),
@@ -370,12 +375,12 @@ export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string):
     fetchPagedItems<LimitUpItem>(
       "/api/a-share/special-data/limit-up-pool",
       apiKey,
-      "sort_field=limit_up_time&sort_dir=asc",
+      poolQuery,
     ),
     fetchPagedItems<LimitBreakItem>(
       "/api/a-share/special-data/limit-break-pool",
       apiKey,
-      "sort_field=open_times&sort_dir=desc",
+      breakQuery,
     ),
   ]);
 
@@ -446,14 +451,7 @@ export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string):
 
   const marketLeaders = rankMarketLeaders(ztPool).map((leader) => ({ ...leader, trend: [] }));
 
-  const tradeDate = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(new Date(ztPage.timestamp || Date.now()))
-    .replaceAll("-", "");
+  const tradeDate = date;
 
   return {
     tradeDate,
@@ -467,8 +465,9 @@ export async function buildThsSnapshot(query: ThsSnapshotQuery, apiKey: string):
     zbCount: zbPage.total,
     marketLeaders,
     sectors,
-    error:
-      sort === "inflow"
+    error: replay
+      ? "复盘模式：涨停/炸板池为所选日期，板块行情仍为实时数据"
+      : sort === "inflow"
         ? "同花顺快照暂无主力净流入，已按成交额排序"
         : undefined,
   };

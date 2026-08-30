@@ -48,6 +48,11 @@
       font-size: 12px; outline: none; cursor: pointer; max-width: 9.5em;
       color-scheme: dark;
     }
+    .srcpick input[type="date"] {
+      border: 0; background: transparent; color: var(--text);
+      font-size: 12px; outline: none; cursor: pointer; color-scheme: dark;
+      font-family: inherit;
+    }
     .ghost {
       border: 1px solid var(--line); background: var(--elev); color: var(--muted);
       border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12px;
@@ -132,6 +137,10 @@
         <div class="status"><span id="dot" class="dot"></span><span id="status">正在打开</span><span id="clock" class="clock"></span></div>
         <div class="pills" id="universe"></div>
         <div class="pills" id="sort"></div>
+        <label class="srcpick">复盘
+          <input id="tradeDate" type="date" />
+        </label>
+        <button type="button" class="ghost" id="todayBtn" hidden>回到今日</button>
         <label class="srcpick">数据源
           <select id="source"></select>
         </label>
@@ -185,6 +194,7 @@
     ];
     const SOURCE_KEY = "shunshi.source";
     const FUYAO_KEY = "shunshi.fuyaoKey";
+    const DATE_KEY = "shunshi.tradeDate";
 
     let universe = "all";
     let sort = "change";
@@ -193,6 +203,26 @@
       const saved = localStorage.getItem(SOURCE_KEY);
       return saved && SOURCE_OK[saved] ? saved : "eastmoney";
     }
+    function readStoredDate() {
+      const saved = localStorage.getItem(DATE_KEY);
+      const raw = String(saved || "").replaceAll("-", "");
+      return /^\d{8}$/.test(raw) ? raw : beijingYmd();
+    }
+    function ymdToDateInput(ymd) {
+      const s = String(ymd).replaceAll("-", "");
+      if (s.length !== 8) return "";
+      return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+    }
+    function dateInputToYmd(value) {
+      const s = String(value || "").replaceAll("-", "");
+      return /^\d{8}$/.test(s) ? s : beijingYmd();
+    }
+    function isTodayYmd(ymd) { return String(ymd).replaceAll("-", "") === beijingYmd(); }
+    function ymdToShanghaiMs(ymd) {
+      const s = String(ymd).replaceAll("-", "");
+      return new Date(`${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T00:00:00+08:00`).getTime();
+    }
+    let tradeDate = readStoredDate();
     let source = readSource();
     const TDX_VIPDOC = "E:/new_tdx/vipdoc";
     let fuyaoKey = (localStorage.getItem(FUYAO_KEY) || "").trim();
@@ -500,7 +530,7 @@
     }
 
     async function loadEastmoney() {
-      const date = beijingYmd();
+      const date = tradeDate;
       const [indices, concepts, industries, zt, zb] = await Promise.all([
         fetchIndices(),
         universe === "industry" ? [] : fetchBoards("concept"),
@@ -536,17 +566,22 @@
         marketLeaders: rankMarketFromPool(zt.pool || []),
         sectors: enriched.slice(0, 3),
         tradeDate: String(zt.qdate || date),
+        replayMode: !isTodayYmd(date),
+        error: !isTodayYmd(date) ? "复盘模式：涨停/炸板池为所选日期，板块行情仍为实时数据" : "",
       };
     }
 
     async function loadThs() {
       if (!fuyaoKey) throw new Error("请先填写同花顺密匙（右上角切换到同花顺后输入）");
+      const dateMs = ymdToShanghaiMs(tradeDate);
+      const poolQuery = `date_ms=${dateMs}&sort_field=limit_up_time&sort_dir=asc`;
+      const breakQuery = `date_ms=${dateMs}&sort_field=open_times&sort_dir=desc`;
       const [concepts, industries, indexSnaps, ztPage, zbPage] = await Promise.all([
         universe === "industry" ? [] : thsBoards("concept"),
         universe === "concept" ? [] : thsBoards("industry"),
         thsIndexSnaps(INDEX_THS.map((x) => x.thscode)),
-        thsPaged("/api/a-share/special-data/limit-up-pool", "sort_field=limit_up_time&sort_dir=asc"),
-        thsPaged("/api/a-share/special-data/limit-break-pool", "sort_field=open_times&sort_dir=desc"),
+        thsPaged("/api/a-share/special-data/limit-up-pool", poolQuery),
+        thsPaged("/api/a-share/special-data/limit-break-pool", breakQuery),
       ]);
       const indexMap = new Map(indexSnaps.map((x) => [x.thscode, x]));
       const indices = INDEX_THS.map((meta) => {
@@ -605,8 +640,11 @@
         zbCount: zbPage.total || 0,
         marketLeaders: rankMarketFromThsItems(ztPage.items || []),
         sectors: enriched.slice(0, 3),
-        tradeDate: beijingYmd(),
-        error: sort === "inflow" ? "同花顺快照暂无主力净流入，已按成交额排序" : "",
+        tradeDate: tradeDate,
+        replayMode: !isTodayYmd(tradeDate),
+        error: !isTodayYmd(tradeDate)
+          ? "复盘模式：涨停/炸板池为所选日期，板块行情仍为实时数据"
+          : sort === "inflow" ? "同花顺快照暂无主力净流入，已按成交额排序" : "",
       };
     }
 
@@ -650,6 +688,7 @@
         universe, sort, mode,
         source: mode,
         vipdoc: TDX_VIPDOC,
+        date: tradeDate,
       });
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), mode === "hq" ? 90000 : 30000);
@@ -690,6 +729,10 @@
       document.getElementById("keyBtn").textContent = fuyaoKey ? "密匙已保存" : "填写密匙";
       document.getElementById("setup").hidden = !(source === "ths" && (document.getElementById("setup").dataset.open === "1" || !fuyaoKey));
       document.getElementById("keyInput").value = fuyaoKey;
+      const dateEl = document.getElementById("tradeDate");
+      dateEl.value = ymdToDateInput(tradeDate);
+      dateEl.max = ymdToDateInput(beijingYmd());
+      document.getElementById("todayBtn").hidden = isTodayYmd(tradeDate);
       document.getElementById("foot").textContent =
         source === "ths" ? "数据来自同花顺扶摇 API，只供看盘，不构成投资建议。"
         : source === "tdx-local" ? "数据来自本机通达信 vipdoc 日线（E:\\new_tdx\\vipdoc），只供看盘，不构成投资建议。"
@@ -725,10 +768,16 @@
     }
 
     function render(data) {
-      const [sid, label, live] = sessionNow();
-      document.getElementById("status").textContent = label;
-      document.getElementById("dot").className = "dot" + (live ? " live" : "");
-      document.getElementById("error").innerHTML = data.error ? `<div class="err">${data.error}</div>` : "";
+      const replay = data.replayMode || !isTodayYmd(tradeDate);
+      const [, label, live] = sessionNow();
+      document.getElementById("status").textContent = replay ? `复盘 ${ymdToDateInput(tradeDate)}` : label;
+      document.getElementById("dot").className = "dot" + (live && !replay ? " live" : "");
+      let errHtml = "";
+      if (replay && !isTodayYmd(tradeDate) && source !== "tdx-local") {
+        errHtml += `<div class="err" style="border-color:rgba(231,184,76,.35);background:rgba(231,184,76,.08);color:var(--gold)">复盘模式 · ${ymdToDateInput(tradeDate)} · 已暂停自动刷新</div>`;
+      }
+      if (data.error) errHtml += `<div class="err">${data.error}</div>`;
+      document.getElementById("error").innerHTML = errHtml;
       renderMarketLeaders(ensureMarketLeaders(data));
       const idx = (data.indices || []).map((x) => `
         <div class="card">
@@ -882,8 +931,22 @@
     function startLoop() {
       if (refreshTimer) clearInterval(refreshTimer);
       refresh();
+      if (!isTodayYmd(tradeDate)) return;
       refreshTimer = setInterval(refresh, pollMs());
     }
+
+    document.getElementById("tradeDate").onchange = (e) => {
+      tradeDate = dateInputToYmd(e.target.value);
+      localStorage.setItem(DATE_KEY, tradeDate);
+      syncChrome();
+      startLoop();
+    };
+    document.getElementById("todayBtn").onclick = () => {
+      tradeDate = beijingYmd();
+      localStorage.setItem(DATE_KEY, tradeDate);
+      syncChrome();
+      startLoop();
+    };
 
     paintPills();
     bootSkeleton();

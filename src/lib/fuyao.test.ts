@@ -57,10 +57,17 @@ describe("fuyao helpers", () => {
 
 describe("snapshot query", () => {
   it("reads source, universe and sort from the query string", () => {
+    const expectDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Shanghai",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()).replaceAll("-", "");
     const query = parseSnapshotQuery(
       new URLSearchParams("universe=concept&sort=amount&source=ths"),
     );
-    assert.deepEqual(query, { universe: "concept", sort: "amount", source: "ths" });
+    assert.deepEqual(query, { universe: "concept", sort: "amount", source: "ths", date: expectDate });
+    assert.equal(parseSnapshotQuery(new URLSearchParams("date=20250828")).date, "20250828");
     assert.equal(parseSnapshotQuery(new URLSearchParams("source=fuyao")).source, "ths");
     assert.equal(parseSnapshotQuery(new URLSearchParams("source=tdx-hq")).source, "tdx-hq");
     assert.equal(parseSnapshotQuery(new URLSearchParams("source=tongdaxin")).source, "tdx-local");

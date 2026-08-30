@@ -1,5 +1,6 @@
 import { fetchBoards, fetchConstituents, fetchIndices, fetchTrendsMany, fetchZbPool, fetchZtPool } from "./eastmoney";
 import { buildThsSnapshot, fuyaoErrorMessage } from "./fuyao";
+import { beijingYmd, isTodayYmd } from "./format";
 import { buildTdxHqSnapshot, buildTdxLocalSnapshot } from "./tdx-snapshot";
 import { getMarketSession } from "./market-hours";
 import { isNoiseBoard } from "./noise-boards";
@@ -17,6 +18,7 @@ export type SnapshotQuery = {
   universe: Universe;
   sort: SectorSort;
   source: DataSource;
+  date: string;
 };
 
 export type SnapshotOptions = {
@@ -41,7 +43,17 @@ function memberFloor(board: BoardQuote): number {
 const lastGood = new Map<string, MarketSnapshot>();
 
 function queryKey(query: SnapshotQuery): string {
-  return `${query.source}:${query.universe}:${query.sort}`;
+  return `${query.source}:${query.universe}:${query.sort}:${query.date}`;
+}
+
+function replayNote(source: DataSource): string {
+  if (source === "tdx-local") {
+    return "复盘模式：通达信本地按所选交易日 vipdoc 日线回放";
+  }
+  if (source === "tdx-hq") {
+    return "复盘模式：通达信实时仅支持当日，请改选东方财富或通达信本地";
+  }
+  return "复盘模式：涨停/炸板池为所选日期，板块行情仍为实时数据";
 }
 
 function isKeyError(message: string | undefined): boolean {
@@ -49,10 +61,11 @@ function isKeyError(message: string | undefined): boolean {
 }
 
 function emptySnapshot(query: SnapshotQuery, error: string): MarketSnapshot {
+  const replay = !isTodayYmd(query.date);
   return {
-    tradeDate: "",
+    tradeDate: query.date,
     updatedAt: new Date().toISOString(),
-    session: getMarketSession(),
+    session: replay ? "closed" : getMarketSession(),
     universe: query.universe,
     sort: query.sort,
     source: query.source,
@@ -75,9 +88,9 @@ export async function buildSnapshot(
       query.source === "ths"
         ? await assembleThsSnapshot(query, options.fuyaoKey)
         : query.source === "tdx-hq"
-          ? await buildTdxHqSnapshot(query.universe, query.sort)
+          ? await buildTdxHqSnapshot(query.universe, query.sort, query.date)
           : query.source === "tdx-local"
-            ? await buildTdxLocalSnapshot(query.universe, query.sort, options.tdxVipdoc)
+            ? await buildTdxLocalSnapshot(query.universe, query.sort, options.tdxVipdoc, query.date)
             : await assembleSnapshot(query);
     if (snapshot.sectors.length) lastGood.set(key, snapshot);
     else {
@@ -115,15 +128,16 @@ async function assembleThsSnapshot(query: SnapshotQuery, fuyaoKey?: string): Pro
 }
 
 async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
-  const { universe, sort } = query;
-  const session = getMarketSession();
+  const { universe, sort, date } = query;
+  const replay = !isTodayYmd(date);
+  const session = replay ? "closed" : getMarketSession();
 
   const [indices, conceptBoards, industryBoards, ztPool, zbPool] = await Promise.all([
     fetchIndices(),
     universe === "industry" ? Promise.resolve([]) : fetchBoards("concept"),
     universe === "concept" ? Promise.resolve([]) : fetchBoards("industry"),
-    fetchZtPool(),
-    fetchZbPool(),
+    fetchZtPool(date),
+    fetchZbPool(date),
   ]);
 
   const ztByCode = new Map(ztPool.pool.map((item) => [item.code, item]));
@@ -190,7 +204,7 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
   const marketLeaders = rankMarketLeaders(ztPool.pool).map((leader) => ({ ...leader, trend: [] }));
 
   return {
-    tradeDate: ztPool.qdate || zbPool.qdate,
+    tradeDate: ztPool.qdate || zbPool.qdate || date,
     updatedAt: new Date().toISOString(),
     session,
     universe,
@@ -201,6 +215,7 @@ async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
     zbCount: zbPool.tc,
     marketLeaders,
     sectors,
+    error: replay ? replayNote("eastmoney") : undefined,
   };
 }
 
@@ -208,6 +223,7 @@ export function parseSnapshotQuery(searchParams: URLSearchParams): SnapshotQuery
   const universeRaw = searchParams.get("universe") ?? "all";
   const sortRaw = searchParams.get("sort") ?? "change";
   const sourceRaw = searchParams.get("source") ?? "eastmoney";
+  const dateRaw = searchParams.get("date");
   const universe: Universe =
     universeRaw === "concept" || universeRaw === "industry" || universeRaw === "all"
       ? universeRaw
@@ -224,5 +240,12 @@ export function parseSnapshotQuery(searchParams: URLSearchParams): SnapshotQuery
         : sourceRaw === "tdx-local" || sourceRaw === "tdx" || sourceRaw === "tongdaxin"
           ? "tdx-local"
           : "eastmoney";
-  return { universe, sort, source };
+  const date = normalizeSnapshotDate(dateRaw);
+  return { universe, sort, source, date };
+}
+
+function normalizeSnapshotDate(raw: string | null): string {
+  const normalized = raw?.replaceAll("-", "").trim();
+  if (normalized && /^\d{8}$/.test(normalized)) return normalized;
+  return beijingYmd();
 }

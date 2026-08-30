@@ -6,7 +6,7 @@ import { IndexBar } from "@/components/IndexBar";
 import { MarketLeadersBar } from "@/components/MarketLeadersBar";
 import { SectorColumn } from "@/components/SectorColumn";
 import { diffSnapshots } from "@/lib/events";
-import { beijingClock } from "@/lib/format";
+import { beijingClock, beijingYmd, dateInputToYmd, isTodayYmd, ymdToDateInput } from "@/lib/format";
 import { pollIntervalMs, sessionLabel } from "@/lib/market-hours";
 import type { DataSource, MarketSnapshot, SectorSort, Universe, WatchEvent } from "@/lib/types";
 
@@ -32,6 +32,16 @@ const SOURCE_OPTIONS: { id: DataSource; label: string }[] = [
 
 const SOURCE_KEY = "shunshi.source";
 const FUYAO_KEY = "shunshi.fuyaoKey";
+const DATE_KEY = "shunshi.tradeDate";
+
+function readStoredDate(): string {
+  if (typeof window === "undefined") return beijingYmd();
+  const raw = window.localStorage.getItem(DATE_KEY);
+  if (raw && /^\d{8}$/.test(raw.replaceAll("-", ""))) {
+    return raw.replaceAll("-", "");
+  }
+  return beijingYmd();
+}
 
 function readStoredSource(): DataSource {
   if (typeof window === "undefined") return "eastmoney";
@@ -50,10 +60,18 @@ async function loadSnapshot(
   sort: SectorSort,
   source: DataSource,
   fuyaoKey: string,
+  tradeDate: string,
 ): Promise<MarketSnapshot> {
-  const response = await fetch(
-    `/api/snapshot?universe=${universe}&sort=${sort}&source=${source}${source === "tdx-local" ? "&vipdoc=" + encodeURIComponent("E:/new_tdx/vipdoc") : ""}`,
-    {
+  const params = new URLSearchParams({
+    universe,
+    sort,
+    source,
+    date: tradeDate,
+  });
+  if (source === "tdx-local") {
+    params.set("vipdoc", "E:/new_tdx/vipdoc");
+  }
+  const response = await fetch(`/api/snapshot?${params.toString()}`, {
       cache: "no-store",
       headers: source === "ths" && fuyaoKey ? { "X-Fuyao-Key": fuyaoKey } : undefined,
     },
@@ -106,8 +124,11 @@ export function Dashboard() {
   const [snapshot, setSnapshot] = useState<MarketSnapshot | null>(null);
   const [events, setEvents] = useState<WatchEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [tradeDate, setTradeDate] = useState(() => beijingYmd());
   const [clock, setClock] = useState(() => beijingClock());
   const prevRef = useRef<MarketSnapshot | null>(null);
+  const replayMode = !isTodayYmd(tradeDate);
+  const todayYmd = beijingYmd();
 
   useEffect(() => {
     const storedSource = readStoredSource();
@@ -115,6 +136,7 @@ export function Dashboard() {
     setSource(storedSource);
     setFuyaoKey(storedKey);
     setKeyDraft(storedKey);
+    setTradeDate(readStoredDate());
     if (storedSource === "ths" && !storedKey) setShowKeyPanel(true);
   }, []);
 
@@ -142,6 +164,23 @@ export function Dashboard() {
     setSnapshot(null);
   };
 
+  const changeTradeDate = (value: string) => {
+    const next = dateInputToYmd(value) ?? todayYmd;
+    setTradeDate(next);
+    window.localStorage.setItem(DATE_KEY, next);
+    prevRef.current = null;
+    setSnapshot(null);
+    setEvents([]);
+  };
+
+  const resetTradeDate = () => {
+    setTradeDate(todayYmd);
+    window.localStorage.setItem(DATE_KEY, todayYmd);
+    prevRef.current = null;
+    setSnapshot(null);
+    setEvents([]);
+  };
+
   useEffect(() => {
     let cancelled = false;
     let timer = 0;
@@ -149,7 +188,7 @@ export function Dashboard() {
 
     const pull = async () => {
       try {
-        const next = await loadSnapshot(universe, sort, source, fuyaoKey);
+        const next = await loadSnapshot(universe, sort, source, fuyaoKey, tradeDate);
         if (cancelled) return;
         const fresh = diffSnapshots(prevRef.current, next);
         prevRef.current = next;
@@ -168,7 +207,7 @@ export function Dashboard() {
 
     const loop = async () => {
       await pull();
-      if (cancelled) return;
+      if (cancelled || replayMode) return;
       const session = prevRef.current?.session ?? "closed";
       timer = window.setTimeout(loop, pollIntervalMs(session, source));
     };
@@ -178,18 +217,22 @@ export function Dashboard() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [universe, sort, source, fuyaoKey]);
+  }, [universe, sort, source, fuyaoKey, tradeDate, replayMode]);
 
   const live = snapshot?.session === "auction" || snapshot?.session === "morning" || snapshot?.session === "afternoon";
   const stale =
     snapshot !== null &&
-    (snapshot.universe !== universe || snapshot.sort !== sort || snapshot.source !== source);
+    (snapshot.universe !== universe ||
+      snapshot.sort !== sort ||
+      snapshot.source !== source ||
+      snapshot.tradeDate !== tradeDate);
   const loading = snapshot === null || stale;
 
   const status = useMemo(() => {
-    if (!snapshot || stale) return "正在计算前三板块龙头";
+    if (!snapshot || stale) return replayMode ? "正在加载复盘数据" : "正在计算前三板块龙头";
+    if (replayMode) return `复盘 ${ymdToDateInput(snapshot.tradeDate)}`;
     return sessionLabel(snapshot.session);
-  }, [snapshot, stale]);
+  }, [snapshot, stale, replayMode]);
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 py-4 md:px-6">
@@ -209,6 +252,25 @@ export function Dashboard() {
           </div>
           <Pill value={universe} options={UNIVERSE_OPTIONS} onChange={setUniverse} />
           <Pill value={sort} options={SORT_OPTIONS} onChange={setSort} />
+          <label className="inline-flex items-center gap-1.5 rounded-full border border-line bg-elev px-3 py-1.5 text-xs text-muted">
+            复盘
+            <input
+              type="date"
+              className="source-select tabular"
+              value={ymdToDateInput(tradeDate)}
+              max={ymdToDateInput(todayYmd)}
+              onChange={(event) => changeTradeDate(event.target.value)}
+            />
+          </label>
+          {replayMode ? (
+            <button
+              type="button"
+              onClick={resetTradeDate}
+              className="rounded-full border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs text-gold hover:bg-gold/20"
+            >
+              回到今日
+            </button>
+          ) : null}
           <label className="inline-flex items-center gap-1.5 rounded-full border border-line bg-elev px-3 py-1.5 text-xs text-muted">
             数据源
             <select
@@ -258,6 +320,12 @@ export function Dashboard() {
             </button>
           </div>
         </div>
+      ) : null}
+
+      {replayMode ? (
+        <p className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-sm text-gold">
+          复盘模式 · {ymdToDateInput(tradeDate)} · 已暂停自动刷新
+        </p>
       ) : null}
 
       {snapshot ? (

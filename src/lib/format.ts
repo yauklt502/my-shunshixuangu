@@ -78,6 +78,35 @@ export function beijingYmd(date = new Date()): string {
   return parts.replaceAll("-", "");
 }
 
+export function normalizeYmd(value: string | null | undefined): string | null {
+  const raw = String(value ?? "").replaceAll("-", "").trim();
+  if (!/^\d{8}$/.test(raw)) return null;
+  return raw;
+}
+
+export function ymdToDateInput(ymd: string): string {
+  const normalized = normalizeYmd(ymd);
+  if (!normalized) return "";
+  return `${normalized.slice(0, 4)}-${normalized.slice(4, 6)}-${normalized.slice(6, 8)}`;
+}
+
+export function dateInputToYmd(value: string): string | null {
+  return normalizeYmd(value);
+}
+
+export function ymdToShanghaiMs(ymd: string): number {
+  const normalized = normalizeYmd(ymd);
+  if (!normalized) return Date.now();
+  return new Date(
+    `${normalized.slice(0, 4)}-${normalized.slice(4, 6)}-${normalized.slice(6, 8)}T00:00:00+08:00`,
+  ).getTime();
+}
+
+export function isTodayYmd(ymd: string): boolean {
+  const normalized = normalizeYmd(ymd);
+  return normalized != null && normalized === beijingYmd();
+}
+
 export function beijingClock(date = new Date()): string {
   return new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai",
