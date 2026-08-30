@@ -167,7 +167,11 @@
     let universe = "all";
     let sort = "change";
     const SOURCE_OK = { eastmoney: 1, ths: 1, "tdx-local": 1, "tdx-hq": 1 };
-    let source = SOURCE_OK[localStorage.getItem(SOURCE_KEY)] ? localStorage.getItem(SOURCE_KEY) : "eastmoney";
+    function readSource() {
+      const saved = localStorage.getItem(SOURCE_KEY);
+      return saved && SOURCE_OK[saved] ? saved : "eastmoney";
+    }
+    let source = readSource();
     const TDX_VIPDOC = "E:/new_tdx/vipdoc";
     let fuyaoKey = (localStorage.getItem(FUYAO_KEY) || "").trim();
     const catalogCache = { industry: null, concept: null, exp: 0 };
@@ -532,15 +536,26 @@
         source: mode,
         vipdoc: TDX_VIPDOC,
       });
-      const res = await fetch("/tdx/snapshot?" + q.toString(), { cache: "no-store" });
-      const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); }
-      catch { throw new Error(res.ok ? "通达信返回无法解析" : "通达信服务错误 " + res.status); }
-      if (data && data.error && !(data.sectors || []).length) {
-        throw new Error(data.error);
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), mode === "hq" ? 90000 : 30000);
+      try {
+        const res = await fetch("/tdx/snapshot?" + q.toString(), { cache: "no-store", signal: ctl.signal });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch { throw new Error(res.ok ? "通达信返回无法解析" : "通达信服务错误 " + res.status); }
+        if (data && data.error && !(data.sectors || []).length) {
+          throw new Error(data.error);
+        }
+        return fromServerSnapshot(data);
+      } catch (e) {
+        if (e && e.name === "AbortError") {
+          throw new Error(mode === "hq" ? "通达信实时超时，请稍后重试或改选东方财富" : "通达信本地读取超时");
+        }
+        throw e;
+      } finally {
+        clearTimeout(timer);
       }
-      return fromServerSnapshot(data);
     }
 
     async function loadAll() {
@@ -646,6 +661,13 @@
       syncChrome();
     }
 
+    function bootSkeleton() {
+      document.getElementById("indices").innerHTML =
+        Array.from({ length: 5 }).map(() => '<div class="skel"></div>').join("");
+      document.getElementById("sectors").innerHTML =
+        '<div class="card">正在计算前三板块龙头…</div><div class="skel"></div><div class="skel"></div>';
+    }
+
     let refreshTimer = 0;
     let refreshing = false;
     async function refresh() {
@@ -712,7 +734,6 @@
       return 8000;
     }
 
-    let refreshTimer = 0;
     function startLoop() {
       if (refreshTimer) clearInterval(refreshTimer);
       refresh();
@@ -720,6 +741,7 @@
     }
 
     paintPills();
+    bootSkeleton();
     setInterval(() => { document.getElementById("clock").textContent = clock(); }, 1000);
     document.getElementById("clock").textContent = clock();
     tryLocalKeyFile().finally(() => {

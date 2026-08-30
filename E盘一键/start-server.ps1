@@ -7,9 +7,21 @@ try {
 
 $script:TdxReady = $false
 $script:TdxError = ""
-$tdxCs = Join-Path $root "TdxEngine.cs"
-if (Test-Path -LiteralPath $tdxCs) {
+$script:TdxLoadLock = $false
+
+function Ensure-TdxEngine {
+  if ($script:TdxReady) { return }
+  if ($script:TdxLoadLock) {
+    while ($script:TdxLoadLock -and -not $script:TdxReady) { Start-Sleep -Milliseconds 200 }
+    return
+  }
+  $script:TdxLoadLock = $true
   try {
+    $tdxCs = Join-Path $root "TdxEngine.cs"
+    if (-not (Test-Path -LiteralPath $tdxCs)) {
+      $script:TdxError = "missing TdxEngine.cs"
+      return
+    }
     $code = [IO.File]::ReadAllText($tdxCs, [Text.Encoding]::UTF8)
     $refs = @("System.dll", "System.Core.dll")
     $compDll = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) "System.IO.Compression.dll"
@@ -22,9 +34,9 @@ if (Test-Path -LiteralPath $tdxCs) {
     } else {
       $script:TdxError = $_.Exception.Message
     }
+  } finally {
+    $script:TdxLoadLock = $false
   }
-} else {
-  $script:TdxError = "missing TdxEngine.cs"
 }
 
 function Get-Listener([int]$port) {
@@ -57,6 +69,9 @@ function Invoke-Tdx($ctx) {
   if ($req.HttpMethod -eq "OPTIONS") {
     Write-Bytes $ctx 204 "text/plain" ([byte[]]@())
     return
+  }
+  if (-not $script:TdxReady) {
+    Ensure-TdxEngine
   }
   if (-not $script:TdxReady) {
     $msg = $script:TdxError
