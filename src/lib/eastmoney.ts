@@ -24,12 +24,17 @@ type CacheEntry<T> = { value: T; exp: number };
 
 const cache = new Map<string, CacheEntry<unknown>>();
 
-async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
-  const hit = cache.get(key);
-  if (hit && hit.exp > Date.now()) return hit.value as T;
-  const value = await fn();
-  cache.set(key, { value, exp: Date.now() + ttlMs });
-  return value;
+async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>, fallback: T): Promise<T> {
+  const hit = cache.get(key) as CacheEntry<T> | undefined;
+  if (hit && hit.exp > Date.now()) return hit.value;
+  try {
+    const value = await fn();
+    cache.set(key, { value, exp: Date.now() + ttlMs });
+    return value;
+  } catch {
+    if (hit) return hit.value;
+    return fallback;
+  }
 }
 
 function diffRows(payload: unknown): Record<string, unknown>[] {
@@ -40,14 +45,14 @@ function diffRows(payload: unknown): Record<string, unknown>[] {
   return Object.values(diff as Record<string, Record<string, unknown>>);
 }
 
-async function fetchJson(url: string, timeoutMs = 8000): Promise<unknown> {
+async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
   const response = await fetch(url, {
     headers: HEADERS,
     cache: "no-store",
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
-    throw new Error(`行情接口 ${response.status}: ${url}`);
+    throw new Error(`行情接口 ${response.status}`);
   }
   return response.json();
 }
@@ -89,7 +94,7 @@ export async function fetchIndices(): Promise<IndexQuote[]> {
       downCount: asNumber(row.f105),
       flatCount: asNumber(row.f106),
     }));
-  });
+  }, []);
 }
 
 function parseBoard(row: Record<string, unknown>, kind: BoardKind): BoardQuote {
@@ -124,7 +129,7 @@ export async function fetchBoards(kind: BoardKind): Promise<BoardQuote[]> {
     return diffRows(json)
       .map((row) => parseBoard(row, kind))
       .filter((board) => board.code && board.name);
-  });
+  }, []);
 }
 
 export async function fetchConstituents(boardCode: string): Promise<StockQuote[]> {
@@ -152,7 +157,7 @@ export async function fetchConstituents(boardCode: string): Promise<StockQuote[]
         mainNetInflow: asNumber(row.f62),
       }))
       .filter((stock) => stock.code && stock.name);
-  });
+  }, []);
 }
 
 function parseZtItem(row: Record<string, unknown>): ZtInfo | null {
@@ -191,26 +196,31 @@ export async function fetchZtPool(date = beijingYmd()): Promise<{
   tc: number;
   pool: ZtInfo[];
 }> {
-  return cached(`zt:${date}`, 8000, async () => {
-    const params = new URLSearchParams({
-      ut: ZT_UT,
-      dpt: "wz.ztzt",
-      Pageindex: "0",
-      pagesize: "500",
-      sort: "fbt:asc",
-      date,
-    });
-    const json = (await fetchJson(`${PUSH2EX}/getTopicZTPool?${params.toString()}`)) as {
-      data?: { qdate?: string | number; tc?: number; pool?: Record<string, unknown>[] };
-    };
-    const data = json.data ?? {};
-    const pool = (data.pool ?? []).map(parseZtItem).filter((item): item is ZtInfo => Boolean(item));
-    return {
-      qdate: String(data.qdate ?? date),
-      tc: data.tc ?? pool.length,
-      pool,
-    };
-  });
+  return cached(
+    `zt:${date}`,
+    8000,
+    async () => {
+      const params = new URLSearchParams({
+        ut: ZT_UT,
+        dpt: "wz.ztzt",
+        Pageindex: "0",
+        pagesize: "500",
+        sort: "fbt:asc",
+        date,
+      });
+      const json = (await fetchJson(`${PUSH2EX}/getTopicZTPool?${params.toString()}`)) as {
+        data?: { qdate?: string | number; tc?: number; pool?: Record<string, unknown>[] };
+      };
+      const data = json.data ?? {};
+      const pool = (data.pool ?? []).map(parseZtItem).filter((item): item is ZtInfo => Boolean(item));
+      return {
+        qdate: String(data.qdate ?? date),
+        tc: data.tc ?? pool.length,
+        pool,
+      };
+    },
+    { qdate: date, tc: 0, pool: [] },
+  );
 }
 
 export async function fetchZbPool(date = beijingYmd()): Promise<{
@@ -218,26 +228,31 @@ export async function fetchZbPool(date = beijingYmd()): Promise<{
   tc: number;
   pool: ZbInfo[];
 }> {
-  return cached(`zb:${date}`, 8000, async () => {
-    const params = new URLSearchParams({
-      ut: ZT_UT,
-      dpt: "wz.ztzt",
-      Pageindex: "0",
-      pagesize: "300",
-      sort: "fbt:asc",
-      date,
-    });
-    const json = (await fetchJson(`${PUSH2EX}/getTopicZBPool?${params.toString()}`)) as {
-      data?: { qdate?: string | number; tc?: number; pool?: Record<string, unknown>[] };
-    };
-    const data = json.data ?? {};
-    const pool = (data.pool ?? []).map(parseZbItem).filter((item): item is ZbInfo => Boolean(item));
-    return {
-      qdate: String(data.qdate ?? date),
-      tc: data.tc ?? pool.length,
-      pool,
-    };
-  });
+  return cached(
+    `zb:${date}`,
+    8000,
+    async () => {
+      const params = new URLSearchParams({
+        ut: ZT_UT,
+        dpt: "wz.ztzt",
+        Pageindex: "0",
+        pagesize: "300",
+        sort: "fbt:asc",
+        date,
+      });
+      const json = (await fetchJson(`${PUSH2EX}/getTopicZBPool?${params.toString()}`)) as {
+        data?: { qdate?: string | number; tc?: number; pool?: Record<string, unknown>[] };
+      };
+      const data = json.data ?? {};
+      const pool = (data.pool ?? []).map(parseZbItem).filter((item): item is ZbInfo => Boolean(item));
+      return {
+        qdate: String(data.qdate ?? date),
+        tc: data.tc ?? pool.length,
+        pool,
+      };
+    },
+    { qdate: date, tc: 0, pool: [] },
+  );
 }
 
 export async function fetchTrend(secid: string): Promise<number[]> {
@@ -259,7 +274,7 @@ export async function fetchTrend(secid: string): Promise<number[]> {
       if (Number.isFinite(price)) prices.push(price);
     }
     return downsample(prices, 60);
-  });
+  }, []);
 }
 
 export async function fetchTrendsMany(secids: string[]): Promise<Record<string, number[]>> {

@@ -26,11 +26,12 @@ async function loadSnapshot(universe: Universe, sort: SectorSort): Promise<Marke
   const response = await fetch(`/api/snapshot?universe=${universe}&sort=${sort}`, {
     cache: "no-store",
   });
-  const data = (await response.json()) as MarketSnapshot;
-  if (!response.ok && !data.sectors) {
-    throw new Error(data.error || "行情获取失败");
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as MarketSnapshot;
+  } catch {
+    throw new Error(response.ok ? "行情解析失败" : `服务错误 ${response.status}`);
   }
-  return data;
 }
 
 function Pill<T extends string>({

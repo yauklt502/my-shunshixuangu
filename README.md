@@ -36,3 +36,17 @@ npm start
 - 点击股票或板块名称跳转东方财富行情。
 
 周末和收盘后仍显示最近一个交易日的数据，刷新间隔会自动放慢。
+
+## 出现 500？
+
+常见有两种：
+
+1. **本地**请用 `npm install && npm run dev`，不要只跑 `npm start`（那需要先 `npm run build`）。
+2. **Cloudflare Workers** 这个仓库已经接了自动部署。上次失败是因为还没有 Workers 适配。合并本更新后会带上 `wrangler.jsonc` + OpenNext；构建命令需要是：
+
+```bash
+npx opennextjs-cloudflare build
+```
+
+Cloudflare 控制台里把 Build command 设成上面这一行，Deploy command 保持 `npx wrangler deploy`。
+

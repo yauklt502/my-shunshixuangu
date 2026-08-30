@@ -29,7 +29,38 @@ function memberFloor(board: BoardQuote): number {
   return (board.upCount ?? 0) + (board.downCount ?? 0);
 }
 
+const lastGood = new Map<string, MarketSnapshot>();
+
+function queryKey(query: SnapshotQuery): string {
+  return `${query.universe}:${query.sort}`;
+}
+
 export async function buildSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
+  const key = queryKey(query);
+  try {
+    const snapshot = await assembleSnapshot(query);
+    if (snapshot.sectors.length) lastGood.set(key, snapshot);
+    else {
+      const prev = lastGood.get(key);
+      if (prev) {
+        return { ...prev, updatedAt: new Date().toISOString(), error: "行情暂无新数据，显示上次结果" };
+      }
+    }
+    return snapshot;
+  } catch (error) {
+    const prev = lastGood.get(key);
+    if (prev) {
+      return {
+        ...prev,
+        updatedAt: new Date().toISOString(),
+        error: error instanceof Error ? `行情刷新失败，显示上次数据：${error.message}` : "行情刷新失败，显示上次数据",
+      };
+    }
+    throw error;
+  }
+}
+
+async function assembleSnapshot(query: SnapshotQuery): Promise<MarketSnapshot> {
   const { universe, sort } = query;
   const session = getMarketSession();
 
@@ -79,10 +110,7 @@ export async function buildSnapshot(query: SnapshotQuery): Promise<MarketSnapsho
       : enriched;
 
   const top = ranked.slice(0, 3);
-  const trendIds = top.flatMap((item) => [
-    `90.${item.board.code}`,
-    ...item.leaders.map((leader) => `${leader.market}.${leader.code}`),
-  ]);
+  const trendIds = top.map((item) => `90.${item.board.code}`);
   const trends = await fetchTrendsMany(trendIds);
 
   const sectors: SectorSnapshot[] = top.map((item, index) => ({
@@ -101,7 +129,7 @@ export async function buildSnapshot(query: SnapshotQuery): Promise<MarketSnapsho
     trend: trends[`90.${item.board.code}`] ?? [],
     leaders: item.leaders.map((leader) => ({
       ...leader,
-      trend: trends[`${leader.market}.${leader.code}`] ?? [],
+      trend: [],
     })),
   }));
 
