@@ -153,6 +153,15 @@ function Invoke-ThsProxy($ctx) {
   }
 }
 
+function Sanitize-FileName([string]$name) {
+  if ([string]::IsNullOrWhiteSpace($name)) { return "" }
+  $clean = $name
+  foreach ($ch in [IO.Path]::GetInvalidFileNameChars()) {
+    $clean = $clean.Replace([string]$ch, "_")
+  }
+  return $clean
+}
+
 function Invoke-SaveScreenshot($ctx) {
   $req = $ctx.Request
   if ($req.HttpMethod -eq "OPTIONS") {
@@ -182,7 +191,7 @@ function Invoke-SaveScreenshot($ctx) {
     if ($b64 -match "^data:image/png;base64,(.+)$") {
       $b64 = $matches[1]
     }
-    $filename = [IO.Path]::GetFileName(($filename -replace '[\\/:*?"<>|]', '_'))
+    $filename = [IO.Path]::GetFileName((Sanitize-FileName $filename))
     if ([string]::IsNullOrWhiteSpace($filename)) {
       $filename = "shunshi_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".png"
     }
