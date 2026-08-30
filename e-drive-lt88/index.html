@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>龙头88 · 板块角色拆解</title>
+  <style>
+    :root {
+      --bg: #07080c; --elev: #10131a; --elev2: #171c27; --line: #2a3140;
+      --text: #e9eef7; --muted: #8b95a8; --up: #ff4d57; --down: #2ecf8f;
+      --gold: #e7b84c; --warn: #f0a14a; --board: #6eb5ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: "Microsoft YaHei", "PingFang SC", sans-serif; }
+    body { background-image: radial-gradient(1200px 500px at 12% -10%, rgba(231,184,76,.08), transparent 55%), radial-gradient(900px 420px at 90% 0%, rgba(255,77,87,.07), transparent 50%); }
+    .wrap { max-width: 1600px; margin: 0 auto; padding: 16px; }
+    .brand { color: var(--gold); letter-spacing: .22em; font-size: 11px; }
+    h1 { margin: 4px 0 0; font-size: 28px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 6px; max-width: 760px; line-height: 1.6; }
+    header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
+    .pills { display: inline-flex; border: 1px solid var(--line); background: var(--elev2); border-radius: 999px; padding: 3px; }
+    .pills button { border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+    .pills button.on { background: var(--gold); color: #111; }
+    .status { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--elev); border-radius: 999px; padding: 6px 12px; font-size: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.live { background: var(--down); animation: live 1.8s infinite; }
+    @keyframes live { 70% { box-shadow: 0 0 0 8px rgba(46,207,143,0); } }
+    .clock { color: var(--gold); font-variant-numeric: tabular-nums; }
+    .idx { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 12px; }
+    .card { border: 1px solid var(--line); background: rgba(16,19,26,.85); border-radius: 14px; padding: 10px 12px; }
+    .up { color: var(--up); } .down { color: var(--down); } .muted { color: var(--muted); font-size: 12px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .sector-block { border: 1px solid var(--line); background: rgba(16,19,26,.9); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+    .sector-block h2 { margin: 0; color: var(--board); font-size: 20px; }
+    .roles { display: grid; gap: 10px; margin-top: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 900px) { .roles { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1280px) { .roles { grid-template-columns: 1fr 1fr 1fr; } }
+    .role { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: rgba(23,28,39,.7); }
+    .role h3 { margin: 0 0 4px; font-size: 14px; }
+    .role .hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+    .stock { display: block; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--elev2); border-radius: 10px; padding: 10px; margin-top: 6px; }
+    .stock strong { color: var(--up); }
+    .stock.zt { box-shadow: inset 3px 0 0 var(--up); }
+    .stock.zb { box-shadow: inset 3px 0 0 var(--warn); }
+    .empty { border: 1px dashed var(--line); border-radius: 10px; padding: 14px; text-align: center; color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .err { border: 1px solid rgba(255,77,87,.3); background: rgba(255,77,87,.1); color: var(--up); border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+    details { border: 1px solid var(--line); background: rgba(16,19,26,.6); border-radius: 16px; padding: 12px 16px; color: var(--muted); font-size: 14px; margin-top: 12px; }
+    summary { color: var(--text); cursor: pointer; }
+    .foot { text-align: center; color: var(--muted); font-size: 11px; padding: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">LONGTOU 88</div>
+        <h1>龙头88</h1>
+        <p class="sub">锁定当日前三热点板块，按连板龙头、趋势龙头、中军、跟风、补涨、卡位六类角色拆解。东方财富数据源，端口 3001，与顺势选股互不覆盖。</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <div class="status"><span id="dot" class="dot"></span><span id="status">正在打开</span><span id="clock" class="clock"></span></div>
+        <div class="pills" id="universe"></div>
+        <div class="pills" id="sort"></div>
+      </div>
+    </header>
+    <div id="error"></div>
+    <div class="idx" id="indices"></div>
+    <div id="sectors"></div>
+    <details>
+      <summary>六类角色怎么分</summary>
+      <ol>
+        <li>连板龙头：涨停优先，先封 → 连板 → 封单。</li>
+        <li>中军：成交额最大，提供板块容量。</li>
+        <li>趋势龙头：未涨停但涨幅领先（约 ≥4.5%）。</li>
+        <li>卡位：炸板或多次开板，分歧时出现。</li>
+        <li>跟风：涨幅居中，跟随龙头。</li>
+        <li>补涨：低位正涨幅，接溢出情绪。</li>
+      </ol>
+    </details>
+    <p class="foot">数据仅供盯盘研究。顺势选股请打开 E:\ShunshiWatch\open.bat</p>
+  </div>
+  <script>
+    const PUSH2 = "https://push2delay.eastmoney.com/api/qt";
+    const PUSH2EX = "https://push2ex.eastmoney.com";
+    const UT = "bd1d9ddb04089700cf9c27f6f7426281";
+    const ZT_UT = "7eea3edcaed734bea9cbfc24409ed989";
+    const NOISE = /昨日|前日|连板|涨停|跌停|破板|炸板|打板|首板|二板|三板|历史新高|历史新低|近期新高|近期新低|近期解禁|公告|^ST|ST股|次新股|沪股通|深股通|融资融券|转融通|高开低走|低开高走|高换手|成交活跃|含一字|题材股|热股|多板|东方财富/;
+    const UNIVERSE = [{ id: "all", label: "综合" }, { id: "concept", label: "概念" }, { id: "industry", label: "行业" }];
+    const SORTS = [{ id: "change", label: "涨幅" }, { id: "limitUp", label: "涨停数" }, { id: "amount", label: "成交额" }, { id: "inflow", label: "主力净流入" }];
+    const ROLE_ORDER = ["连板龙头", "趋势龙头", "中军", "跟风", "补涨", "卡位"];
+    const ROLE_HINTS = {
+      "连板龙头": "连续涨停最多，情绪标杆，短线主攻方向",
+      "趋势龙头": "涨幅领先、趋势最强，往往走趋势而非纯连板",
+      "中军": "成交额大，给板块提供容量",
+      "跟风": "跟随龙头上涨，涨幅居中",
+      "补涨": "低位启动接情绪",
+      "卡位": "龙头走弱、分歧加大时出现"
+    };
+    const ROLE_LIMITS = { "连板龙头": 2, "趋势龙头": 2, "中军": 2, "跟风": 3, "补涨": 3, "卡位": 2 };
+    let universe = "all", sort = "change", refreshTimer = 0;
+
+    function str(v) { return v == null ? "" : String(v); }
+    function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+    function isSt(name) { return /^\*?ST/i.test(name || ""); }
+    function pct(v) { return v == null ? "--" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; }
+    function amt(v) {
+      if (v == null) return "--";
+      const a = Math.abs(v);
+      if (a >= 1e8) return (v / 1e8).toFixed(2) + "亿";
+      if (a >= 1e4) return (v / 1e4).toFixed(0) + "万";
+      return String(Math.round(v));
+    }
+    function fbt(t) {
+      if (!t) return null;
+      const s = String(t).padStart(6, "0");
+      return s.slice(0, 2) + ":" + s.slice(2, 4) + ":" + s.slice(4, 6);
+    }
+    function quoteUrl(code) {
+      const m = code.startsWith("6") ? "1" : "0";
+      return "https://quote.eastmoney.com/" + (m === "1" ? "sh" : "sz") + code + ".html";
+    }
+    async function getJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("行情暂时连不上");
+      return res.json();
+    }
+    function rows(json) {
+      const diff = json && json.data && json.data.diff;
+      if (!diff) return [];
+      return Array.isArray(diff) ? diff : Object.values(diff);
+    }
+    function clist(fs, fields, pz) {
+      const p = new URLSearchParams({ pn: "1", pz: String(pz), po: "1", np: "1", ut: UT, fltt: "2", invt: "2", fid: "f3", fs, fields, _: String(Date.now()) });
+      return PUSH2 + "/clist/get?" + p.toString();
+    }
+    async function fetchBoards(kind) {
+      const fs = kind === "concept" ? "m:90+t:3+f:!50" : "m:90+t:2+f:!50";
+      const json = await getJson(clist(fs, "f12,f14,f2,f3,f6,f8,f62,f104,f105", 80));
+      return rows(json).map((r) => ({
+        code: str(r.f12), name: str(r.f14), kind,
+        changePercent: num(r.f3), amount: num(r.f6), mainNetInflow: num(r.f62),
+        upCount: num(r.f104), downCount: num(r.f105),
+      })).filter((b) => b.code && b.name && !NOISE.test(b.name) && (b.upCount || 0) + (b.downCount || 0) >= 4);
+    }
+    async function fetchMembers(code) {
+      const json = await getJson(clist("b:" + code + "+f:!50", "f12,f13,f14,f2,f3,f6,f8", 80));
+      return rows(json).map((r) => ({
+        code: str(r.f12), name: str(r.f14), market: num(r.f13) || 0,
+        price: num(r.f2), changePercent: num(r.f3), amount: num(r.f6), turnoverRate: num(r.f8),
+      })).filter((s) => s.code && s.name && s.price != null && !isSt(s.name));
+    }
+    async function fetchPool(path, date) {
+      const p = new URLSearchParams({ ut: ZT_UT, dpt: "wz.ztzt", Pageindex: "0", pagesize: "400", sort: "fbt:asc", date });
+      const json = await getJson(PUSH2EX + "/" + path + "?" + p.toString());
+      return json.data || { tc: 0, qdate: date, pool: [] };
+    }
+    async function fetchIndices() {
+      const p = new URLSearchParams({ fltt: "2", invt: "2", secids: "1.000001,0.399001,0.399006,1.000688", fields: "f12,f14,f2,f3,f6" });
+      const json = await getJson(PUSH2 + "/ulist.np/get?" + p.toString());
+      return rows(json).map((r) => ({ code: str(r.f12), name: str(r.f14), price: num(r.f2), changePercent: num(r.f3), amount: num(r.f6) }));
+    }
+    function sortBoards(boards) {
+      const copy = [...boards];
+      copy.sort((a, b) => {
+        if (sort === "amount") return (b.amount || 0) - (a.amount || 0);
+        if (sort === "inflow") return (b.mainNetInflow || 0) - (a.mainNetInflow || 0);
+        return (b.changePercent ?? -999) - (a.changePercent ?? -999);
+      });
+      return copy;
+    }
+    function compareLeaders(a, b) {
+      if (a.ztYes !== b.ztYes) return a.ztYes ? -1 : 1;
+      if (a.ztYes && b.ztYes) {
+        if (a.zt.fbt !== b.zt.fbt) return a.zt.fbt - b.zt.fbt;
+        if (a.zt.lbc !== b.zt.lbc) return b.zt.lbc - a.zt.lbc;
+        return (b.zt.fund || 0) - (a.zt.fund || 0);
+      }
+      return (b.s.changePercent || -999) - (a.s.changePercent || -999);
+    }
+    function medianAmount(items) {
+      const amounts = items.map((x) => x.s.amount || 0).filter((v) => v > 0).sort((a, b) => a - b);
+      if (!amounts.length) return 0;
+      const mid = Math.floor(amounts.length / 2);
+      return amounts.length % 2 ? amounts[mid] : (amounts[mid - 1] + amounts[mid]) / 2;
+    }
+    function toScored(stocks, ztMap, zbMap) {
+      return stocks.map((s) => {
+        const zt = ztMap.get(s.code);
+        const zb = zbMap.get(s.code);
+        return { s, zt, zb, ztYes: Boolean(zt), zbYes: !zt && Boolean(zb) };
+      });
+    }
+    function takeUnique(items, limit, assigned) {
+      const picked = [];
+      for (const item of items) {
+        if (assigned.has(item.s.code)) continue;
+        assigned.add(item.s.code);
+        picked.push(item);
+        if (picked.length >= limit) break;
+      }
+      return picked;
+    }
+    function classifyRoles(stocks, ztMap, zbMap) {
+      const items = toScored(stocks, ztMap, zbMap);
+      const assigned = new Set();
+      const pick = (fn) => fn(items, assigned);
+      const buckets = {
+        "连板龙头": pick((all, asg) => takeUnique(all.filter((x) => x.ztYes).sort(compareLeaders), ROLE_LIMITS["连板龙头"], asg)),
+        "中军": pick((all, asg) => {
+          const floor = medianAmount(all) * 0.45;
+          return takeUnique([...all].sort((a, b) => (b.s.amount || 0) - (a.s.amount || 0)).filter((x) => (x.s.amount || 0) >= floor), ROLE_LIMITS["中军"], asg);
+        }),
+        "趋势龙头": pick((all, asg) => takeUnique(all.filter((x) => !x.ztYes && !x.zbYes && (x.s.changePercent || 0) >= 4.5).sort((a, b) => (b.s.changePercent || -999) - (a.s.changePercent || -999)), ROLE_LIMITS["趋势龙头"], asg)),
+        "卡位": pick((all, asg) => {
+          const broken = all.filter((x) => x.zbYes).sort((a, b) => (b.zb.zbc || 0) - (a.zb.zbc || 0));
+          const div = all.filter((x) => x.ztYes && (x.zt.zbc || 0) >= 2);
+          return takeUnique([...broken, ...div], ROLE_LIMITS["卡位"], asg);
+        }),
+        "跟风": pick((all, asg) => takeUnique(all.filter((x) => !x.ztYes && !x.zbYes && (x.s.changePercent || 0) >= 2.5 && (x.s.changePercent || 0) < 9.8).sort((a, b) => (b.s.changePercent || -999) - (a.s.changePercent || -999)), ROLE_LIMITS["跟风"], asg)),
+        "补涨": pick((all, asg) => takeUnique(all.filter((x) => !x.ztYes && !x.zbYes && (x.s.changePercent || 0) >= 0.3 && (x.s.changePercent || 0) < 2.5).sort((a, b) => (b.s.changePercent || -999) - (a.s.changePercent || -999)), ROLE_LIMITS["补涨"], asg)),
+      };
+      return ROLE_ORDER.map((role) => ({ role, hint: ROLE_HINTS[role], stocks: buckets[role] || [] }));
+    }
+    function stockReason(item) {
+      if (item.ztYes) {
+        const kind = item.zt.fbt <= 92559 ? "竞价封" : "盘中封";
+        return (fbt(item.zt.fbt) || "--") + kind + " · " + (item.zt.lbc > 1 ? item.zt.lbc + "连板" : "首板");
+      }
+      if (item.zbYes) return (fbt(item.zb.fbt) || "炸板") + " · 炸板" + (item.zb.zbc || 1) + "次";
+      return "涨幅 " + pct(item.s.changePercent);
+    }
+    function renderStock(item) {
+      const cls = item.ztYes ? "zt" : item.zbYes ? "zb" : "";
+      return '<a class="stock ' + cls + '" href="' + quoteUrl(item.s.code) + '" target="_blank" rel="noreferrer">' +
+        '<div class="row" style="display:flex;justify-content:space-between"><div><strong>' + item.s.name + '</strong> <span class="muted">' + item.s.code + '</span></div>' +
+        '<span class="up num">' + pct(item.s.changePercent) + '</span></div>' +
+        '<div class="muted" style="margin-top:4px;font-size:11px">' + stockReason(item) + ' · 成交额 ' + amt(item.s.amount) + '</div></a>';
+    }
+    function renderRole(group) {
+      const body = group.stocks.length
+        ? group.stocks.map(renderStock).join("")
+        : '<div class="empty">暂无符合该角色的标的</div>';
+      return '<div class="role"><h3>' + group.role + '</h3><div class="hint">' + group.hint + '</div>' + body + '</div>';
+    }
+    function renderSector(sec, rank) {
+      const badges = ["①", "②", "③"];
+      return '<section class="sector-block"><div style="display:flex;justify-content:space-between;align-items:end;gap:8px">' +
+        '<div><div class="muted">' + (badges[rank - 1] || rank) + ' 热点板块</div><h2>' + sec.name + '</h2>' +
+        '<div class="muted">涨停 ' + sec.limitUpCount + ' · 炸板 ' + sec.brokenCount + '</div></div>' +
+        '<div class="num up" style="text-align:right">' + pct(sec.changePercent) + '<div class="muted">' + amt(sec.amount) + '</div></div></div>' +
+        '<div class="roles">' + sec.roles.map(renderRole).join("") + '</div></section>';
+    }
+    function renderIndices(list) {
+      document.getElementById("indices").innerHTML = list.map((x) =>
+        '<div class="card"><div class="muted">' + x.name + '</div><div class="num ' + ((x.changePercent || 0) >= 0 ? "up" : "down") + '">' + pct(x.changePercent) + '</div></div>'
+      ).join("");
+    }
+    function beijingYmd() {
+      const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+      const g = (t) => p.find((x) => x.type === t).value;
+      return g("year") + g("month") + g("day");
+    }
+    async function refresh() {
+      const date = beijingYmd();
+      document.getElementById("status").textContent = "正在解析板块角色";
+      try {
+        const [indices, ztData, zbData, conceptBoards, industryBoards] = await Promise.all([
+          fetchIndices(),
+          fetchPool("getTopicZTPool", date),
+          fetchPool("getTopicZBPool", date),
+          universe === "industry" ? [] : fetchBoards("concept"),
+          universe === "concept" ? [] : fetchBoards("industry"),
+        ]);
+        const ztMap = new Map();
+        for (const x of ztData.pool || []) {
+          const code = x.c || x.code;
+          if (!code || isSt(x.n || x.name)) continue;
+          ztMap.set(code, { fbt: x.fbt || 0, lbc: x.lbc || 1, fund: x.fund, zbc: x.zbc || 0 });
+        }
+        const zbMap = new Map();
+        for (const x of zbData.pool || []) {
+          const code = x.c || x.code;
+          if (!code) continue;
+          zbMap.set(code, { fbt: x.fbt || 0, zbc: x.zbc || 1 });
+        }
+        const boards = sortBoards([...conceptBoards, ...industryBoards]);
+        const candidates = boards.slice(0, sort === "limitUp" ? 12 : 6);
+        const enriched = await Promise.all(candidates.map(async (board) => {
+          const members = await fetchMembers(board.code);
+          const limitUpCount = members.filter((m) => ztMap.has(m.code)).length;
+          const brokenCount = members.filter((m) => !ztMap.has(m.code) && zbMap.has(m.code)).length;
+          return { board, members, limitUpCount, brokenCount, roles: classifyRoles(members, ztMap, zbMap) };
+        }));
+        let top = enriched;
+        if (sort === "limitUp") {
+          top = [...enriched].sort((a, b) => b.limitUpCount - a.limitUpCount || (b.board.changePercent || 0) - (a.board.changePercent || 0));
+        }
+        top = top.slice(0, 3).map((item, i) => ({
+          rank: i + 1, name: item.board.name, changePercent: item.board.changePercent, amount: item.board.amount,
+          limitUpCount: item.limitUpCount, brokenCount: item.brokenCount, roles: item.roles,
+        }));
+        renderIndices(indices);
+        document.getElementById("sectors").innerHTML = top.length ? top.map(renderSector).join("") : '<div class="empty">暂无板块数据（周末涨停池可能为空）</div>';
+        document.getElementById("error").innerHTML = "";
+        document.getElementById("status").textContent = "已刷新";
+        document.getElementById("dot").className = "dot live";
+      } catch (err) {
+        document.getElementById("error").innerHTML = '<div class="err">' + (err.message || "刷新失败") + '</div>';
+        document.getElementById("status").textContent = "刷新失败";
+        document.getElementById("dot").className = "dot";
+      }
+    }
+    function mountPills(id, options, current, onPick) {
+      const el = document.getElementById(id);
+      el.innerHTML = options.map((o) => '<button type="button" data-id="' + o.id + '" class="' + (o.id === current ? "on" : "") + '">' + o.label + '</button>').join("");
+      el.onclick = (e) => {
+        const btn = e.target.closest("button[data-id]");
+        if (!btn) return;
+        onPick(btn.dataset.id);
+        mountPills(id, options, btn.dataset.id, onPick);
+        void refresh();
+      };
+    }
+    function tickClock() {
+      document.getElementById("clock").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false, timeZone: "Asia/Shanghai" });
+    }
+    mountPills("universe", UNIVERSE, universe, (v) => { universe = v; });
+    mountPills("sort", SORTS, sort, (v) => { sort = v; });
+    tickClock();
+    setInterval(tickClock, 1000);
+    void refresh();
+    refreshTimer = setInterval(refresh, 8000);
+  </script>
+</body>
+</html>

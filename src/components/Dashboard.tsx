@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EventFeed } from "@/components/EventFeed";
 import { IndexBar } from "@/components/IndexBar";
@@ -380,6 +381,9 @@ export function Dashboard() {
 
       <p className="pb-4 text-center text-[11px] text-muted">
         数据仅供盯盘研究，不构成投资建议。点击股票名可跳转东方财富分时。
+        <Link href="/longtou88" className="ml-2 text-gold hover:underline">
+          打开龙头88
+        </Link>
       </p>
     </div>
   );

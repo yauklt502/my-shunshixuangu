@@ -9,7 +9,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "lint": "eslint",
-    "test": "tsx --test src/lib/*.test.ts"
+    "test": "tsx --test src/lib/*.test.ts src/lib/longtou88/*.test.ts"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.4",
