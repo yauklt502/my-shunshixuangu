@@ -18,6 +18,7 @@
       --silver: #c5cdd8;
       --bronze: #c4844a;
       --warn: #f0a14a;
+      --board: #6eb5ff;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
@@ -78,6 +79,8 @@
     .sectors { display: grid; gap: 12px; grid-template-columns: 1fr; min-height: 420px; }
     @media (min-width: 1024px) { .sectors { grid-template-columns: 1fr 1fr 1fr; } }
     .sector { border: 1px solid var(--line); background: rgba(16,19,26,.9); border-radius: 16px; padding: 12px; }
+    .sector h2 { margin: 4px 0 0; color: var(--board); font-weight: 600; }
+    .sector-name { color: var(--board); font-size: 11px; margin-top: 2px; }
     .leader { display: block; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--elev2); border-radius: 12px; padding: 12px; margin-top: 8px; }
     .leader strong, .mkt-card strong { color: var(--up); font-weight: 600; }
     .leader.zt { box-shadow: inset 3px 0 0 var(--up); }
@@ -764,7 +767,7 @@
               ${l.isLimitUp ? '<span class="tag tag-up">涨停</span>' : ""}
               ${l.lbc > 1 ? `<span class="gold" style="font-size:11px;margin-left:6px">${l.lbc}连板</span>` : ""}
               <div style="margin-top:6px"><strong>${l.name}</strong> <span class="muted">${l.code}</span></div>
-              ${l.sectorName ? `<div class="muted" style="font-size:11px;margin-top:2px">${l.sectorName}</div>` : ""}
+              ${l.sectorName ? `<div class="sector-name">${l.sectorName}</div>` : ""}
             </div>
             <div style="text-align:right">
               <div class="num ${tone(l.changePercent)}" style="font-size:18px;font-weight:700">${pct(l.changePercent)}</div>
@@ -810,7 +813,7 @@
           <div class="row">
             <div>
               <div class="muted">${mark[i]} ${sec.kind === "concept" ? "概念" : "行业"} · ${sec.code}</div>
-              <h2 style="margin:4px 0 0">${sec.name}</h2>
+              <h2>${sec.name}</h2>
             </div>
             <div style="text-align:right">
               <div class="num ${tone(sec.changePercent)}" style="font-size:24px;font-weight:700">${pct(sec.changePercent)}</div>
