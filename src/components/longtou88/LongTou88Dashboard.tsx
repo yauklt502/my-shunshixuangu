@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IndexBar } from "@/components/IndexBar";
 import { SectorRolesPanel } from "@/components/longtou88/SectorRolesPanel";
 import {
@@ -12,6 +12,7 @@ import {
   ymdToDateInput,
 } from "@/lib/format";
 import { pollIntervalMs, sessionLabel } from "@/lib/market-hours";
+import { beijingStamp, savePageScreenshot } from "@/lib/save-screenshot";
 import type { LT88Snapshot } from "@/lib/longtou88/types";
 import type { SectorSort, Universe } from "@/lib/types";
 
@@ -91,6 +92,9 @@ export function LongTou88Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [tradeDate, setTradeDate] = useState(() => beijingYmd());
   const [clock, setClock] = useState(() => beijingClock());
+  const [shotBusy, setShotBusy] = useState(false);
+  const [shotToast, setShotToast] = useState<string | null>(null);
+  const captureRef = useRef<HTMLDivElement>(null);
   const replayMode = !isTodayYmd(tradeDate);
   const todayYmd = beijingYmd();
 
@@ -163,8 +167,29 @@ export function LongTou88Dashboard() {
     return sessionLabel(snapshot.session);
   }, [snapshot, stale, replayMode]);
 
+  const saveScreenshot = async () => {
+    const target = captureRef.current;
+    if (!target || shotBusy) return;
+    setShotBusy(true);
+    const filename = `lt88_${tradeDate}_eastmoney_${universe}_${sort}_${beijingStamp()}.png`;
+    try {
+      const result = await savePageScreenshot(target, filename);
+      if (result.ok) {
+        setShotToast(result.path ? `已保存到 ${result.path}` : `已保存 ${result.filename}`);
+      } else {
+        setShotToast(`已下载 ${filename}（未能写入 screenshots 文件夹：${result.error}）`);
+      }
+    } catch (err) {
+      setShotToast(`截屏失败：${err instanceof Error ? err.message : "未知错误"}`);
+    } finally {
+      setShotBusy(false);
+      window.setTimeout(() => setShotToast(null), 6000);
+    }
+  };
+
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 py-4 md:px-6">
+    <>
+    <div ref={captureRef} className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 py-4 md:px-6">
       <header className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs tracking-[0.22em] text-gold">LONGTOU 88</p>
@@ -200,6 +225,15 @@ export function LongTou88Dashboard() {
               回到今日
             </button>
           ) : null}
+          <button
+            type="button"
+            onClick={() => void saveScreenshot()}
+            disabled={shotBusy}
+            className="rounded-full border border-line bg-elev px-3 py-1.5 text-xs text-muted hover:text-ink disabled:opacity-55"
+            title="保存当前页面截图到本机 screenshots 文件夹"
+          >
+            {shotBusy ? "截屏中…" : "截屏保存"}
+          </button>
         </div>
       </header>
 
@@ -260,5 +294,11 @@ export function LongTou88Dashboard() {
         </Link>
       </p>
     </div>
+    {shotToast ? (
+      <div className="fixed bottom-4 right-4 z-50 max-w-[min(420px,calc(100vw-2rem))] rounded-xl border border-[#6eb5ff]/45 bg-elev/95 px-3.5 py-2.5 text-xs text-ink shadow-lg">
+        {shotToast}
+      </div>
+    ) : null}
+    </>
   );
 }
