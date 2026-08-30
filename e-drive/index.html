@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>顺势选股 · 龙头盯盘</title>
+  <style>
+    :root {
+      --bg: #07080c;
+      --elev: #10131a;
+      --elev2: #171c27;
+      --line: #2a3140;
+      --text: #e9eef7;
+      --muted: #8b95a8;
+      --up: #ff4d57;
+      --down: #2ecf8f;
+      --gold: #e7b84c;
+      --silver: #c5cdd8;
+      --bronze: #c4844a;
+      --warn: #f0a14a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background-image:
+        radial-gradient(1200px 500px at 12% -10%, rgba(231, 184, 76, 0.08), transparent 55%),
+        radial-gradient(900px 420px at 90% 0%, rgba(255, 77, 87, 0.07), transparent 50%);
+    }
+    .wrap { max-width: 1600px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 4px 0 0; font-size: 28px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 6px; max-width: 720px; line-height: 1.6; }
+    .brand { color: var(--gold); letter-spacing: 0.22em; font-size: 11px; }
+    header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
+    .pills { display: inline-flex; border: 1px solid var(--line); background: var(--elev2); border-radius: 999px; padding: 3px; }
+    .pills button {
+      border: 0; background: transparent; color: var(--muted); border-radius: 999px;
+      padding: 6px 12px; cursor: pointer; font-size: 12px;
+    }
+    .pills button.on { background: var(--gold); color: #111; }
+    .status {
+      display: flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line); background: var(--elev); border-radius: 999px;
+      padding: 6px 12px; font-size: 12px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.live { background: var(--down); box-shadow: 0 0 0 0 rgba(46,207,143,.55); animation: live 1.8s infinite; }
+    @keyframes live { 70% { box-shadow: 0 0 0 8px rgba(46,207,143,0); } }
+    .clock { color: var(--gold); font-variant-numeric: tabular-nums; }
+    .idx { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 12px; }
+    .card { border: 1px solid var(--line); background: rgba(16,19,26,.85); border-radius: 14px; padding: 10px 12px; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .warn { color: var(--warn); }
+    .gold { color: var(--gold); }
+    .num { font-variant-numeric: tabular-nums; }
+    .sectors { display: grid; gap: 12px; grid-template-columns: 1fr; min-height: 420px; }
+    @media (min-width: 1024px) { .sectors { grid-template-columns: 1fr 1fr 1fr; } }
+    .sector { border: 1px solid var(--line); background: rgba(16,19,26,.9); border-radius: 16px; padding: 12px; }
+    .leader { display: block; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--elev2); border-radius: 12px; padding: 12px; margin-top: 8px; }
+    .leader.zt { box-shadow: inset 3px 0 0 var(--up); }
+    .leader.zb { box-shadow: inset 3px 0 0 var(--warn); }
+    .badge { font-size: 11px; border-radius: 6px; padding: 2px 6px; border: 1px solid; }
+    .b1 { color: var(--gold); border-color: rgba(231,184,76,.4); background: rgba(231,184,76,.15); }
+    .b2 { color: var(--silver); border-color: rgba(197,205,216,.3); background: rgba(197,205,216,.1); }
+    .b3 { color: var(--bronze); border-color: rgba(196,132,74,.35); background: rgba(196,132,74,.15); }
+    .tag { font-size: 11px; border-radius: 6px; padding: 2px 6px; }
+    .tag-up { background: rgba(255,77,87,.15); color: var(--up); }
+    .tag-warn { background: rgba(240,161,74,.15); color: var(--warn); }
+    .row { display: flex; justify-content: space-between; gap: 8px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .err { border: 1px solid rgba(255,77,87,.3); background: rgba(255,77,87,.1); color: var(--up); border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+    details { border: 1px solid var(--line); background: rgba(16,19,26,.6); border-radius: 16px; padding: 12px 16px; color: var(--muted); font-size: 14px; margin-top: 12px; }
+    summary { color: var(--text); cursor: pointer; }
+    .foot { text-align: center; color: var(--muted); font-size: 11px; padding: 16px 0; }
+    .skel { height: 84px; border-radius: 12px; background: var(--elev); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity: .55; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">SHUNSHI XUANGU</div>
+        <h1>顺势选股 · 龙头盯盘</h1>
+        <p class="sub">自动锁定当天最强三个板块，再排出龙一、龙二、龙三。黑窗口不要关。</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <div class="status"><span id="dot" class="dot"></span><span id="status">正在打开</span><span id="clock" class="clock"></span></div>
+        <div class="pills" id="universe"></div>
+        <div class="pills" id="sort"></div>
+      </div>
+    </header>
+    <div id="error"></div>
+    <div class="idx" id="indices"></div>
+    <div class="sectors" id="sectors"></div>
+    <details>
+      <summary>龙一 / 龙二 / 龙三怎么定</summary>
+      <ol>
+        <li>先选出当天最强的三个板块（可改看概念或行业，也可按涨停数、成交额、资金排）。</li>
+        <li>不把「昨日连板、历史新高」这种统计池当成板块。</li>
+        <li>板块里谁先涨停，谁就是龙一；同一时间看连板，再看封单。</li>
+        <li>没有涨停就按涨幅排。ST 不参与。</li>
+      </ol>
+    </details>
+    <p class="foot">数据来自东方财富公开行情，只供看盘，不构成投资建议。</p>
+  </div>
+  <script>
+    const PUSH2 = "https://push2delay.eastmoney.com/api/qt";
+    const PUSH2EX = "https://push2ex.eastmoney.com";
+    const UT = "bd1d9ddb04089700cf9c27f6f7426281";
+    const ZT_UT = "7eea3edcaed734bea9cbfc24409ed989";
+    const NOISE = /昨日|前日|连板|涨停|跌停|破板|炸板|打板|首板|二板|三板|历史新高|历史新低|近期新高|近期新低|近期解禁|公告|^ST|ST股|次新股|沪股通|深股通|融资融券|转融通|高开低走|低开高走|高换手|成交活跃|含一字|题材股|热股|多板|东方财富/;
+    const UNIVERSE = [{ id: "all", label: "综合" }, { id: "concept", label: "概念" }, { id: "industry", label: "行业" }];
+    const SORTS = [{ id: "change", label: "涨幅" }, { id: "limitUp", label: "涨停数" }, { id: "amount", label: "成交额" }, { id: "inflow", label: "主力净流入" }];
+
+    let universe = "all";
+    let sort = "change";
+
+    const num = (v) => (v === "-" || v == null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+    const str = (v) => (v == null || v === "-" ? "" : String(v).trim());
+    const yi = (v) => {
+      if (v == null || !Number.isFinite(v)) return "--";
+      const s = v < 0 ? "-" : "";
+      const a = Math.abs(v);
+      if (a >= 1e8) return s + (a / 1e8).toFixed(2) + "亿";
+      if (a >= 1e4) return s + (a / 1e4).toFixed(a >= 1e5 ? 0 : 1) + "万";
+      return s + a.toFixed(0);
+    };
+    const pct = (v) => v == null || !Number.isFinite(v) ? "--" : (v > 0 ? "+" : "") + v.toFixed(2) + "%";
+    const px = (v) => v == null || !Number.isFinite(v) ? "--" : v.toFixed(2);
+    const tone = (v) => (v == null || v === 0 ? "" : v > 0 ? "up" : "down");
+    const fbt = (v) => {
+      if (!v) return "";
+      const s = String(Math.trunc(v)).padStart(6, "0");
+      return s.slice(0, 2) + ":" + s.slice(2, 4) + ":" + s.slice(4, 6);
+    };
+    const isSt = (name) => /(?:\*?ST|S\*ST)/i.test(String(name).replaceAll(" ", ""));
+    const beijingYmd = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).replaceAll("-", "");
+    const clock = () => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(new Date());
+
+    function sessionNow() {
+      const wd = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Shanghai", weekday: "short" }).format(new Date());
+      if (wd === "Sat" || wd === "Sun") return ["weekend", "周末休市", false];
+      const hm = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
+      const [h, m] = hm.split(":").map(Number);
+      const mins = h * 60 + m;
+      if (mins < 9 * 60 + 15) return ["pre", "未开盘", false];
+      if (mins < 9 * 60 + 25) return ["auction", "集合竞价", true];
+      if (mins < 11 * 60 + 30) return ["morning", "上午交易", true];
+      if (mins < 13 * 60) return ["lunch", "午间休市", false];
+      if (mins < 15 * 60 + 5) return ["afternoon", "下午交易", true];
+      return ["closed", "已收盘", false];
+    }
+
+    async function getJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("行情暂时连不上");
+      return res.json();
+    }
+    function rows(json) {
+      const diff = json && json.data && json.data.diff;
+      if (!diff) return [];
+      return Array.isArray(diff) ? diff : Object.values(diff);
+    }
+    function clist(fs, fields, pz) {
+      const p = new URLSearchParams({ pn: "1", pz: String(pz), po: "1", np: "1", ut: UT, fltt: "2", invt: "2", fid: "f3", fs, fields, _: String(Date.now()) });
+      return PUSH2 + "/clist/get?" + p.toString();
+    }
+
+    async function fetchBoards(kind) {
+      const fs = kind === "concept" ? "m:90+t:3+f:!50" : "m:90+t:2+f:!50";
+      try {
+        const json = await getJson(clist(fs, "f12,f14,f2,f3,f6,f8,f62,f104,f105,f128,f136,f140,f184", 80));
+        return rows(json).map((r) => ({
+          code: str(r.f12), name: str(r.f14), kind,
+          changePercent: num(r.f3), amount: num(r.f6), mainNetInflow: num(r.f62),
+          upCount: num(r.f104), downCount: num(r.f105),
+        })).filter((b) => b.code && b.name && !NOISE.test(b.name) && (b.upCount || 0) + (b.downCount || 0) >= 4);
+      } catch { return []; }
+    }
+    async function fetchMembers(code) {
+      try {
+        const json = await getJson(clist("b:" + code + "+f:!50", "f12,f13,f14,f2,f3,f6,f8,f22,f62", 80));
+        return rows(json).map((r) => ({
+          code: str(r.f12), name: str(r.f14), market: num(r.f13) || 0,
+          price: num(r.f2), changePercent: num(r.f3), amount: num(r.f6),
+          turnoverRate: num(r.f8), mainNetInflow: num(r.f62),
+        })).filter((s) => s.code && s.name && s.price != null && !isSt(s.name));
+      } catch { return []; }
+    }
+    async function fetchPool(path, date) {
+      try {
+        const p = new URLSearchParams({ ut: ZT_UT, dpt: "wz.ztzt", Pageindex: "0", pagesize: "400", sort: "fbt:asc", date });
+        const json = await getJson(PUSH2EX + "/" + path + "?" + p.toString());
+        return json.data || { tc: 0, qdate: date, pool: [] };
+      } catch { return { tc: 0, qdate: date, pool: [] }; }
+    }
+    async function fetchIndices() {
+      try {
+        const p = new URLSearchParams({ fltt: "2", invt: "2", secids: "1.000001,0.399001,0.399006,1.000688", fields: "f12,f14,f2,f3,f4,f6,f104,f105,f106" });
+        const json = await getJson(PUSH2 + "/ulist.np/get?" + p.toString());
+        return rows(json).map((r) => ({
+          code: str(r.f12), name: str(r.f14), price: num(r.f2), changePercent: num(r.f3), amount: num(r.f6),
+          upCount: num(r.f104), downCount: num(r.f105),
+        }));
+      } catch { return []; }
+    }
+
+    function rankLeaders(stocks, ztMap, zbMap) {
+      const scored = stocks.map((s) => {
+        const zt = ztMap.get(s.code);
+        const zb = zbMap.get(s.code);
+        return { s, zt, zb, ztYes: Boolean(zt), zbYes: !zt && Boolean(zb) };
+      });
+      scored.sort((a, b) => {
+        if (a.ztYes !== b.ztYes) return a.ztYes ? -1 : 1;
+        if (a.ztYes && b.ztYes) {
+          if (a.zt.firstSealTime !== b.zt.firstSealTime) return a.zt.firstSealTime - b.zt.firstSealTime;
+          if (a.zt.lbc !== b.zt.lbc) return b.zt.lbc - a.zt.lbc;
+          return (b.zt.fund || 0) - (a.zt.fund || 0);
+        }
+        return (b.s.changePercent || -999) - (a.s.changePercent || -999);
+      });
+      const names = ["龙一", "龙二", "龙三"];
+      const badge = ["b1", "b2", "b3"];
+      return scored.slice(0, 3).map((item, i) => {
+        const kind = item.zt ? (item.zt.firstSealTime <= 92559 ? "竞价封" : "盘中封") : "";
+        let reason = "板块内排序";
+        if (item.ztYes) {
+          reason = fbt(item.zt.firstSealTime) + kind + " · " + (item.zt.lbc > 1 ? item.zt.lbc + "连板" : "首板") + (item.zt.zbc > 0 ? " · 开板" + item.zt.zbc + "次" : " · 未开板");
+        } else if (item.zbYes) {
+          reason = fbt(item.zb.fbt) + "曾封 · 炸板" + (item.zb.zbc || 1) + "次";
+        } else if (item.s.changePercent != null) {
+          reason = "板块内涨幅 " + pct(item.s.changePercent);
+        }
+        return { rank: names[i], badge: badge[i], ...item.s, isLimitUp: item.ztYes, isBroken: item.zbYes, lbc: item.zt ? item.zt.lbc : null, seal: item.zt ? item.zt.fund : null, reason };
+      });
+    }
+
+    async function loadAll() {
+      const date = beijingYmd();
+      const [indices, concepts, industries, zt, zb] = await Promise.all([
+        fetchIndices(),
+        universe === "industry" ? [] : fetchBoards("concept"),
+        universe === "concept" ? [] : fetchBoards("industry"),
+        fetchPool("getTopicZTPool", date),
+        fetchPool("getTopicZBPool", date),
+      ]);
+      const ztMap = new Map((zt.pool || []).map((x) => [x.c, { firstSealTime: x.fbt || 0, lbc: x.lbc || 1, fund: x.fund, zbc: x.zbc || 0 }]));
+      const zbMap = new Map((zb.pool || []).map((x) => [x.c, x]));
+      let boards = [...concepts, ...industries];
+      boards.sort((a, b) => {
+        if (sort === "amount") return (b.amount || 0) - (a.amount || 0);
+        if (sort === "inflow") return (b.mainNetInflow || 0) - (a.mainNetInflow || 0);
+        return (b.changePercent || -999) - (a.changePercent || -999);
+      });
+      const take = sort === "limitUp" ? 12 : 6;
+      const cand = boards.slice(0, take);
+      const enriched = await Promise.all(cand.map(async (b) => {
+        const members = await fetchMembers(b.code);
+        return {
+          ...b,
+          memberCount: members.length,
+          limitUpCount: members.filter((m) => ztMap.has(m.code)).length,
+          brokenCount: members.filter((m) => !ztMap.has(m.code) && zbMap.has(m.code)).length,
+          leaders: rankLeaders(members, ztMap, zbMap),
+        };
+      }));
+      if (sort === "limitUp") enriched.sort((a, b) => b.limitUpCount - a.limitUpCount || (b.changePercent || 0) - (a.changePercent || 0));
+      return { indices, ztCount: zt.tc || 0, zbCount: zb.tc || 0, sectors: enriched.slice(0, 3), tradeDate: String(zt.qdate || date) };
+    }
+
+    function pills(el, options, current, onPick) {
+      el.innerHTML = options.map((o) => `<button data-id="${o.id}" class="${o.id === current ? "on" : ""}">${o.label}</button>`).join("");
+      el.querySelectorAll("button").forEach((btn) => btn.onclick = () => onPick(btn.dataset.id));
+    }
+    function render(data) {
+      const [sid, label, live] = sessionNow();
+      document.getElementById("status").textContent = label;
+      document.getElementById("dot").className = "dot" + (live ? " live" : "");
+      document.getElementById("error").innerHTML = data.error ? `<div class="err">${data.error}</div>` : "";
+      const idx = (data.indices || []).map((x) => `
+        <div class="card">
+          <div class="row muted"><span>${x.name}</span><span>涨${x.upCount ?? "--"} / 跌${x.downCount ?? "--"}</span></div>
+          <div class="row" style="margin-top:6px;align-items:flex-end">
+            <strong class="num ${tone(x.changePercent)}" style="font-size:20px">${px(x.price)}</strong>
+            <span class="num ${tone(x.changePercent)}">${pct(x.changePercent)}</span>
+          </div>
+          <div class="muted" style="margin-top:4px">成交 ${yi(x.amount)}</div>
+        </div>`).join("") + `
+        <div class="card">
+          <div class="muted">涨停 / 炸板</div>
+          <div style="margin-top:6px"><strong class="num up" style="font-size:20px">${data.ztCount}</strong>
+          <span class="muted"> / </span><strong class="num warn" style="font-size:20px">${data.zbCount}</strong></div>
+          <div class="muted" style="margin-top:4px">全市场情绪</div>
+        </div>`;
+      document.getElementById("indices").innerHTML = idx;
+      const mark = ["①", "②", "③"];
+      document.getElementById("sectors").innerHTML = (data.sectors || []).map((sec, i) => `
+        <section class="sector">
+          <div class="row">
+            <div>
+              <div class="muted">${mark[i]} ${sec.kind === "concept" ? "概念" : "行业"} · ${sec.code}</div>
+              <h2 style="margin:4px 0 0">${sec.name}</h2>
+            </div>
+            <div style="text-align:right">
+              <div class="num ${tone(sec.changePercent)}" style="font-size:24px;font-weight:700">${pct(sec.changePercent)}</div>
+              <div class="muted">板块涨幅</div>
+            </div>
+          </div>
+          <div class="muted" style="margin:8px 0">成分 ${sec.memberCount} · <span class="up">涨停 ${sec.limitUpCount}</span> · <span class="warn">炸板 ${sec.brokenCount}</span> · 成交 ${yi(sec.amount)} · 主力 ${yi(sec.mainNetInflow)}</div>
+          ${(sec.leaders || []).map((l) => `
+            <a class="leader ${l.isLimitUp ? "zt" : l.isBroken ? "zb" : ""}" href="https://quote.eastmoney.com/unify/r/${l.market}.${l.code}" target="_blank" rel="noreferrer">
+              <div class="row">
+                <div>
+                  <span class="badge ${l.badge}">${l.rank}</span>
+                  ${l.isLimitUp ? '<span class="tag tag-up">涨停</span>' : ""}
+                  ${l.isBroken ? '<span class="tag tag-warn">炸板</span>' : ""}
+                  ${l.lbc > 1 ? `<span class="gold" style="font-size:11px">${l.lbc}连板</span>` : ""}
+                  <div style="margin-top:6px"><strong>${l.name}</strong> <span class="muted">${l.code}</span></div>
+                </div>
+                <div style="text-align:right">
+                  <div class="num ${tone(l.changePercent)}" style="font-size:18px;font-weight:700">${pct(l.changePercent)}</div>
+                  <div class="muted num">${px(l.price)}</div>
+                </div>
+              </div>
+              <div class="muted" style="margin-top:6px">${l.reason}</div>
+              <div class="meta">
+                <div>成交额<div class="num" style="color:var(--text)">${yi(l.amount)}</div></div>
+                <div>换手<div class="num" style="color:var(--text)">${l.turnoverRate == null ? "--" : l.turnoverRate.toFixed(1) + "%"}</div></div>
+                <div>${l.isLimitUp ? "封单" : "主力净流"}<div class="num" style="color:var(--text)">${yi(l.isLimitUp ? l.seal : l.mainNetInflow)}</div></div>
+              </div>
+            </a>`).join("")}
+        </section>`).join("") || `<div class="card">正在计算前三板块龙头…</div><div class="skel"></div><div class="skel"></div>`;
+    }
+
+    function paintPills() {
+      pills(document.getElementById("universe"), UNIVERSE, universe, (id) => { universe = id; paintPills(); refresh(); });
+      pills(document.getElementById("sort"), SORTS, sort, (id) => { sort = id; paintPills(); refresh(); });
+    }
+
+    async function refresh() {
+      try {
+        render(await loadAll());
+      } catch (e) {
+        document.getElementById("error").innerHTML = `<div class="err">${e.message || "行情获取失败"}</div>`;
+      }
+    }
+
+    paintPills();
+    setInterval(() => { document.getElementById("clock").textContent = clock(); }, 1000);
+    document.getElementById("clock").textContent = clock();
+    refresh();
+    setInterval(refresh, 8000);
+  </script>
+</body>
+</html>
