@@ -31,6 +31,10 @@ const NOISE_PATTERNS: RegExp[] = [
   /高换手/,
   /成交活跃/,
   /含一字/,
+  /题材股/,
+  /热股/,
+  /多板/,
+  /东方财富/,
 ];
 
 export function isNoiseBoard(name: string): boolean {

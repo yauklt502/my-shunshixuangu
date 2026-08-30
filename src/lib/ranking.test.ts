@@ -24,6 +24,9 @@ describe("filters", () => {
   it("drops statistical boards and ST names", () => {
     assert.equal(isNoiseBoard("昨日连板_含一字"), true);
     assert.equal(isNoiseBoard("历史新高"), true);
+    assert.equal(isNoiseBoard("东方财富热股"), true);
+    assert.equal(isNoiseBoard("最近多板"), true);
+    assert.equal(isNoiseBoard("题材股"), true);
     assert.equal(isNoiseBoard("供销社概念"), false);
     assert.equal(isNoiseBoard("粮食概念"), false);
     assert.equal(isStStock("*ST海航"), true);
