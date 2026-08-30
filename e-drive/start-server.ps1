@@ -182,7 +182,7 @@ function Invoke-SaveScreenshot($ctx) {
     if ($b64 -match "^data:image/png;base64,(.+)$") {
       $b64 = $matches[1]
     }
-    $filename = [IO.Path]::GetFileName(($filename -replace "[\\/:*?\"<>|]", "_"))
+    $filename = [IO.Path]::GetFileName(($filename -replace '[\\/:*?"<>|]', '_'))
     if ([string]::IsNullOrWhiteSpace($filename)) {
       $filename = "shunshi_" + (Get-Date -Format "yyyyMMdd_HHmmss") + ".png"
     }
