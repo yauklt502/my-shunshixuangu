@@ -22,3 +22,24 @@
 - **通达信实时**：连通达信行情服务器（7709）。第一次大约半分钟（要下板块和股票名单），之后大约 10 秒刷新。没有涨停池先封时间，涨停/炸板按涨停价启发式判断。
 
 同花顺、通达信都暂无主力净流入；选这个排序时会改按成交额。周末涨停/炸板池经常是空的，板块涨幅仍可看。
+
+## Python 表格版（命令行）
+
+网页版保留不变。若想在终端里看表格结果，可用 `python/leader_watch.py`：
+
+```bash
+pip install -r requirements.txt
+python3 python/leader_watch.py
+python3 python/leader_watch.py --date 20250828
+python3 python/leader_watch.py --universe concept --sort limitUp
+```
+
+参数：
+
+| 参数 | 说明 |
+|------|------|
+| `--date` | 交易日 `YYYYMMDD`，默认今日（复盘用） |
+| `--universe` | `all` / `concept` / `industry` |
+| `--sort` | `change` / `limitUp` / `amount` / `inflow` |
+
+输出包含：大盘指数表、全市场总龙头/龙二/龙三、前三板块及龙一/龙二/龙三。数据源为东方财富（与网页默认一致）。
