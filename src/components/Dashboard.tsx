@@ -384,6 +384,9 @@ export function Dashboard() {
         <Link href="/longtou88" className="ml-2 text-gold hover:underline">
           打开龙头88
         </Link>
+        <Link href="/qushi-longtou" className="ml-2 text-gold hover:underline">
+          打开趋势龙头
+        </Link>
       </p>
     </div>
   );

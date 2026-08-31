@@ -292,6 +292,9 @@ export function LongTou88Dashboard() {
         <Link href="/" className="ml-2 text-gold hover:underline">
           返回顺势选股
         </Link>
+        <Link href="/qushi-longtou" className="ml-2 text-gold hover:underline">
+          趋势龙头
+        </Link>
       </p>
     </div>
     {shotToast ? (

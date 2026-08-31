@@ -438,7 +438,6 @@
           ztMap.set(code, true);
         }
         const boards = sortBoards([...conceptBoards, ...industryBoards]);
-        const sortKey = sort === "limitUp" ? "change" : sort;
         const candidates = boards.slice(0, 6);
         const enriched = await Promise.all(candidates.map(async (board) => {
           const members = await fetchMembers(board.code);
@@ -455,8 +454,6 @@
             if (bUp !== aUp) return bUp - aUp;
             return (b.board.changePercent || 0) - (a.board.changePercent || 0);
           });
-        } else if (sortKey !== sort) {
-          ranked = sortBoards(ranked.map((x) => x.board)).map((b) => enriched.find((x) => x.board.code === b.code));
         }
         const top = ranked.slice(0, 3).map((item, i) => ({
           rank: i + 1,
