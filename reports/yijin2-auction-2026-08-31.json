@@ -1,0 +1,64 @@
+{
+  "trade_date": "2026-08-31",
+  "snapshot": "09:30 first-minute = auction match",
+  "zt_date": "20260828",
+  "zt_total": 82,
+  "first_total": 64,
+  "max_board": {"code": "000017", "name": "深中华A", "lbc": 7},
+  "top3": [
+    {
+      "rank": 1,
+      "code": "000560",
+      "name": "我爱我家",
+      "open_pct": 9.85,
+      "auction_zt": true,
+      "one_word": true,
+      "ratio_pct": 4.1,
+      "first_bar_yi": 0.27,
+      "y_amt_yi": 6.42,
+      "y_fbt": "09:44:18",
+      "y_zbc": 0,
+      "y_hs": 10.6,
+      "ltsz_yi": 61.8,
+      "theme": "地产政策 + 中报净利 +110%"
+    },
+    {
+      "rank": 2,
+      "code": "002679",
+      "name": "福建金森",
+      "open_pct": 10.03,
+      "auction_zt": true,
+      "one_word": true,
+      "ratio_pct": 10.1,
+      "first_bar_yi": 0.14,
+      "y_amt_yi": 1.36,
+      "y_fbt": "10:27:15",
+      "y_zbc": 1,
+      "y_hs": 5.5,
+      "ltsz_yi": 25.2,
+      "theme": "农业主线 / 林业碳汇"
+    },
+    {
+      "rank": 3,
+      "code": "601086",
+      "name": "国芳集团",
+      "open_pct": 9.95,
+      "auction_zt": true,
+      "one_word": true,
+      "ratio_pct": 14.1,
+      "first_bar_yi": 0.21,
+      "y_amt_yi": 1.47,
+      "y_fbt": "09:38:47",
+      "y_zbc": 0,
+      "y_hs": 2.7,
+      "ltsz_yi": 55.5,
+      "theme": "区域零售 + 中报净利 +214%"
+    }
+  ],
+  "runner_up": {
+    "code": "000011",
+    "name": "深物业A",
+    "open_pct": 10.05,
+    "note": "同样竞价一字，地产方向弱于我爱我家"
+  }
+}
