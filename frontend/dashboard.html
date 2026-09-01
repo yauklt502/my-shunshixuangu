@@ -164,7 +164,6 @@
     .metric-box .m-label { font-size: 10px; color: var(--muted); }
     .metric-box .m-val { font-size: 14px; margin-top: 2px; }
     .header-tools {
-      margin-left: auto;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -201,6 +200,14 @@
       white-space: nowrap;
     }
     .header-connect:hover { opacity: 0.9; }
+    .header-connect.connected {
+      background: #30363d;
+      color: var(--down);
+      border: 1px solid var(--down);
+    }
+    .header-connect.connecting { opacity: 0.7; cursor: wait; }
+    #data-badge.connected { color: var(--down); border-color: var(--down); }
+    #data-badge.error { color: var(--up); border-color: var(--up); }
     #ws-badge.connected { color: var(--down); border-color: var(--down); }
     #ws-badge.connecting { color: var(--accent); border-color: var(--accent); }
   </style>
@@ -212,6 +219,7 @@
       <span class="badge">BACKTEST</span>
       <span class="badge" id="env-badge">本地模式</span>
       <span class="badge" id="ws-badge">WS:未连接</span>
+      <span class="badge" id="data-badge">数据:未连接</span>
       <span class="header-spacer"></span>
       <div class="header-tools">
         <span class="header-label">数据端口</span>
@@ -322,6 +330,12 @@
 
     const API_PROBE_PORTS = [8000, 8080, 3000];
 
+    function fetchWithTimeout(url, options = {}, ms = 3000) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+    }
+
     function getApiBase() {
       if (apiBase) return apiBase;
       if (location.protocol !== "file:" && location.host) return location.origin;
@@ -343,7 +357,7 @@
       for (const port of API_PROBE_PORTS) {
         const base = `http://127.0.0.1:${port}`;
         try {
-          const resp = await fetch(`${base}/api/data/sources`, { signal: AbortSignal.timeout(1500) });
+          const resp = await fetchWithTimeout(`${base}/api/data/sources`, {}, 1500);
           if (resp.ok) {
             apiBase = base;
             return apiBase;
@@ -363,6 +377,30 @@
       return document.getElementById("data-port").value;
     }
 
+    function setDataStatus(state, label) {
+      const el = document.getElementById("data-badge");
+      const btn = document.getElementById("btn-connect");
+      el.className = "badge";
+      btn.classList.remove("connected", "connecting");
+      if (state === "connected") {
+        el.textContent = "数据:" + (label || "已连接");
+        el.classList.add("connected");
+        btn.textContent = "已连接";
+        btn.classList.add("connected");
+      } else if (state === "connecting") {
+        el.textContent = "数据:连接中";
+        btn.textContent = "连接中";
+        btn.classList.add("connecting");
+      } else if (state === "error") {
+        el.textContent = "数据:连接失败";
+        el.classList.add("error");
+        btn.textContent = "连接";
+      } else {
+        el.textContent = "数据:未连接";
+        btn.textContent = "连接";
+      }
+    }
+
     function setWsStatus(state) {
       const el = document.getElementById("ws-badge");
       el.className = "badge";
@@ -380,7 +418,7 @@
     async function testBackendConnection() {
       try {
         await ensureApiBase();
-        const resp = await fetch(`${getApiBase()}/api/data/sources`, { signal: AbortSignal.timeout(3000) });
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/data/sources`, {}, 3000);
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         return true;
       } catch (_) {
@@ -388,37 +426,79 @@
       }
     }
 
+    async function testDataSourceHealth(source) {
+      try {
+        const resp = await fetchWithTimeout(
+          `${getApiBase()}/api/data/health?source=${encodeURIComponent(source)}`,
+          {},
+          15000
+        );
+        if (!resp.ok) return { ok: false, message: "健康检查失败" };
+        return await resp.json();
+      } catch (_) {
+        return { ok: false, message: "数据端口请求超时" };
+      }
+    }
+
     async function connectBackend() {
       wsManualConnect = true;
       setWsStatus("connecting");
+      setDataStatus("connecting");
+      const source = getDataPort();
+      const sourceLabel = document.getElementById("data-port").selectedOptions[0].text;
+
       const ok = await testBackendConnection();
       if (!ok) {
         apiBase = null;
         setWsStatus("disconnected");
+        setDataStatus("error");
         alert(
-          "无法连接后端 (" + getApiBase() + ")\n\n" +
+          "无法连接本地服务\n\n" +
+          "「连接」需要先启动后端，不是直接连东方财富。\n\n" +
           "请按顺序操作：\n" +
           "1. 双击 deploy.bat 或 一键部署到E盘.bat\n" +
           "2. 双击 start.bat 启动服务\n" +
           "3. 浏览器打开 http://127.0.0.1:8000\n" +
-          "4. 再点击「连接」\n\n" +
-          "API 端口将自动探测 (8000/8080/3000)"
+          "4. 再点右上角「连接」\n\n" +
+          "不要直接双击 dashboard.html 文件打开。"
         );
         return;
       }
+
       if (ws) { try { ws.close(); } catch (_) {} ws = null; }
       connectWebSocket(true);
+
       try {
-        await fetch(`${getApiBase()}/api/data/source`, {
+        const setResp = await fetchWithTimeout(`${getApiBase()}/api/data/source`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ source: getDataPort() }),
-        });
-      } catch (_) {}
+          body: JSON.stringify({ source }),
+        }, 8000);
+        if (!setResp.ok) throw new Error("set source failed");
+      } catch (_) {
+        setDataStatus("error");
+        alert("后端已连接，但切换数据端口失败，请重试。");
+        return;
+      }
+
+      const health = await testDataSourceHealth(source);
+      if (!health.ok) {
+        setDataStatus("error");
+        const tip = source === "eastmoney"
+          ? "东方财富接口暂时不可用，可切换到「本地模拟」测试功能。"
+          : (health.message || "当前数据源不可用");
+        alert("数据端口连接失败\n\n" + tip);
+        document.getElementById("env-badge").textContent = "API";
+        return;
+      }
+
+      setDataStatus("connected", sourceLabel);
       await refreshOverview();
+      if (!overviewTimer) overviewTimer = setInterval(refreshOverview, 30000);
       document.getElementById("env-badge").textContent = "API";
       const symbol = document.getElementById("cfg-symbol").value;
-      if (getDataPort() === "eastmoney") await loadEastmoneyBars(symbol);
+      if (source === "eastmoney" || source === "mock") await loadEastmoneyBars(symbol);
+      else runBacktestLocal();
     }
 
     function connectWebSocket(manual) {
@@ -452,18 +532,28 @@
 
     async function switchDataSource(source) {
       localStorage.setItem("data_port", source);
+      setDataStatus("connecting");
       try {
-        const resp = await fetch(`${getApiBase()}/api/data/source`, {
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/data/source`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ source }),
-        });
-        if (resp.ok) await refreshOverview();
+        }, 8000);
+        if (!resp.ok) throw new Error("switch failed");
+        const data = await resp.json();
+        const health = data.health || await testDataSourceHealth(source);
+        if (health.ok) {
+          const label = document.getElementById("data-port").selectedOptions[0].text;
+          setDataStatus("connected", label);
+          await refreshOverview();
+        } else {
+          setDataStatus("error");
+        }
       } catch (_) {
-        // 无 API 时仅本地记录选择
+        setDataStatus("disconnected");
       }
       const symbol = document.getElementById("cfg-symbol").value;
-      if (source === "eastmoney") await loadEastmoneyBars(symbol);
+      if (source === "eastmoney" || source === "mock") await loadEastmoneyBars(symbol);
       else runBacktestLocal();
     }
 
@@ -991,16 +1081,16 @@
 
     initStockList();
     setWsStatus("disconnected");
+    setDataStatus("disconnected");
     if (location.protocol !== "file:" && location.host) {
       apiBase = location.origin;
       document.getElementById("env-badge").textContent = "API";
       connectBackend();
-      overviewTimer = setInterval(refreshOverview, 30000);
     } else {
       document.getElementById("env-badge").textContent = "本地模式";
       resolveApiBase().then(async (base) => {
         try {
-          const resp = await fetch(`${base}/api/data/sources`, { signal: AbortSignal.timeout(1500) });
+          const resp = await fetchWithTimeout(`${base}/api/data/sources`, {}, 1500);
           if (resp.ok) connectBackend();
         } catch (_) {}
       });

@@ -7,9 +7,11 @@ from typing import Optional
 from src.common import BarPeriod, Environment
 
 from .eastmoney_adapter import EastmoneyAdapter
-from .pipeline import DataPipeline, get_active_source, list_sources, set_active_source
+from .mock_adapter import MockDataSource
+from .pipeline import SOURCE_REGISTRY, DataPipeline, get_active_source, list_sources, set_active_source
 
 __all__ = [
+    "check_data_source_health",
     "get_active_source",
     "get_klines",
     "get_market_overview",
@@ -17,6 +19,31 @@ __all__ = [
     "list_sources",
     "set_active_source",
 ]
+
+
+def check_data_source_health(source: Optional[str] = None) -> dict:
+    src = source or get_active_source()
+    labels = {item["id"]: item["name"] for item in list_sources()}
+    name = labels.get(src, src)
+    if src not in SOURCE_REGISTRY:
+        return {"ok": False, "source": src, "name": name, "message": f"未知数据源: {src}"}
+
+    adapter = MockDataSource() if src == "mock" else SOURCE_REGISTRY[src]()
+    ok = adapter.health_check()
+    detail = ""
+    if src == "eastmoney" and not ok:
+        detail = "东方财富接口无响应，请检查网络或稍后重试"
+    elif src == "tushare" and not ok:
+        detail = "Tushare 未配置 Token，请在环境变量 TUSHARE_TOKEN 中设置"
+    elif not ok:
+        detail = f"{name} 暂不可用"
+
+    return {
+        "ok": ok,
+        "source": src,
+        "name": name,
+        "message": "连接正常" if ok else detail or f"{name} 连接失败",
+    }
 
 
 def get_market_overview(source: Optional[str] = None) -> dict:

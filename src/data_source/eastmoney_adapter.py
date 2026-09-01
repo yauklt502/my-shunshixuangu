@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime
@@ -29,6 +30,16 @@ QUOTE_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 INDEX_URL = "https://push2.eastmoney.com/api/qt/stock/get"
 BREADTH_URL = "https://push2.eastmoney.com/api/qt/clist/get"
 NORTH_URL = "https://push2.eastmoney.com/api/qt/kamt/get"
+UT_TOKEN = "fa5fd1943c7b386f172d6893dbfba10b"
+HTTP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://quote.eastmoney.com/",
+    "Accept": "*/*",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+}
 
 
 class EastmoneyAdapter(DataSource):
@@ -39,9 +50,15 @@ class EastmoneyAdapter(DataSource):
 
     def health_check(self) -> bool:
         try:
-            self._http_get(QUOTE_URL, {"secid": "1.000001", "fields": "f43,f169,f170"})
-            return True
-        except Exception:
+            data = self._http_get(
+                QUOTE_URL,
+                {"secid": "1.000001", "fields": "f43,f169,f170", "ut": UT_TOKEN},
+            )
+            item = data.get("data") or {}
+            price = item.get("f43")
+            return price is not None and price != "-"
+        except Exception as e:
+            logger.warning("Eastmoney health check failed: %s", e)
             return False
 
     @staticmethod
@@ -72,6 +89,7 @@ class EastmoneyAdapter(DataSource):
             "fqt": "1",
             "lmt": str(limit),
             "end": "20500101",
+            "ut": UT_TOKEN,
             "fields1": "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
             "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
         }
@@ -123,7 +141,7 @@ class EastmoneyAdapter(DataSource):
         secid = self.to_secid(symbol)
         fields = "f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170"
         try:
-            data = self._http_get(QUOTE_URL, {"secid": secid, "fields": fields})
+            data = self._http_get(QUOTE_URL, {"secid": secid, "fields": fields, "ut": UT_TOKEN})
         except Exception:
             return None
         item = data.get("data")
@@ -147,7 +165,10 @@ class EastmoneyAdapter(DataSource):
     def fetch_market_overview(self) -> dict:
         overview = {"index_sh": None, "breadth_up": None, "breadth_down": None, "north_flow": None}
         try:
-            idx = self._http_get(INDEX_URL, {"secid": "1.000001", "fields": "f43,f169,f170,f58"})
+            idx = self._http_get(
+                INDEX_URL,
+                {"secid": "1.000001", "fields": "f43,f169,f170,f58", "ut": UT_TOKEN},
+            )
             d = idx.get("data") or {}
             if d.get("f43"):
                 overview["index_sh"] = {
@@ -171,6 +192,7 @@ class EastmoneyAdapter(DataSource):
                     "fid": "f3",
                     "fs": "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23",
                     "fields": "f3,f12,f14",
+                    "ut": UT_TOKEN,
                 },
             )
             items = breadth.get("data", {}).get("diff") or []
@@ -182,7 +204,14 @@ class EastmoneyAdapter(DataSource):
             logger.warning("Eastmoney breadth failed: %s", e)
 
         try:
-            north = self._http_get(NORTH_URL, {"fields1": "f1,f2,f3,f4", "fields2": "f51,f52,f53,f54,f55,f56"})
+            north = self._http_get(
+                NORTH_URL,
+                {
+                    "fields1": "f1,f2,f3,f4",
+                    "fields2": "f51,f52,f53,f54,f55,f56",
+                    "ut": UT_TOKEN,
+                },
+            )
             d = north.get("data") or {}
             # f52: 北向资金净流入（万元）
             flow = d.get("f52")
@@ -208,6 +237,7 @@ class EastmoneyAdapter(DataSource):
                     "fid": "f3",
                     "fs": "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23",
                     "fields": "f2,f3,f12,f14",
+                    "ut": UT_TOKEN,
                 },
             )
             items = data.get("data", {}).get("diff") or []
@@ -231,15 +261,21 @@ class EastmoneyAdapter(DataSource):
 
     def _http_get(self, url: str, params: dict) -> dict:
         qs = urllib.parse.urlencode(params)
-        req = urllib.request.Request(
-            f"{url}?{qs}",
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Referer": "https://quote.eastmoney.com/",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read().decode())
+        full_url = f"{url}?{qs}"
+        last_err: Exception | None = None
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(full_url, headers=HTTP_HEADERS)
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    data = json.loads(resp.read().decode())
+                if isinstance(data, dict) and data.get("rc") not in (None, 0):
+                    raise RuntimeError(f"Eastmoney rc={data.get('rc')}")
+                return data
+            except Exception as e:
+                last_err = e
+                if attempt < 2:
+                    time.sleep(0.4 * (attempt + 1))
+        raise last_err or RuntimeError("Eastmoney request failed")
 
     def _dict_to_bar(self, d: dict) -> KlineBar:
         return KlineBar(

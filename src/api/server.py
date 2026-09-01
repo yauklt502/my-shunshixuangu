@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from src.backtest import BacktestRunner
 from src.common import AppConfig, BarPeriod, Environment
 from src.data_source.market import get_klines, get_market_overview, get_quote
+from src.data_source.market import check_data_source_health
 from src.data_source.pipeline import get_active_source, list_sources, set_active_source
 from src.live import LiveRunner
 from src.screener import screen_by_strategy
@@ -115,8 +116,15 @@ async def api_set_source(req: DataSourceRequest):
     ok = set_active_source(req.source)
     if not ok:
         return {"ok": False, "message": f"未知数据源: {req.source}"}
-    await _broadcast_ws("data_source_changed", {"source": req.source})
-    return {"ok": True, "active": get_active_source()}
+    health = check_data_source_health(req.source)
+    await _broadcast_ws("data_source_changed", {"source": req.source, "health": health})
+    return {"ok": True, "active": get_active_source(), "health": health}
+
+
+@app.get("/api/data/health")
+async def api_data_health(source: str | None = None):
+    src = source or get_active_source()
+    return check_data_source_health(src)
 
 
 @app.get("/api/market/overview")
