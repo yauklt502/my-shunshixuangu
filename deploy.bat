@@ -56,6 +56,7 @@ echo OK
 echo [5/5] Copy scripts...
 copy /Y "%SOURCE%\start.bat" "%TARGET%\start.bat" >nul
 copy /Y "%SOURCE%\stop.bat" "%TARGET%\stop.bat" >nul
+copy /Y "%SOURCE%\install_deps.bat" "%TARGET%\install_deps.bat" >nul
 
 echo.
 echo ============================================

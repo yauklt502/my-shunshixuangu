@@ -15,10 +15,12 @@ from .failover import FailoverDataSource
 from .mock_adapter import MockDataSource
 from .mootdx_adapter import MootdxAdapter
 from .ths_adapter import ThsAdapter
+from .tdx_adapter import TdxAdapter
 from .tushare_adapter import TushareAdapter
 
 SOURCE_REGISTRY: dict[str, type[DataSource]] = {
     "eastmoney": EastmoneyAdapter,
+    "tdx": TdxAdapter,
     "tushare": TushareAdapter,
     "mootdx": MootdxAdapter,
     "ths": ThsAdapter,
@@ -32,6 +34,7 @@ _active_source: str = os.environ.get("DATA_SOURCE", "eastmoney")
 def list_sources() -> list[dict]:
     return [
         {"id": "eastmoney", "name": "东方财富实时", "realtime": True},
+        {"id": "tdx", "name": "通达信 TDX", "realtime": True},
         {"id": "tushare", "name": "Tushare", "realtime": False},
         {"id": "mootdx", "name": "Mootdx", "realtime": True},
         {"id": "ths", "name": "同花顺", "realtime": True},
@@ -70,9 +73,9 @@ def build_pipeline(
     if primary in SOURCE_REGISTRY:
         adapters.append(_create_adapter(primary, cache))
 
-    fallback_order = ["eastmoney", "mootdx", "tushare", "ths", "mock"]
+    fallback_order = ["tdx", "eastmoney", "mootdx", "tushare", "ths", "mock"]
     if environment == Environment.BACKTEST:
-        fallback_order = ["tushare", "eastmoney", "mootdx", "ths", "mock"]
+        fallback_order = ["tdx", "tushare", "eastmoney", "mootdx", "ths", "mock"]
 
     for name in fallback_order:
         if name != primary and name in SOURCE_REGISTRY:

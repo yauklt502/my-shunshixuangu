@@ -61,6 +61,7 @@ echo OK
 echo [5/5] Copy start scripts...
 copy /Y "%SOURCE%\start.bat" "%TARGET%\start.bat" >nul
 copy /Y "%SOURCE%\stop.bat" "%TARGET%\stop.bat" >nul
+copy /Y "%SOURCE%\install_deps.bat" "%TARGET%\install_deps.bat" >nul
 if exist "%SOURCE%\一键启动.bat" copy /Y "%SOURCE%\一键启动.bat" "%TARGET%\一键启动.bat" >nul
 
 echo.

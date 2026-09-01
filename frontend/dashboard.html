@@ -239,6 +239,7 @@
         <span class="header-label">数据端口</span>
         <select id="data-port" class="header-select" title="行情数据源">
           <option value="eastmoney" selected>东方财富</option>
+          <option value="tdx">通达信 TDX</option>
           <option value="tushare">Tushare</option>
           <option value="mootdx">Mootdx</option>
           <option value="ths">同花顺</option>
@@ -518,7 +519,9 @@
       if (!health.ok) {
         setDataStatus("error");
         const tip = source === "eastmoney"
-          ? "东方财富接口暂时不可用，可切换到「本地模拟」测试功能。"
+          ? "东方财富接口暂时不可用，可切换到「通达信 TDX」或「本地模拟」。"
+          : source === "tdx"
+          ? "通达信 TDX 连接失败，请确认 deploy 已安装 eltdx，或切换「本地模拟」。"
           : (health.message || "当前数据源不可用");
         alert("数据端口连接失败\n\n" + tip);
         document.getElementById("env-badge").textContent = "API";
@@ -530,7 +533,7 @@
       if (!overviewTimer) overviewTimer = setInterval(refreshOverview, 30000);
       document.getElementById("env-badge").textContent = "API";
       const symbol = document.getElementById("cfg-symbol").value;
-      if (source === "eastmoney" || source === "mock") await loadEastmoneyBars(symbol);
+      if (source === "eastmoney" || source === "tdx" || source === "mock") await loadMarketBars(symbol);
       else runBacktestLocal();
     }
 
@@ -586,7 +589,7 @@
         setDataStatus("disconnected");
       }
       const symbol = document.getElementById("cfg-symbol").value;
-      if (source === "eastmoney" || source === "mock") await loadEastmoneyBars(symbol);
+      if (source === "eastmoney" || source === "tdx" || source === "mock") await loadMarketBars(symbol);
       else runBacktestLocal();
     }
 
@@ -616,7 +619,7 @@
       }
     }
 
-    async function loadEastmoneyBars(symbol) {
+    async function loadMarketBars(symbol) {
       const period = document.getElementById("cfg-period").value;
       const strategy = document.getElementById("cfg-strategy").value;
       document.getElementById("current-symbol").textContent = symbol;
@@ -637,9 +640,10 @@
         renderSignals(signals, bars);
         renderEquity(result.equity);
         applyLocalMetrics(result);
-        document.getElementById("env-badge").textContent = "东方财富";
+        document.getElementById("env-badge").textContent =
+          getDataPort() === "tdx" ? "通达信TDX" : getDataPort() === "eastmoney" ? "东方财富" : "API";
       } catch (e) {
-        console.warn("Eastmoney load failed, fallback mock:", e);
+        console.warn("Market bars load failed, fallback mock:", e);
         runBacktestLocal();
       }
     }
@@ -1222,8 +1226,8 @@
 
     async function runBacktestLocal() {
       const symbol = document.getElementById("cfg-symbol").value;
-      if (getDataPort() === "eastmoney") {
-        await loadEastmoneyBars(symbol);
+      if (getDataPort() === "eastmoney" || getDataPort() === "tdx") {
+        await loadMarketBars(symbol);
         return;
       }
       const strategy = document.getElementById("cfg-strategy").value;

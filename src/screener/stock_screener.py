@@ -7,8 +7,8 @@ from typing import List, Optional
 
 from src.common import BarPeriod, Environment, SignalType
 from src.compute import IndicatorPreprocessor
-from src.data_source.eastmoney_adapter import EastmoneyAdapter
 from src.data_source.pipeline import DataPipeline, get_active_source
+from src.data_source.pipeline import SOURCE_REGISTRY
 from src.strategy.registry import STRATEGY_LABELS, get_strategy
 
 logger = logging.getLogger(__name__)
@@ -34,12 +34,25 @@ DEFAULT_UNIVERSE = [
 
 
 def get_universe(limit: int = 80) -> List[dict]:
+    src = get_active_source()
+    adapter_cls = SOURCE_REGISTRY.get(src)
+    if adapter_cls and src != "mock":
+        try:
+            adapter = adapter_cls()
+            if hasattr(adapter, "fetch_stock_list"):
+                stocks = adapter.fetch_stock_list(limit=limit)
+                if stocks:
+                    return stocks
+        except Exception as e:
+            logger.warning("Fetch universe from %s failed: %s", src, e)
     try:
+        from src.data_source.eastmoney_adapter import EastmoneyAdapter
+
         stocks = EastmoneyAdapter().fetch_stock_list(limit=limit)
         if stocks:
             return stocks
     except Exception as e:
-        logger.warning("Fetch universe failed: %s", e)
+        logger.warning("Fetch universe fallback failed: %s", e)
     return DEFAULT_UNIVERSE[:limit]
 
 

@@ -7,6 +7,7 @@ from .mock_adapter import MockDataSource
 from .mootdx_adapter import MootdxAdapter
 from .pipeline import DataPipeline, get_active_source, list_sources, set_active_source
 from .stream import RealtimeBarStream
+from .tdx_adapter import TdxAdapter
 from .ths_adapter import ThsAdapter
 from .tushare_adapter import TushareAdapter
 
@@ -19,6 +20,7 @@ __all__ = [
     "MockDataSource",
     "MootdxAdapter",
     "RealtimeBarStream",
+    "TdxAdapter",
     "ThsAdapter",
     "TushareAdapter",
     "get_active_source",

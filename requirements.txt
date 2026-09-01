@@ -4,6 +4,8 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 pydantic>=2.0.0
 websockets>=12.0
+# 通达信 TDX 行情（同源 https://github.com/Neoooo0909/tdx-mcp）
+eltdx>=0.5.0,<1.0
 # Optional data sources (install as needed):
 # tushare>=1.4.0
 # mootdx>=0.11.0
