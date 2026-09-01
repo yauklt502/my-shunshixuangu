@@ -16,6 +16,10 @@ function sinaNode(raw) {
   const n = (raw || "").trim();
   return SINA_NODES.has(n) ? n : "cyb";
 }
+function thsCode(raw) {
+  const n = String(raw || "").replace(/^(sh|sz|bj)/i, "");
+  return /^\d{6}$/.test(n) ? n : "";
+}
 
 async function proxy(url, init = {}) {
   const r = await fetch(url, {
@@ -77,6 +81,31 @@ export default {
       const node = sinaNode(url.searchParams.get("node"));
       const u = `${SINA_LIST}?page=${page}&num=${num}&sort=symbol&asc=1&node=${node}&symbol=&_s_r_a=page`;
       return proxy(u);
+    }
+
+    if (p === "/api/ths/kline") {
+      const code = thsCode(url.searchParams.get("code"));
+      if (!code) return new Response("bad code", { status: 400 });
+      const ths = `https://d.10jqka.com.cn/v8/line/hs_${code}/01/last180.js`;
+      const r = await fetch(ths, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Referer: `http://stockpage.10jqka.com.cn/${code}/`,
+        },
+      });
+      let body = await r.text();
+      const i = body.indexOf("{");
+      const j = body.lastIndexOf("}");
+      if (i >= 0 && j > i) body = body.slice(i, j + 1);
+      return new Response(body, {
+        status: r.status,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+          "cache-control": "no-store",
+        },
+      });
     }
 
     if (env.ASSETS) return env.ASSETS.fetch(request);

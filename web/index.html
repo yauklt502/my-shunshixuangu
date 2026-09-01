@@ -7,29 +7,32 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24'><rect x='4' y='8' width='6' height='10' fill='%23f5465b'/><rect x='18' y='4' width='6' height='14' fill='%2322c55e'/></svg>">
 <style>
   :root{
-    --bg:#0b0e14; --bg2:#0e1320; --panel:#141a28; --panel2:#1b2233;
-    --border:#222c40; --line:#1a2233;
-    --txt:#e6edf3; --muted:#8b97a8; --dim:#5d6878;
-    --up:#f5465b; --down:#22c55e; --watch:#eab308; --accent:#3b82f6;
+    --bg:#1c0a0d; --bg2:#2a0f14; --panel:#3a141a; --panel2:#4a1a22;
+    --border:#7a2a36; --line:#5a1e28;
+    --txt:#ff3b3b; --muted:#ff7a7a; --dim:#ff9a9a;
+    --up:#ff3b3b; --down:#22c55e; --watch:#ffb020; --accent:#ff5a5a;
     --mono:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace;
   }
   *{box-sizing:border-box}
   body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+    font-family:system-ui,'Segoe UI',Roboto,'PingFang SC',sans-serif;
     font-size:14px;line-height:1.5}
   .topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border);
     background:rgba(20,26,40,.78);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30;flex-wrap:wrap}
   .logo{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
     background:linear-gradient(135deg,var(--up),#ff8a4c);color:#fff;font-weight:800;font-size:18px;flex:0 0 auto}
-  .title{font-size:17px;font-weight:700}
+  .title{font-size:17px;font-weight:700;color:var(--txt)}
   .title small{display:block;font-size:11px;color:var(--muted);font-weight:400}
   .spacer{flex:1}
   .clock{font-family:var(--mono);font-size:13px;color:var(--muted)}
-  .conn{font-size:12px;color:var(--down)}
+  .conn{font-size:12px;color:var(--txt)}
+  .srcpick{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt);font-weight:600}
+  .srcpick select{background:var(--panel2);color:var(--txt);border:1px solid var(--border);
+    border-radius:9px;padding:7px 10px;font-size:13px;font-weight:600}
   .btn{background:var(--panel2);border:1px solid var(--border);color:var(--txt);padding:8px 14px;
     border-radius:9px;cursor:pointer;font-size:13px;font-weight:600}
-  .btn:hover{background:#243049}
   .btn.primary{background:linear-gradient(135deg,var(--up),#ff7a45);border:none;color:#fff}
+  .btn:hover{background:#5a1820}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .layout{display:grid;grid-template-columns:300px 1fr;gap:18px;padding:18px 22px 48px;align-items:start}
   .side{display:flex;flex-direction:column;gap:14px;position:sticky;top:78px}
@@ -45,15 +48,19 @@
   .stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
   .stat .n{font-size:24px;font-weight:800;font-family:var(--mono)}
   .stat .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .stat .n{color:var(--txt)}
   .stat.hi .n{color:var(--up)} .stat.mid .n{color:var(--watch)} .stat.lo .n{color:var(--muted)}
   .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .tab{background:var(--panel2);border:1px solid var(--border);color:var(--muted);padding:8px 14px;
     border-radius:9px;cursor:pointer;font-weight:600}
-  .tab.on{color:#fff;border-color:#3a4760;background:#243049}
+  .tab.on{color:var(--txt);border-color:var(--up);background:#5a1820}
+  .strat{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+  .strat .note{flex:1}
+  .strat .btn{flex:0 0 auto;padding:6px 10px;font-size:12px}
   .tab .c{font-family:var(--mono);margin-left:6px;color:var(--up)}
   table{width:100%;border-collapse:collapse}
   th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-  th{color:var(--dim);font-weight:500;font-size:12px}
+  th{color:var(--muted);font-weight:500;font-size:12px}
   td.mono,th.mono{font-family:var(--mono)}
   .up{color:var(--up)} .down{color:var(--down)} .warn{color:var(--watch)}
   .banner{font-size:12px;color:var(--watch);margin:0 0 10px}
@@ -72,11 +79,19 @@
 <body>
 <header class="topbar">
   <div class="logo">4</div>
-  <div class="title">顺势选股<small>主板 · 创业板 · 妖龙隔夜 · 龙头观察 · 腾讯行情</small></div>
+  <div class="title">顺势选股<small>主板 · 创业板 · 妖龙隔夜 · 龙头观察 · 非 ST · 非次新</small></div>
   <div class="spacer"></div>
   <div class="clock" id="clock">--:--:--</div>
   <div class="conn" id="conn">● 未测连接</div>
+  <label class="srcpick">数据源
+    <select id="srcSel">
+      <option value="ths_tx">同花顺+腾讯</option>
+      <option value="tx">腾讯</option>
+      <option value="ths">同花顺</option>
+    </select>
+  </label>
   <button class="btn" id="connBtn">测连接</button>
+  <button class="btn" id="shotBtn">截屏</button>
   <button class="btn primary" id="scanMainTop">扫描主板</button>
   <button class="btn" id="scanCybTop">扫描创业板</button>
 </header>
@@ -85,21 +100,33 @@
   <aside class="side">
     <div class="card">
       <h3>怎么用</h3>
-      <div class="note">只扫<strong style="color:var(--txt)">主板</strong>（约 3000）或<strong style="color:var(--txt)">创业板 300</strong>（约 900），非 ST。名单不拉沪深全 A，不会出现 4970。</div>
+      <div class="note">只扫<strong>主板</strong>（约 3000）或<strong>创业板 300</strong>（约 900）。非 ST、非次新。名单不拉沪深全 A，不会出现 4970。</div>
       <button class="btn primary" id="scanMain" style="width:100%;margin-top:12px">扫描主板</button>
       <button class="btn" id="scanCyb" style="width:100%;margin-top:8px">扫描创业板</button>
       <div class="note" id="prog" style="margin-top:10px">尚未扫描</div>
     </div>
     <div class="card">
       <h3>四套规则</h3>
-      <div class="note"><b style="color:var(--txt)">主板稳健少</b> 最多 3 只，不够不凑；持有偏隔夜 / 最多 3–5 日，破 MA20 走。</div>
-      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">创业板放宽</b> 无 MA5，扫全部 300，最多 8 只。</div>
-      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">主板妖龙</b> 红灯空仓，只做隔夜。</div>
-      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">龙头盯盘</b> 只观察，禁止自动下单。</div>
+      <div class="strat">
+        <div class="note"><b>主板稳健少</b> 最多 3 只，不够不凑；持有偏隔夜 / 最多 3–5 日，破 MA20 走。</div>
+        <button class="btn" id="scanStratMain">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>创业板放宽</b> 无 MA5，扫全部 300，最多 8 只。</div>
+        <button class="btn" id="scanStratCyb">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>主板妖龙</b> 红灯空仓，只做隔夜。</div>
+        <button class="btn" id="scanStratYao">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>龙头盯盘</b> 只观察，禁止自动下单。点这套只扫主板龙头；创业板龙头用上方「扫描创业板」。</div>
+        <button class="btn" id="scanStratDrag">只扫这套</button>
+      </div>
     </div>
     <div class="card">
       <h3>数据源</h3>
-      <div class="note">行情：web.sqt.gtimg.cn / qt.gtimg.cn<br>日K：ifzq.gtimg.cn 前复权<br>名单：新浪 sh_a / sz_a / cyb，不拉 hs_a</div>
+      <div class="note" id="srcNote">右上角可选 同花顺+腾讯 / 腾讯 / 同花顺。同花顺提供前复权日 K 与上市日期；腾讯提供批量行情、量比、换手、流通市值。名单仍用新浪板块节点，不拉 hs_a。</div>
     </div>
   </aside>
 
@@ -119,7 +146,7 @@
       <button class="tab" data-tab="drag">龙头观察 <span class="c" id="cDrag">0</span></button>
     </div>
     <div class="card">
-      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」或「扫描创业板」。非 ST，不含科创 / 北交 / 301。休市用最近交易日。</div>
+      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」「扫描创业板」，或四套规则下的「只扫这套」。非 ST、非次新，不含科创 / 北交 / 301。休市用最近交易日。</div>
       <div class="scroll" id="panel"></div>
     </div>
   </main>
@@ -146,6 +173,19 @@ function klineUrl(code, count) {
   if (USE_PROXY) return `/api/kline?code=${encodeURIComponent(code)}&count=${count}`;
   return `https://${cur().kline}/appstock/app/fqkline/get?param=${code},day,,,${count},qfq`;
 }
+function thsKlineUrl(code) {
+  const num = numOf(code);
+  if (USE_PROXY) return `/api/ths/kline?code=${encodeURIComponent(num)}`;
+  return `https://d.10jqka.com.cn/v8/line/hs_${num}/01/last180.js`;
+}
+function currentSrc() {
+  const el = $("srcSel");
+  return (el && el.value) || localStorage.getItem("data_src") || "ths_tx";
+}
+function srcLabel() {
+  const s = currentSrc();
+  return s === "tx" ? "腾讯" : s === "ths" ? "同花顺" : "同花顺+腾讯";
+}
 const SINA_NODE_OK = { sh_a: 1, sz_a: 1, cyb: 1 };
 function sinaNode(node) {
   return SINA_NODE_OK[node] ? node : "cyb";
@@ -167,6 +207,20 @@ function numOf(code) {
 function isSTName(name) {
   return /ST|退|摘牌/.test(name || "");
 }
+function isSubNewName(name) {
+  const n = name || "";
+  return /^[NC]/.test(n) || /次新/.test(n);
+}
+function isSubNewKline(kl) {
+  if (!kl || kl.length < 60) return true;
+  const start = kl.start;
+  if (start && /^\d{8}$/.test(String(start))) {
+    const s = String(start);
+    const t = Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+    if (Number.isFinite(t) && Date.now() - t < 365 * 864e5) return true;
+  }
+  return false;
+}
 function isMainCode(code) {
   return /^(600|601|603|605|000|001|002)/.test(numOf(code));
 }
@@ -182,6 +236,10 @@ const SCAN_BTNS = [
   { id: "scanCyb", idle: "扫描创业板" },
   { id: "scanMainTop", idle: "扫描主板" },
   { id: "scanCybTop", idle: "扫描创业板" },
+  { id: "scanStratMain", idle: "只扫这套" },
+  { id: "scanStratCyb", idle: "只扫这套" },
+  { id: "scanStratYao", idle: "只扫这套" },
+  { id: "scanStratDrag", idle: "只扫这套" },
 ];
 
 const state = {
@@ -241,7 +299,7 @@ async function fetchTXQuotes(codes) {
         const code = m[1], f = m[2].split("~");
         if (f.length < 45) return;
         const name = f[1] || "";
-        if (isSTName(name)) return;
+        if (isSTName(name) || isSubNewName(name)) return;
         if (!isMainCode(code) && !isCybCode(code)) return;
         const price = +f[3], prev = +f[4], open = +f[5];
         const high = +f[33], low = +f[34];
@@ -265,7 +323,7 @@ async function fetchTXQuotes(codes) {
   return out;
 }
 
-async function fetchKline(code, count = 130) {
+async function fetchTXKline(code, count = 130) {
   const url = klineUrl(code, count);
   const j = await safeFetch(url, { json: true });
   const node = j.data && (j.data[code] || j.data[code.toUpperCase()]);
@@ -274,6 +332,38 @@ async function fetchKline(code, count = 130) {
   return k.map(x => ({
     d: x[0], o: +x[1], c: +x[2], h: +x[3], l: +x[4], v: x[5] != null && x[5] !== "" ? +x[5] : 0,
   }));
+}
+
+function parseTHSKline(j) {
+  if (!j || !j.data) throw new Error("no ths kline");
+  const rows = String(j.data).split(";").filter(Boolean).map(line => {
+    const p = line.split(",");
+    const d = p[0].length === 8 ? p[0].slice(0, 4) + "-" + p[0].slice(4, 6) + "-" + p[0].slice(6, 8) : p[0];
+    return { d, o: +p[1], h: +p[2], l: +p[3], c: +p[4], v: p[5] != null && p[5] !== "" ? +p[5] : 0 };
+  });
+  rows.start = j.start || "";
+  rows.total = +(j.total || rows.length);
+  return rows;
+}
+
+async function fetchTHSKline(code) {
+  const url = thsKlineUrl(code);
+  const raw = await safeFetch(url, { json: false });
+  const txt = await raw.text();
+  const jsonTxt = txt.replace(/^[^{]+/, "").replace(/\)\s*;?\s*$/, "");
+  const j = JSON.parse(jsonTxt);
+  return parseTHSKline(j);
+}
+
+async function fetchKline(code, count = 130) {
+  const src = currentSrc();
+  if (src === "tx") return fetchTXKline(code, count);
+  try {
+    return await fetchTHSKline(code);
+  } catch (e) {
+    if (src === "ths_tx") return fetchTXKline(code, count);
+    throw e;
+  }
 }
 
 async function mapLimit(items, limit, fn) {
@@ -293,7 +383,7 @@ function universeRow(it) {
   const code = String(it.code || "").padStart(6, "0");
   const symbol = String(it.symbol || (code.startsWith("6") ? "sh" + code : "sz" + code));
   const name = it.name || "";
-  if (isSTName(name)) return null;
+  if (isSTName(name) || isSubNewName(name)) return null;
   if (!isMainCode(symbol) && !isCybCode(symbol)) return null;
   return { code, symbol, name };
 }
@@ -488,7 +578,7 @@ function screenYao(q, f) {
 
 async function sentiment() {
   try {
-    const [sh, sz] = await Promise.all([fetchKline("sh000001", 30), fetchKline("sz399001", 30)]);
+    const [sh, sz] = await Promise.all([fetchTXKline("sh000001", 30), fetchTXKline("sz399001", 30)]);
     const c = sh.map(x => x.c);
     const ma5 = maAt(c, 5), ma10 = maAt(c, 10);
     const last = c[c.length - 1], prev = c[c.length - 2];
@@ -592,19 +682,23 @@ document.querySelectorAll(".tab").forEach(btn => {
 async function checkConn() {
   $("conn").textContent = "连接测试…";
   $("conn").style.color = "var(--muted)";
+  const src = currentSrc();
   try {
-    const kUrl = klineUrl("sh600519", 5);
-    const j = await safeFetch(kUrl, { json: true });
-    if (!(j && j.data)) throw new Error("no data");
-    state.src = "tx";
-    $("conn").textContent = "● 实时已连 · 腾讯";
-    $("conn").style.color = "var(--down)";
+    if (src === "tx") {
+      const j = await safeFetch(klineUrl("sh600519", 5), { json: true });
+      if (!(j && j.data)) throw new Error("no data");
+    } else {
+      const kl = await fetchTHSKline("sh600519");
+      if (!kl.length) throw new Error("no ths");
+    }
+    $("conn").textContent = "● 已连 · " + srcLabel();
+    $("conn").style.color = "var(--txt)";
     hideHint();
     return true;
   } catch (e) {
-    $("conn").textContent = "● 未连上腾讯";
+    $("conn").textContent = "● 未连上" + srcLabel();
     $("conn").style.color = "var(--up)";
-    showHint("腾讯行情无法直连。请用 Chrome/Edge 打开本页，不要用拦截外网的预览面板。");
+    showHint("行情无法直连。请用 Chrome/Edge 打开本页，或换一个数据源再测连接。");
     return false;
   }
 }
@@ -630,14 +724,18 @@ function switchTab(tab) {
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
 }
 
-async function scanAll(board) {
+async function scanAll(board, strategy) {
+  strategy = strategy || "all";
+  if (strategy === "main" || strategy === "yao") board = "main";
+  if (strategy === "cyb") board = "cyb";
   board = board === "cyb" ? "cyb" : "main";
   if (state.running) return;
   state.running = true;
   setScanBusy(true);
   const boardName = board === "cyb" ? "创业板" : "主板";
+  const stratName = { all: "四套", main: "稳健少", cyb: "放宽", yao: "妖龙", drag: "龙头" }[strategy] || "";
   try {
-    setProg(`${boardName}名单（非 ST）…`);
+    setProg(`${boardName}${stratName}名单（非 ST / 非次新）…`);
     const meta = await getList(board);
     if (meta.length < 50) throw new Error(boardName + "列表过短");
     setProg(`${boardName}非 ST ${meta.length} 只，拉行情…`);
@@ -646,60 +744,82 @@ async function scanAll(board) {
     Object.values(quotes).forEach(q => {
       if (!q.name) q.name = nameBySym.get(q.code) || "";
     });
-    const all = Object.values(quotes).filter(q => inBoard(q.code, board) && !isSTName(q.name));
+    const all = Object.values(quotes).filter(q => inBoard(q.code, board) && !isSTName(q.name) && !isSubNewName(q.name));
     if (!all.length) throw new Error("无行情");
-    state.src = "tx";
-    $("conn").textContent = "● 实时已连 · 腾讯";
-    $("conn").style.color = "var(--down)";
+    state.src = currentSrc();
+    $("conn").textContent = "● 已连 · " + srcLabel();
+    $("conn").style.color = "var(--txt)";
 
-    setProg("指数情绪…");
-    state.lamp = await sentiment();
+    if (strategy !== "drag") {
+      setProg("指数情绪…");
+      state.lamp = await sentiment();
+    }
 
     const needK = new Map();
     const add = q => { if (!needK.has(q.code)) needK.set(q.code, q); };
+    const wantMain = strategy === "all" || strategy === "main";
+    const wantCyb = strategy === "all" || strategy === "cyb";
+    const wantYao = strategy === "all" || strategy === "yao";
+    const wantDrag = strategy === "all" || strategy === "drag";
     all.forEach(q => {
       const num = numOf(q.code);
-      if (board === "main") {
+      if (board === "main" && wantMain) {
         if (isMainCode(q.code) && q.pct > 2 && q.pct < 5.5 && q.amount >= 1e8 && q.amp <= 10) add(q);
+      }
+      if (board === "main" && wantYao) {
         if (/^(600|601|603|605|000|001)/.test(num) && !num.startsWith("002") && q.pct >= 2 && q.amount >= 8e8) add(q);
-      } else if (isCybCode(q.code) && q.pct >= 3 && q.pct <= 12 && (q.volRatio == null || q.volRatio >= 1.2)) {
-        add(q);
+      }
+      if (board === "cyb" && wantCyb) {
+        if (isCybCode(q.code) && q.pct >= 3 && q.pct <= 12 && (q.volRatio == null || q.volRatio >= 1.2)) add(q);
       }
     });
-    const dragonPool = all.filter(q => q.pct > 3 || q.amount > 2e8)
-      .sort((a, b) => b.amount - a.amount);
+    const dragonPool = wantDrag
+      ? all.filter(q => q.pct > 3 || q.amount > 2e8).sort((a, b) => b.amount - a.amount)
+      : [];
     dragonPool.filter(q => q.pct > 5 || q.amount > 5e8).slice(0, 80).forEach(add);
 
     const jobs = [...needK.values()];
     let done = 0;
     const feats = {};
     await mapLimit(jobs, 8, async q => {
-      try { feats[q.code] = feat(await fetchKline(q.code, 130), q); }
-      catch (e) {}
+      try {
+        const kl = await fetchKline(q.code, 130);
+        if (isSubNewKline(kl)) return;
+        feats[q.code] = feat(kl, q);
+      } catch (e) {}
       done++;
-      if (done % 8 === 0 || done === jobs.length) setProg(`${boardName}核验 K 线 ${done}/${jobs.length}`);
+      if (done % 8 === 0 || done === jobs.length) setProg(`${boardName}核验 K 线 ${done}/${jobs.length} · ${srcLabel()}`);
     });
 
-    if (board === "main") {
+    if (board === "main" && (wantMain || wantYao)) {
       const main = [], yao = [], yaoNear = [];
       jobs.forEach(q => {
         const f = feats[q.code];
         if (!f) return;
-        const m = screenMain(q, f); if (m) main.push(m);
-        const y = screenYao(q, f);
-        if (y && !y.skip) {
-          if (y.near) yaoNear.push(y);
-          else yao.push(y);
+        if (wantMain) {
+          const m = screenMain(q, f); if (m) main.push(m);
+        }
+        if (wantYao) {
+          const y = screenYao(q, f);
+          if (y && !y.skip) {
+            if (y.near) yaoNear.push(y);
+            else yao.push(y);
+          }
         }
       });
-      main.sort((a, b) => b.score - a.score);
-      yao.sort((a, b) => b.score - a.score);
-      yaoNear.sort((a, b) => b.score - a.score);
-      state.main = main.slice(0, 3);
-      if (state.lamp.code === 0) { state.yao = []; state.yaoNear = yao.concat(yaoNear); }
-      else { state.yao = yao; state.yaoNear = yaoNear; }
-      switchTab("main");
-    } else {
+      if (wantMain) {
+        main.sort((a, b) => b.score - a.score);
+        state.main = main.slice(0, 3);
+        switchTab("main");
+      }
+      if (wantYao) {
+        yao.sort((a, b) => b.score - a.score);
+        yaoNear.sort((a, b) => b.score - a.score);
+        if (state.lamp.code === 0) { state.yao = []; state.yaoNear = yao.concat(yaoNear); }
+        else { state.yao = yao; state.yaoNear = yaoNear; }
+        if (!wantMain) switchTab("yao");
+      }
+    } else if (board === "cyb" && wantCyb) {
       const cyb = [];
       jobs.forEach(q => {
         const f = feats[q.code];
@@ -711,38 +831,41 @@ async function scanAll(board) {
       switchTab("cyb");
     }
 
-    const dscore = dragonPool.map(q => ({ ...q }));
-    const maxAmt = Math.max(...dscore.map(x => x.amount), 1);
-    dscore.forEach(q => {
-      const num = numOf(q.code);
-      const is20 = num.startsWith("300");
-      q.isLimit = is20 ? q.pct >= 19.5 : q.pct >= 9.5;
-      q.consec = feats[q.code] ? feats[q.code].consec : 0;
-      q.score = (q.isLimit ? 1000 : 0) + q.consec * 100 + q.pct * 2 + (q.amount / maxAmt) * 50;
-    });
-    dscore.sort((a, b) => b.score - a.score);
-    const maybe = dscore.filter(q => {
-      if (q.isLimit || q.pct < 5) return false;
-      const num = numOf(q.code);
-      if (num.startsWith("300")) return q.pct < 15;
-      return q.pct < 9;
-    }).slice(0, 5);
-    if (board === "main") {
-      state.dragMain = dscore.slice(0, 3);
-      state.maybeMain = maybe;
-    } else {
-      state.dragCyb = dscore.slice(0, 3);
-      state.maybeCyb = maybe;
+    if (wantDrag) {
+      const dscore = dragonPool.filter(q => !isSubNewName(q.name)).map(q => ({ ...q }));
+      const maxAmt = Math.max(...dscore.map(x => x.amount), 1);
+      dscore.forEach(q => {
+        const num = numOf(q.code);
+        const is20 = num.startsWith("300");
+        q.isLimit = is20 ? q.pct >= 19.5 : q.pct >= 9.5;
+        q.consec = feats[q.code] ? feats[q.code].consec : 0;
+        q.score = (q.isLimit ? 1000 : 0) + q.consec * 100 + q.pct * 2 + (q.amount / maxAmt) * 50;
+      });
+      dscore.sort((a, b) => b.score - a.score);
+      const maybe = dscore.filter(q => {
+        if (q.isLimit || q.pct < 5) return false;
+        const num = numOf(q.code);
+        if (num.startsWith("300")) return q.pct < 15;
+        return q.pct < 9;
+      }).slice(0, 5);
+      if (board === "main") {
+        state.dragMain = dscore.slice(0, 3);
+        state.maybeMain = maybe;
+      } else {
+        state.dragCyb = dscore.slice(0, 3);
+        state.maybeCyb = maybe;
+      }
+      mergeDragon();
+      if (strategy === "drag") switchTab("drag");
     }
-    mergeDragon();
 
     $("snapInfo").textContent =
-      `${boardName}扫描完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · 腾讯 · 非ST ${meta.length} 只 · 行情 ${all.length} · K线 ${jobs.length}（未扫全市场）`;
-    setProg(`${boardName}完成 · ${meta.length} 只`);
+      `${boardName}${stratName}完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · ${srcLabel()} · 非ST/非次新 ${all.length} 只 · K线 ${jobs.length}（未扫全市场）`;
+    setProg(`${boardName}${stratName}完成 · ${all.length} 只`);
     hideHint();
     render();
   } catch (e) {
-    showHint("扫描失败：" + (e.message || e) + "。请确认能访问腾讯/新浪行情。");
+    showHint("扫描失败：" + (e.message || e) + "。请确认能访问腾讯/同花顺/新浪，或换数据源。");
     setProg("失败");
   } finally {
     state.running = false;
@@ -750,11 +873,52 @@ async function scanAll(board) {
   }
 }
 
+async function screenshot() {
+  const btn = $("shotBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "截屏中…"; }
+  try {
+    if (!window.html2canvas) {
+      await new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = "vendor/html2canvas.min.js";
+        s.onload = res;
+        s.onerror = () => rej(new Error("截屏库加载失败"));
+        document.head.appendChild(s);
+      });
+    }
+    const canvas = await window.html2canvas(document.body, {
+      backgroundColor: "#1c0a0d",
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+    const a = document.createElement("a");
+    a.download = "顺势选股-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "") + ".png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+    setProg("截屏已保存");
+  } catch (e) {
+    showHint("截屏失败：" + (e.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "截屏"; }
+  }
+}
+
 $("connBtn").onclick = checkConn;
-$("scanMain").onclick = () => scanAll("main");
-$("scanCyb").onclick = () => scanAll("cyb");
-$("scanMainTop").onclick = () => scanAll("main");
-$("scanCybTop").onclick = () => scanAll("cyb");
+$("shotBtn").onclick = screenshot;
+$("scanMain").onclick = () => scanAll("main", "all");
+$("scanCyb").onclick = () => scanAll("cyb", "all");
+$("scanMainTop").onclick = () => scanAll("main", "all");
+$("scanCybTop").onclick = () => scanAll("cyb", "all");
+$("scanStratMain").onclick = () => scanAll("main", "main");
+$("scanStratCyb").onclick = () => scanAll("cyb", "cyb");
+$("scanStratYao").onclick = () => scanAll("main", "yao");
+$("scanStratDrag").onclick = () => scanAll("main", "drag");
+$("srcSel").value = localStorage.getItem("data_src") || "ths_tx";
+$("srcSel").onchange = () => {
+  localStorage.setItem("data_src", $("srcSel").value);
+  checkConn();
+};
 render();
 checkConn();
 </script>

@@ -39,10 +39,11 @@ README_TXT = """拷到 E 盘
 2. 安装 Python 3：https://www.python.org/downloads/  安装时勾选 Add python.exe to PATH
 3. 双击 打开选股.bat
 4. 浏览器打开 http://127.0.0.1:8787/
-5. 点「扫描主板」或「扫描创业板」
-   - 主板：600/601/603/605/000/001/002，非 ST
-   - 创业板：300 开头，非 ST
-   - 不扫科创板 688、北交所、301、ST/退市
+5. 点「扫描主板」或「扫描创业板」，或四套规则下的「只扫这套」
+   - 主板：600/601/603/605/000/001/002，非 ST、非次新
+   - 创业板：300 开头，非 ST、非次新
+   - 不扫科创板 688、北交所、301、ST/退市、次新
+   - 右上角可选数据源：同花顺+腾讯 / 腾讯 / 同花顺，并可一键截屏
    - 不会拉全市场 4000+ 行情
 
 不要用文件协议直接打开 index.html（file://），必须走 bat 启动的本地服务，否则腾讯接口会被浏览器跨域拦住。
@@ -58,6 +59,9 @@ def main() -> None:
         z.writestr(f"{INNER}/拷到E盘.txt", README_TXT.replace("\n", "\r\n"))
         z.writestr(f"{INNER}/serve_web.py", serve)
         z.writestr(f"{INNER}/web/index.html", html)
+        vendor = ROOT / "web" / "vendor" / "html2canvas.min.js"
+        if vendor.is_file():
+            z.writestr(f"{INNER}/web/vendor/html2canvas.min.js", vendor.read_bytes())
     print("wrote", OUT, OUT.stat().st_size)
 
 

@@ -3,6 +3,7 @@
 """Local server: static web/ + Tencent/Sina proxy (same origin)."""
 from __future__ import annotations
 
+import re
 import urllib.parse
 import urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -38,6 +39,12 @@ SINA_LIST = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
     "Market_Center.getHQNodeData"
 )
+THS_KLINE = "https://d.10jqka.com.cn/v8/line/hs_{code}/01/last180.js"
+
+
+def _ths_code(raw: str) -> str:
+    n = re.sub(r"^(sh|sz|bj)", "", (raw or "").strip(), flags=re.I)
+    return n if re.fullmatch(r"\d{6}", n) else ""
 
 
 def _sina_node(raw: str) -> str:
@@ -45,8 +52,8 @@ def _sina_node(raw: str) -> str:
     return n if n in SINA_NODES else "cyb"
 
 
-def _get(url: str) -> tuple[int, bytes, str]:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Referer": "https://finance.sina.com.cn/"})
+def _get(url: str, referer: str = "https://finance.sina.com.cn/") -> tuple[int, bytes, str]:
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Referer": referer})
     with urllib.request.urlopen(req, timeout=20) as resp:
         ctype = resp.headers.get("Content-Type", "application/octet-stream")
         return resp.status, resp.read(), ctype
@@ -111,6 +118,21 @@ class Handler(SimpleHTTPRequestHandler):
             try:
                 status, body, ctype = _get(url)
                 return self._send(status, body, ctype or "application/json; charset=gbk")
+            except Exception as e:
+                return self._send(502, str(e).encode(), "text/plain; charset=utf-8")
+        if parsed.path == "/api/ths/kline":
+            code = _ths_code((q.get("code") or [""])[0])
+            if not code:
+                return self._send(400, b"bad code", "text/plain; charset=utf-8")
+            url = THS_KLINE.format(code=code)
+            try:
+                status, body, ctype = _get(url, f"http://stockpage.10jqka.com.cn/{code}/")
+                if body.startswith(b"quotebridge"):
+                    i = body.find(b"{")
+                    j = body.rfind(b"}")
+                    if i >= 0 and j > i:
+                        body = body[i : j + 1]
+                return self._send(status, body, "application/json; charset=utf-8")
             except Exception as e:
                 return self._send(502, str(e).encode(), "text/plain; charset=utf-8")
         return super().do_GET()
