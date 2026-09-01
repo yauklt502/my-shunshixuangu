@@ -26,13 +26,26 @@
     }
     header {
       border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      padding: 0;
       background: var(--panel);
     }
-    header h1 { font-size: 15px; font-weight: 600; color: var(--accent); }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      flex-wrap: wrap;
+    }
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: #0d1117;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; }
     .badge {
       font-size: 11px;
       padding: 2px 8px;
@@ -46,7 +59,7 @@
       grid-template-rows: auto 1fr;
       gap: 1px;
       background: var(--border);
-      height: calc(100vh - 49px);
+      height: calc(100vh - 96px);
     }
     .panel {
       background: var(--panel);
@@ -164,18 +177,31 @@
       border-radius: 4px;
     }
     .header-select:focus { outline: 1px solid var(--accent); }
+    .header-btn {
+      background: #238636;
+      color: #fff;
+      border: none;
+      font-family: var(--font);
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .header-btn.secondary { background: #30363d; color: var(--text); }
     #ws-badge.connected { color: var(--down); border-color: var(--down); }
     #ws-badge.connecting { color: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
   <header>
-    <h1>顺时选股 · 复盘看板</h1>
-    <span class="badge">BACKTEST</span>
-    <span class="badge" id="env-badge">本地模式</span>
-    <span class="badge" id="ws-badge">WS: 未连接</span>
-    <div class="header-right">
-      <label style="font-size:11px;color:var(--muted)">数据端口</label>
+    <div class="header-top">
+      <h1>顺时选股 · 复盘看板</h1>
+      <span class="badge">BACKTEST</span>
+      <span class="badge" id="env-badge">本地模式</span>
+      <span class="badge" id="ws-badge">WS: 未连接</span>
+    </div>
+    <div class="header-tools">
+      <span style="font-size:11px;color:var(--muted)">数据端口</span>
       <select id="data-port" class="header-select" title="行情数据源">
         <option value="eastmoney" selected>东方财富实时</option>
         <option value="tushare">Tushare</option>
@@ -183,12 +209,15 @@
         <option value="ths">同花顺</option>
         <option value="mock">本地模拟</option>
       </select>
-      <label style="font-size:11px;color:var(--muted)">API</label>
+      <button id="btn-connect" class="header-btn" type="button">连接</button>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">API端口</span>
       <select id="api-port" class="header-select" title="后端 API 端口">
-        <option value="8000" selected>:8000</option>
-        <option value="8080">:8080</option>
-        <option value="3000">:3000</option>
+        <option value="8000" selected>8000</option>
+        <option value="8080">8080</option>
+        <option value="3000">3000</option>
       </select>
+      <button id="btn-open-dashboard" class="header-btn secondary" type="button">打开看板</button>
+      <span id="connect-hint" style="font-size:11px;color:var(--muted)">请先运行 start.bat，再点「连接」</span>
     </div>
   </header>
 
@@ -279,6 +308,7 @@
     let ws = null;
     let wsRetryTimer = null;
     let overviewTimer = null;
+    let wsManualConnect = false;
     let useBackend = false;
 
     function getApiBase() {
@@ -286,18 +316,12 @@
         return window.location.origin;
       }
       const port = document.getElementById("api-port")?.value || localStorage.getItem("api_port") || "8000";
-      return `http://localhost:${port}`;
+      return `http://127.0.0.1:${port}`;
     }
 
     function getWsUrl() {
-      const base = getApiBase();
-      try {
-        const u = new URL(base);
-        const proto = u.protocol === "https:" ? "wss:" : "ws:";
-        return `${proto}//${u.host}/ws`;
-      } catch (_) {
-        return "ws://localhost:8000/ws";
-      }
+      const port = document.getElementById("api-port")?.value || localStorage.getItem("api_port") || "8000";
+      return `ws://127.0.0.1:${port}/ws`;
     }
 
     function getDataPort() {
@@ -314,11 +338,61 @@
         el.textContent = "WS: 连接中...";
         el.classList.add("connecting");
       } else {
-        el.textContent = location.protocol === "file:" ? "WS: 未连接(请启动API)" : "WS: 未连接";
+        el.textContent = location.protocol === "file:" ? "WS: 未连接(请运行start.bat)" : "WS: 未连接";
+      }
+      const hint = document.getElementById("connect-hint");
+      if (hint) {
+        hint.textContent = state === "connected"
+          ? "已连接 · 数据端口: " + document.getElementById("data-port").selectedOptions[0].text
+          : "请先运行 start.bat，再点「连接」";
+        hint.style.color = state === "connected" ? "var(--down)" : "var(--muted)";
       }
     }
 
-    function connectWebSocket() {
+    async function testBackendConnection() {
+      try {
+        const resp = await fetch(`${getApiBase()}/api/data/sources`, { signal: AbortSignal.timeout(3000) });
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function connectBackend() {
+      wsManualConnect = true;
+      localStorage.setItem("api_port", document.getElementById("api-port").value);
+      setWsStatus("connecting");
+      const ok = await testBackendConnection();
+      if (!ok) {
+        setWsStatus("disconnected");
+        alert(
+          "无法连接后端 (http://127.0.0.1:" + document.getElementById("api-port").value + ")\n\n" +
+          "请按顺序操作：\n" +
+          "1. 双击 deploy.bat 或 一键部署到E盘.bat\n" +
+          "2. 双击 start.bat 启动服务\n" +
+          "3. 浏览器打开 http://127.0.0.1:8000\n" +
+          "4. 再点击「连接」按钮\n\n" +
+          "若 .bat 双击无反应，请右键「以管理员身份运行」或使用 install.ps1"
+        );
+        return;
+      }
+      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      connectWebSocket(true);
+      try {
+        await fetch(`${getApiBase()}/api/data/source`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: getDataPort() }),
+        });
+      } catch (_) {}
+      await refreshOverview();
+      document.getElementById("env-badge").textContent = "API";
+      const symbol = document.getElementById("cfg-symbol").value;
+      if (getDataPort() === "eastmoney") await loadEastmoneyBars(symbol);
+    }
+
+    function connectWebSocket(manual) {
       if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
         return;
       }
@@ -334,7 +408,9 @@
       ws.onopen = () => setWsStatus("connected");
       ws.onclose = () => {
         setWsStatus("disconnected");
-        wsRetryTimer = setTimeout(connectWebSocket, 3000);
+        if (wsManualConnect) {
+          wsRetryTimer = setTimeout(() => connectWebSocket(false), 5000);
+        }
       };
       ws.onerror = () => setWsStatus("disconnected");
       ws.onmessage = (ev) => {
@@ -778,20 +854,25 @@
       } catch (_) {}
     }
 
+    document.getElementById("btn-connect").addEventListener("click", connectBackend);
+    document.getElementById("btn-open-dashboard").addEventListener("click", () => {
+      window.open(`${getApiBase()}/`, "_blank");
+    });
     document.getElementById("data-port").addEventListener("change", (e) => switchDataSource(e.target.value));
     document.getElementById("api-port").addEventListener("change", () => {
       localStorage.setItem("api_port", document.getElementById("api-port").value);
       if (ws) { ws.close(); ws = null; }
-      connectWebSocket();
-      refreshOverview();
+      if (wsManualConnect) connectBackend();
     });
 
     initStockList();
-    updateOverview();
-    connectWebSocket();
-    overviewTimer = setInterval(refreshOverview, 30000);
-    if (location.port === "8000" || location.pathname === "/") {
+    setWsStatus("disconnected");
+    if (location.protocol !== "file:" && location.host) {
       document.getElementById("env-badge").textContent = "API";
+      connectBackend();
+      overviewTimer = setInterval(refreshOverview, 30000);
+    } else {
+      document.getElementById("env-badge").textContent = "本地HTML";
     }
     runBacktestLocal();
   </script>

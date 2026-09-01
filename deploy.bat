@@ -1,20 +1,18 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Shunshi - Deploy to E:
+title Shunshi Deploy
 
 echo.
 echo ============================================
-echo   Shunshi Trading - Deploy to E:
+echo   Shunshi Trading - Deploy
 echo ============================================
 echo.
 
-if not exist E:\ (
-    echo [ERROR] Drive E: not found.
-    echo Please mount drive E: or use deploy.bat for auto drive pick.
-    goto FAIL
-)
+set "TARGET="
+if exist E:\ set "TARGET=E:\shunshi-trading"
+if not defined TARGET if exist D:\ set "TARGET=D:\shunshi-trading"
+if not defined TARGET set "TARGET=C:\shunshi-trading"
 
-set "TARGET=E:\shunshi-trading"
 set "SOURCE=%~dp0"
 if "%SOURCE:~-1%"=="\" set "SOURCE=%SOURCE:~0,-1%"
 
@@ -28,7 +26,7 @@ echo [1/5] Copy files...
 robocopy "%SOURCE%" "%TARGET%" /E /XD .git .venv __pycache__ .cache data /XF *.pyc /NFL /NDL /NJH /NJS /nc /ns /np
 set RC=!ERRORLEVEL!
 if !RC! GEQ 8 (
-    echo [ERROR] Copy failed, code !RC!
+    echo [ERROR] Copy failed code !RC!
     goto FAIL
 )
 echo OK
@@ -38,13 +36,10 @@ set "PY="
 where python >nul 2>&1 && set "PY=python"
 if not defined PY where py >nul 2>&1 && set "PY=py -3"
 if not defined PY (
-    echo [ERROR] Python not found.
-    echo Install Python 3.10+ from https://www.python.org/downloads/
-    echo Check "Add Python to PATH" during install.
+    echo [ERROR] Python not found. Install 3.10+ and check Add to PATH.
     goto FAIL
 )
 %PY% --version
-if errorlevel 1 goto FAIL
 
 echo [3/5] Create venv...
 cd /d "%TARGET%"
@@ -59,17 +54,16 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 if errorlevel 1 goto FAIL
 
-echo [5/5] Copy start scripts...
+echo [5/5] Copy scripts...
 copy /Y "%SOURCE%\start.bat" "%TARGET%\start.bat" >nul
 copy /Y "%SOURCE%\stop.bat" "%TARGET%\stop.bat" >nul
-if exist "%SOURCE%\一键启动.bat" copy /Y "%SOURCE%\一键启动.bat" "%TARGET%\一键启动.bat" >nul
 
 echo.
 echo ============================================
 echo   DEPLOY SUCCESS
 echo ============================================
 echo   Folder : %TARGET%
-echo   Next   : double-click start.bat
+echo   Start  : %TARGET%\start.bat
 echo   URL    : http://127.0.0.1:8000
 echo ============================================
 echo.
@@ -80,9 +74,9 @@ goto OK
 
 :FAIL
 echo.
-echo Deploy failed. You can also try:
-echo   1. Right-click - Run as administrator
-echo   2. Run install.ps1 in PowerShell
+echo Deploy failed. Try:
+echo   - Right-click deploy.bat - Run as administrator
+echo   - Or run install.ps1 in PowerShell
 echo.
 pause
 exit /b 1

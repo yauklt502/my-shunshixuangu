@@ -26,33 +26,45 @@
 
 > 适用于 Windows 10/11，需先安装 [Python 3.10+](https://www.python.org/downloads/)（勾选 Add to PATH）
 
-### 步骤
+### 若 .bat 双击无反应
 
-1. 下载/克隆项目到任意目录  
-   ZIP：https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/trading-system-architecture-f820.zip
+1. **优先试英文脚本**：双击 `deploy.bat`（自动选 E/D/C 盘）
+2. **右键以管理员身份运行** `一键部署到E盘.bat`
+3. **PowerShell 备用**：右键 `install.ps1` → 使用 PowerShell 运行
+4. **不要直接双击** `frontend/dashboard.html`，应通过 http://127.0.0.1:8000 访问
 
-2. **双击 `一键部署到E盘.bat`**  
-   - 自动复制到 `E:\shunshi-trading`  
-   - 创建虚拟环境、安装依赖  
-   - 生成桌面快捷方式「顺时选股」
+### 若 WS 未连接
 
-3. **双击 `一键启动.bat`**（或桌面快捷方式）  
-   - 启动 API 服务  
-   - 自动打开浏览器 http://localhost:8000  
-   - 右上角选择「东方财富实时」数据端口
+1. 先运行 `start.bat` 启动后端
+2. 浏览器打开 http://127.0.0.1:8000
+3. 右上角选数据端口 → 点击 **「连接」** 按钮
 
-4. 停止服务：双击 `停止服务.bat` 或在启动窗口按 Ctrl+C
+### 步骤（推荐用 deploy.bat）
 
-### 部署目录结构
+1. 下载 ZIP 并解压到**纯英文路径**（如 `D:\shunshi`）  
+   https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/trading-system-architecture-f820.zip
+
+2. **双击 `deploy.bat`**（若无反应，见下方「故障排除」）
+
+3. **双击 `start.bat`**，浏览器打开 http://127.0.0.1:8000
+
+4. 看板**第二行**可选择「东方财富实时」数据端口，点击「连接后端」
+
+> 详细说明见解压包内的 `部署说明.txt`
+
+### 故障排除：bat 双击无反应
+
+| 方法 | 操作 |
+|------|------|
+| A | 双击 **`deploy.bat`**（英文文件名，比中文 bat 更稳定） |
+| B | 文件夹内 Shift+右键 → 终端，运行：`powershell -ExecutionPolicy Bypass -File install.ps1` |
+| C | 确认已安装 Python 3.10+ 并勾选 **Add to PATH** |
+
+### 安装目录（自动选择，不强制 E 盘）
 
 ```
-E:\shunshi-trading\
-├── 一键启动.bat      ← 日常启动入口
-├── 停止服务.bat
-├── .venv\             ← Python 虚拟环境
-├── src\               ← 后端代码
-├── frontend\          ← 看板页面
-└── data\              ← 运行数据（自动创建）
+有 E 盘 → E:\shunshi-trading
+无 E 盘 → D:\shunshi-trading 或 C:\shunshi-trading
 ```
 
 ## 快速开始（开发者）
