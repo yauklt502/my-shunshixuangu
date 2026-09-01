@@ -32,11 +32,11 @@
     .header-top {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       padding: 10px 16px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
-    header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+    header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
     .badge {
       font-size: 11px;
       padding: 2px 8px;
@@ -161,12 +161,12 @@
     }
     .metric-box .m-label { font-size: 10px; color: var(--muted); }
     .metric-box .m-val { font-size: 14px; margin-top: 2px; }
-    .header-right {
+    .header-tools {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-shrink: 0;
     }
     .header-label {
       font-size: 11px;
@@ -179,9 +179,10 @@
       color: var(--text);
       font-family: var(--font);
       font-size: 12px;
-      padding: 6px 8px;
+      padding: 5px 8px;
       border-radius: 4px;
-      height: 32px;
+      height: 30px;
+      min-width: 108px;
     }
     .header-select:focus { outline: 1px solid var(--accent); }
     .header-connect {
@@ -190,10 +191,10 @@
       border: none;
       font-family: var(--font);
       font-size: 12px;
-      padding: 6px 14px;
+      padding: 5px 16px;
       border-radius: 4px;
       cursor: pointer;
-      height: 32px;
+      height: 30px;
       line-height: 1;
       white-space: nowrap;
     }
@@ -209,22 +210,16 @@
       <span class="badge">BACKTEST</span>
       <span class="badge" id="env-badge">本地模式</span>
       <span class="badge" id="ws-badge">WS: 未连接</span>
-      <div class="header-right">
+      <div class="header-tools">
         <span class="header-label">数据端口</span>
         <select id="data-port" class="header-select" title="行情数据源">
-          <option value="eastmoney" selected>东方财富实时</option>
+          <option value="eastmoney" selected>东方财富</option>
           <option value="tushare">Tushare</option>
           <option value="mootdx">Mootdx</option>
           <option value="ths">同花顺</option>
           <option value="mock">本地模拟</option>
         </select>
         <button id="btn-connect" class="header-connect" type="button">连接</button>
-        <span class="header-label">API端口</span>
-        <select id="api-port" class="header-select" title="后端 API 端口">
-          <option value="8000" selected>8000</option>
-          <option value="8080">8080</option>
-          <option value="3000">3000</option>
-        </select>
       </div>
     </div>
   </header>
@@ -320,18 +315,45 @@
     let overviewTimer = null;
     let wsManualConnect = false;
     let useBackend = false;
+    let apiBase = null;
+
+    const API_PROBE_PORTS = [8000, 8080, 3000];
 
     function getApiBase() {
-      if (location.protocol !== "file:" && location.host) {
-        return window.location.origin;
-      }
-      const port = document.getElementById("api-port")?.value || localStorage.getItem("api_port") || "8000";
-      return `http://127.0.0.1:${port}`;
+      if (apiBase) return apiBase;
+      if (location.protocol !== "file:" && location.host) return location.origin;
+      return "http://127.0.0.1:8000";
     }
 
     function getWsUrl() {
-      const port = document.getElementById("api-port")?.value || localStorage.getItem("api_port") || "8000";
-      return `ws://127.0.0.1:${port}/ws`;
+      const base = getApiBase();
+      const u = new URL(base);
+      const proto = u.protocol === "https:" ? "wss:" : "ws:";
+      return `${proto}//${u.host}/ws`;
+    }
+
+    async function resolveApiBase() {
+      if (location.protocol !== "file:" && location.host) {
+        apiBase = location.origin;
+        return apiBase;
+      }
+      for (const port of API_PROBE_PORTS) {
+        const base = `http://127.0.0.1:${port}`;
+        try {
+          const resp = await fetch(`${base}/api/data/sources`, { signal: AbortSignal.timeout(1500) });
+          if (resp.ok) {
+            apiBase = base;
+            return apiBase;
+          }
+        } catch (_) {}
+      }
+      apiBase = "http://127.0.0.1:8000";
+      return apiBase;
+    }
+
+    async function ensureApiBase() {
+      if (!apiBase) await resolveApiBase();
+      return apiBase;
     }
 
     function getDataPort() {
@@ -361,6 +383,7 @@
 
     async function testBackendConnection() {
       try {
+        await ensureApiBase();
         const resp = await fetch(`${getApiBase()}/api/data/sources`, { signal: AbortSignal.timeout(3000) });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         return true;
@@ -371,19 +394,19 @@
 
     async function connectBackend() {
       wsManualConnect = true;
-      localStorage.setItem("api_port", document.getElementById("api-port").value);
       setWsStatus("connecting");
       const ok = await testBackendConnection();
       if (!ok) {
+        apiBase = null;
         setWsStatus("disconnected");
         alert(
-          "无法连接后端 (http://127.0.0.1:" + document.getElementById("api-port").value + ")\n\n" +
+          "无法连接后端 (" + getApiBase() + ")\n\n" +
           "请按顺序操作：\n" +
           "1. 双击 deploy.bat 或 一键部署到E盘.bat\n" +
           "2. 双击 start.bat 启动服务\n" +
           "3. 浏览器打开 http://127.0.0.1:8000\n" +
-          "4. 再点击「连接」按钮\n\n" +
-          "若 .bat 双击无反应，请右键「以管理员身份运行」或使用 install.ps1"
+          "4. 再点击「连接」\n\n" +
+          "API 端口将自动探测 (8000/8080/3000)"
         );
         return;
       }
@@ -933,7 +956,6 @@
         maxPos: document.getElementById("cfg-max-pos").value,
         period: document.getElementById("cfg-period").value,
         dataPort: getDataPort(),
-        apiPort: document.getElementById("api-port").value,
         lastResult: { totalReturn: result.totalReturn, winRate: result.winRate },
       }));
     }
@@ -952,7 +974,6 @@
         maxPos: document.getElementById("cfg-max-pos").value,
         period: document.getElementById("cfg-period").value,
         dataPort: getDataPort(),
-        apiPort: document.getElementById("api-port").value,
       }));
       alert("配置已保存到 localStorage");
     });
@@ -966,17 +987,11 @@
         if (cfg.maxPos) document.getElementById("cfg-max-pos").value = cfg.maxPos;
         if (cfg.period) document.getElementById("cfg-period").value = cfg.period;
         if (cfg.dataPort) document.getElementById("data-port").value = cfg.dataPort;
-        if (cfg.apiPort) document.getElementById("api-port").value = cfg.apiPort;
       } catch (_) {}
     }
 
     document.getElementById("btn-connect").addEventListener("click", connectBackend);
     document.getElementById("data-port").addEventListener("change", (e) => switchDataSource(e.target.value));
-    document.getElementById("api-port").addEventListener("change", () => {
-      localStorage.setItem("api_port", document.getElementById("api-port").value);
-      if (ws) { ws.close(); ws = null; }
-      if (wsManualConnect) connectBackend();
-    });
 
     initStockList();
     setWsStatus("disconnected");
