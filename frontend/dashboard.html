@@ -971,9 +971,6 @@
     }
 
     document.getElementById("btn-connect").addEventListener("click", connectBackend);
-    document.getElementById("btn-open-dashboard").addEventListener("click", () => {
-      window.open(`${getApiBase()}/`, "_blank");
-    });
     document.getElementById("data-port").addEventListener("change", (e) => switchDataSource(e.target.value));
     document.getElementById("api-port").addEventListener("change", () => {
       localStorage.setItem("api_port", document.getElementById("api-port").value);
