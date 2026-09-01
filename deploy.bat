@@ -48,11 +48,10 @@ if not exist ".venv\Scripts\python.exe" (
     if errorlevel 1 goto FAIL
 )
 
-echo [4/5] Install packages...
-call ".venv\Scripts\activate.bat"
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+echo [4/5] 安装依赖（国内镜像，请稍候）...
+call "%SOURCE%\install_deps.bat"
 if errorlevel 1 goto FAIL
+echo OK
 
 echo [5/5] Copy scripts...
 copy /Y "%SOURCE%\start.bat" "%TARGET%\start.bat" >nul

@@ -43,6 +43,11 @@ A: 1) 安装 Python 3.10+ 并勾选 Add to PATH
    2) 用方法二的 PowerShell 部署
    3) 右键 bat -> 以管理员身份运行
 
+Q: 部署卡在 pip / Requirement already satisfied 很久？
+A: 旧版会先升级 pip（从国外下载很慢）。新版已跳过 pip 升级，改用清华镜像。
+   看到「首次安装 numpy/pandas」后等待 1-3 分钟即可，不要关窗口。
+   若仍失败，用 PowerShell 运行 install.ps1。
+
 Q: 没有 E 盘怎么办？
 A: 新版本会自动装到 D 盘或 C 盘，无需 E 盘。
 

@@ -30,8 +30,19 @@ else { throw "Python not found. Install from https://www.python.org/downloads/" 
 Write-Host "[3/4] Create venv + install..."
 Set-Location $Target
 if (-not (Test-Path ".venv\Scripts\python.exe")) { Invoke-Expression "$py -m venv .venv" }
-& ".venv\Scripts\python.exe" -m pip install --upgrade pip
-& ".venv\Scripts\pip.exe" install -r requirements.txt
+$env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
+$env:PIP_DEFAULT_TIMEOUT = "120"
+Write-Host "       使用清华镜像，首次约 1-3 分钟，请勿关闭..."
+& ".venv\Scripts\pip.exe" install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn --prefer-binary
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "       清华镜像失败，尝试阿里云..."
+    & ".venv\Scripts\pip.exe" install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com --prefer-binary
+}
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "       尝试官方 PyPI..."
+    & ".venv\Scripts\pip.exe" install -r requirements.txt --prefer-binary
+}
+if ($LASTEXITCODE -ne 0) { throw "pip install failed" }
 
 Write-Host "[4/4] Done"
 Write-Host ""
