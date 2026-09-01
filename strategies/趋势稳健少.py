@@ -276,6 +276,7 @@ def main():
         print(line)
         print(f"✅ 选出 {len(data)} 只（上限 {MAX_PICKS}，不够不凑）")
         print(f"📌 持有 {HOLD_DAYS} 个交易日；跌破 MA20 提前走。不要每天满仓换股。")
+        print("   回测提醒：隔夜（次日开盘→收盘）期望最高；拿满 5 日会摊薄，这是降换手不是加强收益。")
     else:
         print("[i] 今日无符合条件的稳健标的 → 空仓，不要用次优票凑满仓。")
 
