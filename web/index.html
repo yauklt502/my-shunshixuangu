@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顺势选股 · 四套合一</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24'><rect x='4' y='8' width='6' height='10' fill='%23f5465b'/><rect x='18' y='4' width='6' height='14' fill='%2322c55e'/></svg>">
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#0e1320; --panel:#141a28; --panel2:#1b2233;
+    --border:#222c40; --line:#1a2233;
+    --txt:#e6edf3; --muted:#8b97a8; --dim:#5d6878;
+    --up:#f5465b; --down:#22c55e; --watch:#eab308; --accent:#3b82f6;
+    --mono:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+    font-size:14px;line-height:1.5}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border);
+    background:rgba(20,26,40,.78);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30;flex-wrap:wrap}
+  .logo{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--up),#ff8a4c);color:#fff;font-weight:800;font-size:18px;flex:0 0 auto}
+  .title{font-size:17px;font-weight:700}
+  .title small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+  .spacer{flex:1}
+  .clock{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .conn{font-size:12px;color:var(--down)}
+  .btn{background:var(--panel2);border:1px solid var(--border);color:var(--txt);padding:8px 14px;
+    border-radius:9px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn:hover{background:#243049}
+  .btn.primary{background:linear-gradient(135deg,var(--up),#ff7a45);border:none;color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:18px;padding:18px 22px 48px;align-items:start}
+  .side{display:flex;flex-direction:column;gap:14px;position:sticky;top:78px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .card h3{margin:0 0 12px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.4px;
+    display:flex;align-items:center;gap:8px}
+  .card h3::before{content:"";width:3px;height:13px;background:var(--up);border-radius:2px}
+  .note{font-size:12px;color:var(--dim);line-height:1.7}
+  .hint{display:none;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);color:var(--watch);
+    padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:14px}
+  .hint.show{display:block}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .stat .n{font-size:24px;font-weight:800;font-family:var(--mono)}
+  .stat .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .stat.hi .n{color:var(--up)} .stat.mid .n{color:var(--watch)} .stat.lo .n{color:var(--muted)}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{background:var(--panel2);border:1px solid var(--border);color:var(--muted);padding:8px 14px;
+    border-radius:9px;cursor:pointer;font-weight:600}
+  .tab.on{color:#fff;border-color:#3a4760;background:#243049}
+  .tab .c{font-family:var(--mono);margin-left:6px;color:var(--up)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  th{color:var(--dim);font-weight:500;font-size:12px}
+  td.mono,th.mono{font-family:var(--mono)}
+  .up{color:var(--up)} .down{color:var(--down)} .warn{color:var(--watch)}
+  .banner{font-size:12px;color:var(--watch);margin:0 0 10px}
+  .empty{color:var(--dim);padding:40px;text-align:center}
+  .scroll{overflow:auto}
+  .foot{padding:16px 22px 36px;color:var(--dim);font-size:11px;line-height:1.8;border-top:1px solid var(--line)}
+  .lamp{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%}
+  @media (max-width:860px){
+    .layout{display:flex;flex-direction:column;padding:12px}
+    .side{position:static}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">4</div>
+  <div class="title">顺势选股<small>主板 · 创业板 · 妖龙隔夜 · 龙头观察 · 腾讯行情</small></div>
+  <div class="spacer"></div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="conn" id="conn">● 未测连接</div>
+  <button class="btn" id="connBtn">测连接</button>
+  <button class="btn primary" id="scanBtn">扫描四套</button>
+</header>
+
+<div class="layout">
+  <aside class="side">
+    <div class="card">
+      <h3>怎么用</h3>
+      <div class="note">点「扫描四套」：新浪拉股票列表，腾讯批量行情 + 前复权日 K（和 <a href="https://zt.mininas.cc/" style="color:#93c5fd">zt.mininas.cc</a> 同一套公网源）。浏览器直连，不用通达信。</div>
+      <button class="btn primary" id="scanBtn2" style="width:100%;margin-top:12px">扫描四套</button>
+      <div class="note" id="prog" style="margin-top:10px">尚未扫描</div>
+    </div>
+    <div class="card">
+      <h3>四套规则</h3>
+      <div class="note"><b style="color:var(--txt)">主板稳健少</b> 最多 3 只，不够不凑；持有偏隔夜 / 最多 3–5 日，破 MA20 走。</div>
+      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">创业板放宽</b> 无 MA5，扫全部 300，最多 8 只。</div>
+      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">主板妖龙</b> 红灯空仓，只做隔夜。</div>
+      <div class="note" style="margin-top:8px"><b style="color:var(--txt)">龙头盯盘</b> 只观察，禁止自动下单。</div>
+    </div>
+    <div class="card">
+      <h3>数据源</h3>
+      <div class="note">行情：web.sqt.gtimg.cn / qt.gtimg.cn<br>日K：ifzq.gtimg.cn 前复权<br>列表：新浪 A 股节点（缓存 12 小时）</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="hint" id="hint"></div>
+    <div class="stats">
+      <div class="stat hi"><div class="n" id="nMain">—</div><div class="l">主板稳健少</div></div>
+      <div class="stat mid"><div class="n" id="nCyb">—</div><div class="l">创业板放宽</div></div>
+      <div class="stat lo"><div class="n" id="nYao">—</div><div class="l">妖龙正式</div></div>
+      <div class="stat"><div class="n" id="nDrag">—</div><div class="l">龙头观察</div></div>
+      <div class="stat"><div class="n" id="nLamp">—</div><div class="l">市场情绪</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" data-tab="main">主板 <span class="c" id="cMain">0</span></button>
+      <button class="tab" data-tab="cyb">创业板 <span class="c" id="cCyb">0</span></button>
+      <button class="tab" data-tab="yao">妖龙 <span class="c" id="cYao">0</span></button>
+      <button class="tab" data-tab="drag">龙头观察 <span class="c" id="cDrag">0</span></button>
+    </div>
+    <div class="card">
+      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后点扫描。休市时用最近交易日行情。</div>
+      <div class="scroll" id="panel"></div>
+    </div>
+  </main>
+</div>
+<div class="foot">
+  选股条件与仓库 strategies/ 四套实盘脚本一致。次日开盘涨停视为买不进。龙头只观察不下单。本页不构成投资建议。
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SERVERS = [
+  { quote: "web.sqt.gtimg.cn", kline: "ifzq.gtimg.cn" },
+  { quote: "qt.gtimg.cn", kline: "web.ifzq.gtimg.cn" },
+];
+let si = 0;
+const cur = () => SERVERS[si % SERVERS.length];
+const USE_PROXY = location.protocol === "http:" || location.protocol === "https:";
+
+function quoteUrl(codes) {
+  if (USE_PROXY) return `/api/quote?q=${encodeURIComponent(codes)}`;
+  return `https://${cur().quote}/q=${codes}`;
+}
+function klineUrl(code, count) {
+  if (USE_PROXY) return `/api/kline?code=${encodeURIComponent(code)}&count=${count}`;
+  return `https://${cur().kline}/appstock/app/fqkline/get?param=${code},day,,,${count},qfq`;
+}
+function sinaCountUrl() {
+  if (USE_PROXY) return "/api/sina/count";
+  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=hs_a";
+}
+function sinaListUrl(page, pageSize) {
+  if (USE_PROXY) return `/api/sina/list?page=${page}&num=${pageSize}`;
+  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
+    + `?page=${page}&num=${pageSize}&sort=symbol&asc=1&node=hs_a&symbol=&_s_r_a=page`;
+}
+const state = {
+  running: false,
+  tab: "main",
+  main: [],
+  cyb: [],
+  yao: [],
+  yaoNear: [],
+  drag: [],
+  maybe: [],
+  lamp: { code: 1, label: "未测", score: null },
+  src: "",
+};
+
+function tick() {
+  $("clock").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+}
+setInterval(tick, 1000); tick();
+
+function showHint(t) { const h = $("hint"); h.textContent = t; h.classList.add("show"); }
+function hideHint() { $("hint").classList.remove("show"); }
+function setProg(t) { $("prog").textContent = t; }
+
+async function safeFetch(url, { json = true, timeout = 15000 } = {}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return json ? await r.json() : r;
+  } finally { clearTimeout(t); }
+}
+
+async function decodeGBK(resp) {
+  const buf = await resp.arrayBuffer();
+  try { return new TextDecoder("gbk").decode(buf); }
+  catch (e) { return new TextDecoder("utf-8").decode(buf); }
+}
+
+async function fetchTXQuotes(codes) {
+  const out = {};
+  const B = 350;
+  for (let i = 0; i < codes.length; i += B) {
+    const sub = codes.slice(i, i + B);
+    const url = quoteUrl(sub.join(","));
+    try {
+      const r = await safeFetch(url, { json: false });
+      const txt = await decodeGBK(r);
+      txt.split(";").forEach(line => {
+        const m = line.match(/v_(\w+)="(.+)"/);
+        if (!m) return;
+        const code = m[1], f = m[2].split("~");
+        if (f.length < 45) return;
+        const price = +f[3], prev = +f[4], open = +f[5];
+        const high = +f[33], low = +f[34];
+        const volHand = +f[6];
+        const amountWan = +f[37];
+        if (!(price > 0) || !(prev > 0)) return;
+        const name = f[1] || "";
+        if (/ST|退/.test(name)) return;
+        out[code] = {
+          code, name, price, prev, open, high, low,
+          pct: +((price / prev - 1) * 100).toFixed(2),
+          amp: low > 0 ? +(((high - low) / low) * 100).toFixed(2) : 0,
+          amount: isFinite(amountWan) ? amountWan * 10000 : 0,
+          vol: volHand,
+          volRatio: +f[43] || null,
+          turn: +f[38] || null,
+          cap: +f[44] || null,
+        };
+      });
+    } catch (e) { si++; }
+    setProg(`行情 ${Math.min(i + B, codes.length)}/${codes.length}`);
+  }
+  return out;
+}
+
+async function fetchKline(code, count = 130) {
+  const url = klineUrl(code, count);
+  const j = await safeFetch(url, { json: true });
+  const node = j.data && (j.data[code] || j.data[code.toUpperCase()]);
+  const k = node && (node.qfqday || node.day);
+  if (!k || !k.length) throw new Error("no kline");
+  return k.map(x => ({
+    d: x[0], o: +x[1], c: +x[2], h: +x[3], l: +x[4], v: x[5] != null && x[5] !== "" ? +x[5] : 0,
+  }));
+}
+
+async function mapLimit(items, limit, fn) {
+  const out = [];
+  let i = 0;
+  const workers = Array.from({ length: limit }, async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx], idx);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
+async function getList() {
+  const cache = localStorage.getItem("hs_a_list");
+  const ts = +localStorage.getItem("hs_a_list_ts") || 0;
+  if (cache && Date.now() - ts < 12 * 3600 * 1000) {
+    try { return JSON.parse(cache); } catch (e) {}
+  }
+  const countUrl = sinaCountUrl();
+  const cr = await safeFetch(countUrl, { json: false });
+  const raw = (await decodeGBK(cr)).replace(/"/g, "").trim();
+  const total = parseInt(raw, 10) || 4500;
+  const pageSize = 80;
+  const pages = Math.ceil(total / pageSize);
+  const rows = [];
+  const idxs = Array.from({ length: pages }, (_, i) => i + 1);
+  await mapLimit(idxs, 6, async page => {
+    const url = sinaListUrl(page, pageSize);
+    try {
+      const r = await safeFetch(url, { json: false, timeout: 20000 });
+      const txt = await decodeGBK(r);
+      const batch = JSON.parse(txt);
+      if (Array.isArray(batch)) rows.push(...batch);
+    } catch (e) {}
+    if (rows.length % 400 < 80) setProg(`列表 ${rows.length}/${total}`);
+  });
+  const prefix = /^(000|001|002|300|301|600|601|603|605|688)/;
+  const out = [];
+  const seen = new Set();
+  rows.forEach(it => {
+    const code = String(it.code || "").padStart(6, "0");
+    const symbol = String(it.symbol || (code.startsWith("6") ? "sh" + code : "sz" + code));
+    const name = it.name || "";
+    if (!prefix.test(code) || /ST|退/.test(name) || seen.has(symbol)) return;
+    seen.add(symbol);
+    out.push({ code, symbol, name });
+  });
+  if (out.length > 500) {
+    try {
+      localStorage.setItem("hs_a_list", JSON.stringify(out));
+      localStorage.setItem("hs_a_list_ts", String(Date.now()));
+    } catch (e) {}
+  }
+  return out;
+}
+
+function mean(arr) {
+  if (!arr.length) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+function maAt(closes, n, shift = 0) {
+  const end = closes.length - shift;
+  if (end < n) return null;
+  return mean(closes.slice(end - n, end));
+}
+function volRatioFromK(todayVol, kl) {
+  if (!kl || kl.length < 6 || !(todayVol > 0)) return null;
+  const hist = kl.slice(-6, -1).map(x => x.v || 0).filter(v => v > 0);
+  if (hist.length < 3) return null;
+  const avg5 = mean(hist);
+  return avg5 > 0 ? +(todayVol / avg5).toFixed(2) : null;
+}
+function consecLimit(kl, thr) {
+  let n = 0;
+  for (let i = kl.length - 1; i >= 1; i--) {
+    if (kl[i - 1].c <= 0) break;
+    if (kl[i].c / kl[i - 1].c >= thr) n++;
+    else break;
+  }
+  return n;
+}
+function feat(kl, quote) {
+  const closes = kl.map(x => x.c);
+  const n = closes.length;
+  const ma5 = maAt(closes, 5);
+  const ma10 = maAt(closes, 10);
+  const ma20 = maAt(closes, 20);
+  const ma60 = maAt(closes, 60);
+  const ma120 = maAt(closes, 120);
+  const ma5_3 = maAt(closes, 5, 3);
+  const ma10_3 = maAt(closes, 10, 3);
+  const ma20_5 = maAt(closes, 20, 5);
+  const ma60_last = maAt(closes, 60, 1);
+  const close = quote.price;
+  const vr = volRatioFromK(quote.vol, kl) ?? quote.volRatio;
+  let amp10 = null;
+  if (kl.length >= 10) {
+    const amps = kl.slice(-10).map(x => x.l > 0 ? (x.h - x.l) / x.l * 100 : 0);
+    amp10 = mean(amps);
+  }
+  let amp10c = null;
+  if (kl.length >= 10) {
+    const amps = kl.slice(-10).map(x => x.c > 0 ? (x.h - x.l) / x.c * 100 : 0);
+    amp10c = mean(amps);
+  }
+  const rise5 = n > 5 && closes[n - 6] > 0 ? (close / closes[n - 6] - 1) * 100 : null;
+  const rise10 = n > 10 && closes[n - 11] > 0 ? (close / closes[n - 11] - 1) * 100 : null;
+  let up10 = 0;
+  for (let i = Math.max(1, n - 10); i < n; i++) if (closes[i] > closes[i - 1]) up10++;
+  const high30 = kl.slice(-30).reduce((m, x) => Math.max(m, x.h), 0);
+  const pullback = high30 > 0 ? (high30 - close) / high30 * 100 : null;
+  let vol3now = null, vol3old = null;
+  if (kl.length >= 6) {
+    vol3now = mean(kl.slice(-3).map(x => x.v));
+    vol3old = mean(kl.slice(-6, -3).map(x => x.v));
+  }
+  const num = quote.code.replace(/^(sh|sz)/, "");
+  const thr = /^(300|688)/.test(num) ? 1.195 : 1.095;
+  return {
+    nobs: n, close, ma5, ma10, ma20, ma60, ma120: ma120 ?? ma60, ma120raw: ma120,
+    ma5_3, ma10_3, ma20_5, ma60_last, vr, amp10, amp10c, rise5, rise10, up10,
+    high30, pullback, vol3now, vol3old,
+    bias20: ma20 > 0 ? (close - ma20) / ma20 * 100 : null,
+    spread2060: ma60 > 0 ? (ma20 - ma60) / ma60 : null,
+    spread520: ma20 > 0 && ma5 != null ? (ma5 - ma20) / ma20 * 100 : null,
+    consec: consecLimit(kl, thr),
+  };
+}
+
+function screenMain(q, f) {
+  const num = q.code.replace(/^(sh|sz)/, "");
+  if (!/^(600|601|603|605|000|001|002)/.test(num)) return null;
+  if (!(q.pct > 2 && q.pct < 5.5 && q.amount >= 1e8 && q.amp <= 10)) return null;
+  if (f.nobs < 120) return null;
+  if (!(q.price > f.ma20 && f.ma20 > f.ma60 && f.ma60 > f.ma120raw && f.ma60 > f.ma60_last && f.spread2060 > 0.01 && f.vr >= 1.2)) return null;
+  const volSc = Math.min(f.vr, 5) / 5 * 40;
+  const pctSc = q.pct / 5.5 * 20;
+  let trend = q.price / f.ma20 * 0.5 + f.ma20 / f.ma60 * 0.3 + f.ma60 / f.ma120raw * 0.2;
+  trend = Math.min(trend, 1.2) / 1.2 * 40;
+  return { ...q, ...f, score: +(volSc + pctSc + trend).toFixed(2) };
+}
+
+function screenCyb(q, f) {
+  const num = q.code.replace(/^(sh|sz)/, "");
+  if (!num.startsWith("300")) return null;
+  if (!(q.pct >= 3 && q.pct <= 12 && (f.vr ?? 0) >= 1.5)) return null;
+  if (f.nobs < 60) return null;
+  const ma120 = f.ma120raw || f.ma60;
+  if (!(q.price > f.ma20 && f.ma20 > f.ma60 && f.ma60 > ma120 && f.ma60 > f.ma60_last)) return null;
+  if (!(f.amp10 < 12 && f.bias20 < 18)) return null;
+  const volSc = Math.min(f.vr, 8) / 8 * 35;
+  const trendSc = (f.ma20 / f.ma60) * 35;
+  const ampSc = (12 - f.amp10) / 12 * 30;
+  return { ...q, ...f, score: +(volSc + trendSc + ampSc).toFixed(2) };
+}
+
+function screenYao(q, f) {
+  const num = q.code.replace(/^(sh|sz)/, "");
+  if (!/^(600|601|603|605|000|001)/.test(num) || num.startsWith("002")) return { skip: true };
+  if (f.nobs < 100) return { skip: true };
+  const core = f.ma5 > f.ma10 && f.ma10 > f.ma20 && f.ma20 > f.ma60
+    && f.ma5 > f.ma5_3 && f.ma10 > f.ma10_3 && f.ma20 > f.ma20_5
+    && q.price >= f.ma5 && f.rise5 >= 12 && f.rise10 >= 20 && q.pct >= 2
+    && f.vr >= 1 && f.vr <= 8 && q.amount >= 8e8 && f.up10 >= 7;
+  if (!core) return { skip: true };
+  const boom = f.vol3old > 0 && f.vol3now > f.vol3old * 2;
+  const near = q.price < f.high30 * 0.97;
+  const pb = f.pullback > 5;
+  const vola = f.amp10c > 12;
+  const fails = [];
+  if (boom) fails.push("爆量");
+  if (near) fails.push("近新高");
+  if (pb) fails.push("回撤");
+  if (vola) fails.push("波动");
+  const limitUp = f.consec;
+  const subLb = limitUp >= 2;
+  const score = subLb
+    ? limitUp * 30 + q.pct * 6 + f.vr * 25 + f.rise5 * 2 + f.up10 * 8 + (5 - f.pullback) * 5
+    : f.rise5 * 3 + f.rise10 * 2 + q.pct * 5 + f.vr * 20 + (f.spread520 || 0) * 8 + limitUp * 25 + f.up10 * 10 + (5 - f.pullback) * 10;
+  return { ...q, ...f, score: +score.toFixed(2), type: subLb ? "连板妖" : "趋势妖", fails, near: fails.length > 0 };
+}
+
+async function sentiment() {
+  try {
+    const [sh, sz] = await Promise.all([fetchKline("sh000001", 30), fetchKline("sz399001", 30)]);
+    const c = sh.map(x => x.c);
+    const ma5 = maAt(c, 5), ma10 = maAt(c, 10);
+    const last = c[c.length - 1], prev = c[c.length - 2];
+    const pct = prev > 0 ? (last / prev - 1) * 100 : 0;
+    const rise5 = c.length > 5 && c[c.length - 6] > 0 ? (last / c[c.length - 6] - 1) * 100 : 0;
+    let score = 0;
+    score += pct > 0.3 ? 35 : (pct > -0.3 ? 18 : 0);
+    score += last > ma5 ? 25 : 0;
+    score += ma5 > ma10 ? 25 : 0;
+    score += rise5 > 0 ? 15 : 0;
+    if (sz.length >= 2) {
+      const p2 = sz[sz.length - 1].c / sz[sz.length - 2].c * 100 - 100;
+      if (p2 <= -1) score = Math.max(0, score - 10);
+    }
+    const code = score >= 70 ? 2 : score >= 40 ? 1 : 0;
+    const label = code === 2 ? "绿灯" : code === 1 ? "黄灯" : "红灯空仓";
+    return { code, score, label, pct: +pct.toFixed(2) };
+  } catch (e) {
+    return { code: 1, score: null, label: "黄灯(指数失败)", pct: null };
+  }
+}
+
+function fmtAmt(v) {
+  if (!(v > 0)) return "—";
+  if (v >= 1e8) return (v / 1e8).toFixed(2) + "亿";
+  if (v >= 1e4) return (v / 1e4).toFixed(0) + "万";
+  return String(Math.round(v));
+}
+function pctCell(p) {
+  const cls = p > 0 ? "up" : p < 0 ? "down" : "";
+  return `<td class="mono ${cls}">${p > 0 ? "+" : ""}${p.toFixed(2)}%</td>`;
+}
+function table(rows, cols) {
+  if (!rows.length) return `<div class="empty">今日无符合条件标的 → 空仓</div>`;
+  return `<table><thead><tr>${cols.map(c => `<th>${c.h}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r => `<tr>${cols.map(c => c.html ? c.html(r) : `<td class="${c.mono ? "mono" : ""}">${c.v(r)}</td>`).join("")}</tr>`).join("")
+  }</tbody></table>`;
+}
+
+function render() {
+  $("nMain").textContent = state.main.length;
+  $("nCyb").textContent = state.cyb.length;
+  $("nYao").textContent = state.yao.length;
+  $("nDrag").textContent = state.drag.length;
+  $("nLamp").textContent = state.lamp.label;
+  $("cMain").textContent = state.main.length;
+  $("cCyb").textContent = state.cyb.length;
+  $("cYao").textContent = state.yao.length;
+  $("cDrag").textContent = state.drag.length;
+  const colsScore = [
+    { h: "名称", v: r => r.name },
+    { h: "代码", mono: true, v: r => r.code.replace(/^(sh|sz)/, "") },
+    { h: "现价", mono: true, v: r => r.price.toFixed(2) },
+    { h: "涨幅", html: r => pctCell(r.pct) },
+    { h: "量比", mono: true, v: r => r.vr != null ? r.vr.toFixed(2) : "—" },
+    { h: "成交额", mono: true, v: r => fmtAmt(r.amount) },
+    { h: "评分", mono: true, v: r => r.score.toFixed(2) },
+  ];
+  let html = "";
+  if (state.tab === "main") {
+    html = `<div class="banner">最多 3 只，不够不凑。持有偏隔夜；拿满 5 日会摊薄超额。跌破 MA20 提前走。</div>` + table(state.main, colsScore);
+  } else if (state.tab === "cyb") {
+    html = `<div class="banner">放宽版：无 MA5，全部创业板，最多 8 只。</div>` + table(state.cyb, colsScore);
+  } else if (state.tab === "yao") {
+    html = `<div class="banner">情绪 ${state.lamp.label}${state.lamp.score != null ? "（" + state.lamp.score + "分）" : ""}。红灯空仓。只做隔夜：次日开盘买、次日收盘卖。</div>`;
+    if (state.lamp.code === 0) html += `<div class="empty">情绪红灯，禁止下单</div>`;
+    else html += table(state.yao, colsScore.concat([{ h: "类型", v: r => r.type }, { h: "连板", mono: true, v: r => r.consec }]));
+    if (state.yaoNear.length) {
+      html += `<div class="banner" style="margin-top:16px">近失候选（仅观察，不要拿来凑单）</div>` + table(state.yaoNear.slice(0, 10), colsScore.concat([{ h: "未过", v: r => (r.fails || []).join(",") }]));
+    }
+  } else {
+    html = `<div class="banner">仅观察，禁止自动下单。涨停/连板不追；可买观察是未涨停跟风。</div>`;
+    html += `<div class="note" style="margin-bottom:8px">总龙头</div>` + table(state.drag, [
+      { h: "名称", v: r => r.name },
+      { h: "代码", mono: true, v: r => r.code.replace(/^(sh|sz)/, "") },
+      { h: "涨幅", html: r => pctCell(r.pct) },
+      { h: "成交额", mono: true, v: r => fmtAmt(r.amount) },
+      { h: "连板", mono: true, v: r => r.consec },
+      { h: "涨停", v: r => r.isLimit ? "是" : "" },
+      { h: "评分", mono: true, v: r => r.score.toFixed(1) },
+    ]);
+    html += `<div class="note" style="margin:14px 0 8px">可买观察（主板 5%–9% / 创业科创 5%–15%，未涨停）</div>`;
+    html += table(state.maybe, [
+      { h: "名称", v: r => r.name },
+      { h: "代码", mono: true, v: r => r.code.replace(/^(sh|sz)/, "") },
+      { h: "涨幅", html: r => pctCell(r.pct) },
+      { h: "成交额", mono: true, v: r => fmtAmt(r.amount) },
+    ]);
+  }
+  $("panel").innerHTML = html;
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.onclick = () => {
+    state.tab = btn.dataset.tab;
+    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b === btn));
+    render();
+  };
+});
+
+async function checkConn() {
+  $("conn").textContent = "连接测试…";
+  $("conn").style.color = "var(--muted)";
+  try {
+    const kUrl = klineUrl("sh600519", 5);
+    const j = await safeFetch(kUrl, { json: true });
+    if (!(j && j.data)) throw new Error("no data");
+    state.src = "tx";
+    $("conn").textContent = "● 实时已连 · 腾讯";
+    $("conn").style.color = "var(--down)";
+    hideHint();
+    return true;
+  } catch (e) {
+    $("conn").textContent = "● 未连上腾讯";
+    $("conn").style.color = "var(--up)";
+    showHint("腾讯行情无法直连。请用 Chrome/Edge 打开本页，不要用拦截外网的预览面板。");
+    return false;
+  }
+}
+
+async function scanAll() {
+  if (state.running) return;
+  state.running = true;
+  ["scanBtn", "scanBtn2"].forEach(id => { $(id).disabled = true; $(id).textContent = "扫描中…"; });
+  try {
+    setProg("股票列表…");
+    const meta = await getList();
+    if (meta.length < 100) throw new Error("列表过短");
+    setProg(`列表 ${meta.length}，拉行情…`);
+    const quotes = await fetchTXQuotes(meta.map(m => m.symbol));
+    const nameBySym = new Map(meta.map(m => [m.symbol, m.name]));
+    Object.values(quotes).forEach(q => {
+      if (!q.name) q.name = nameBySym.get(q.code) || "";
+    });
+    const all = Object.values(quotes);
+    if (!all.length) throw new Error("无行情");
+    state.src = "tx";
+    $("conn").textContent = "● 实时已连 · 腾讯";
+    $("conn").style.color = "var(--down)";
+
+    setProg("指数情绪…");
+    state.lamp = await sentiment();
+
+    const needK = new Map();
+    const add = q => { if (!needK.has(q.code)) needK.set(q.code, q); };
+    all.forEach(q => {
+      const num = q.code.replace(/^(sh|sz)/, "");
+      if (/^(600|601|603|605|000|001|002)/.test(num) && q.pct > 2 && q.pct < 5.5 && q.amount >= 1e8 && q.amp <= 10) add(q);
+      if (num.startsWith("300") && q.pct >= 3 && q.pct <= 12 && (q.volRatio == null || q.volRatio >= 1.2)) add(q);
+      if (/^(600|601|603|605|000|001)/.test(num) && !num.startsWith("002") && q.pct >= 2 && q.amount >= 8e8) add(q);
+    });
+    const dragonPool = all.filter(q => q.pct > 3 || q.amount > 2e8)
+      .sort((a, b) => b.amount - a.amount);
+    dragonPool.filter(q => q.pct > 5 || q.amount > 5e8).slice(0, 80).forEach(add);
+
+    const jobs = [...needK.values()];
+    let done = 0;
+    const feats = {};
+    await mapLimit(jobs, 8, async q => {
+      try { feats[q.code] = feat(await fetchKline(q.code, 130), q); }
+      catch (e) {}
+      done++;
+      if (done % 8 === 0 || done === jobs.length) setProg(`核验 K 线 ${done}/${jobs.length}`);
+    });
+
+    const main = [], cyb = [], yao = [], yaoNear = [];
+    jobs.forEach(q => {
+      const f = feats[q.code];
+      if (!f) return;
+      const m = screenMain(q, f); if (m) main.push(m);
+      const c = screenCyb(q, f); if (c) cyb.push(c);
+      const y = screenYao(q, f);
+      if (y && !y.skip) {
+        if (y.near) yaoNear.push(y);
+        else yao.push(y);
+      }
+    });
+    main.sort((a, b) => b.score - a.score);
+    cyb.sort((a, b) => b.score - a.score);
+    yao.sort((a, b) => b.score - a.score);
+    yaoNear.sort((a, b) => b.score - a.score);
+    state.main = main.slice(0, 3);
+    state.cyb = cyb.slice(0, 8);
+    if (state.lamp.code === 0) { state.yao = []; state.yaoNear = yao.concat(yaoNear); }
+    else { state.yao = yao; state.yaoNear = yaoNear; }
+
+    const dscore = [...dragonPool];
+    const maxAmt = Math.max(...dscore.map(x => x.amount), 1);
+    dscore.forEach(q => {
+      const num = q.code.replace(/^(sh|sz)/, "");
+      const is20 = /^(300|688)/.test(num);
+      q.isLimit = is20 ? q.pct >= 19.5 : q.pct >= 9.5;
+      q.consec = feats[q.code] ? feats[q.code].consec : 0;
+      q.score = (q.isLimit ? 1000 : 0) + q.consec * 100 + q.pct * 2 + (q.amount / maxAmt) * 50;
+    });
+    dscore.sort((a, b) => b.score - a.score);
+    state.drag = dscore.slice(0, 3);
+    state.maybe = dscore.filter(q => {
+      if (q.isLimit || q.pct < 5) return false;
+      const num = q.code.replace(/^(sh|sz)/, "");
+      if (/^(300|688)/.test(num)) return q.pct < 15;
+      return q.pct < 9;
+    }).slice(0, 5);
+
+    $("snapInfo").textContent = `扫描完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · 腾讯 · 列表 ${meta.length} · 行情 ${all.length} · K线 ${jobs.length}`;
+    setProg("完成");
+    hideHint();
+    render();
+  } catch (e) {
+    showHint("扫描失败：" + (e.message || e) + "。请确认能访问腾讯/新浪行情。");
+    setProg("失败");
+  } finally {
+    state.running = false;
+    ["scanBtn", "scanBtn2"].forEach(id => { $(id).disabled = false; $(id).textContent = "扫描四套"; });
+  }
+}
+
+$("connBtn").onclick = checkConn;
+$("scanBtn").onclick = scanAll;
+$("scanBtn2").onclick = scanAll;
+render();
+checkConn();
+</script>
+</body>
+</html>
