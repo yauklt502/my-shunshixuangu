@@ -50,7 +50,8 @@ DELAY = 0.01
 # ============================================================
 
 print("=" * 140)
-print("🔥 妖龙 · 机构趋势推进系统（终极优化版）")
+print("🔥 妖龙 · 机构趋势推进系统（红灯空仓 · 只做隔夜）")
+print("   次日开盘买 → 次日收盘卖。红灯全日空仓，禁止下单。不做波段。")
 print("=" * 140)
 
 # ============================================================
@@ -125,9 +126,11 @@ try:
     print(f"✅ 市场情绪分 {SENTIMENT_SCORE}/100 → {_lamp}")
 
     if SENTIMENT_CODE == 0:
-        print("🚫 情绪红灯：今日「全条件通过」将全部降级为近失候选，建议空仓/仅观察！")
+        print("🚫 情绪红灯：正式通过全部降级。今日空仓，禁止下单。")
     elif SENTIMENT_CODE == 1:
-        print("⚠️ 情绪黄灯：可正常参与，注意仓位与止损纪律。")
+        print("⚠️ 情绪黄灯：只做隔夜（次日开盘→次日收盘），不要波段拿着。")
+    else:
+        print("✅ 情绪绿灯：仍只做隔夜，次日收盘前必须清掉。")
 
 except Exception as e:
 
@@ -356,18 +359,17 @@ def screen(code):
         # 连板统计
         # ====================================================
 
+        # 连板：从最近一根往回数真正连续涨停（不是近 6 日涨停天数）
         limit_up = 0
-
-        for i in range(-6, 0):
-
-            zf = (
-                (close.iloc[i] - close.iloc[i-1])
-                / close.iloc[i-1]
-                * 100
-            )
-
+        for i in range(-1, -7, -1):
+            prev_c = float(close.iloc[i - 1])
+            if prev_c <= 0:
+                break
+            zf = (float(close.iloc[i]) - prev_c) / prev_c * 100
             if zf >= 9.5:
                 limit_up += 1
+            else:
+                break
 
         # ====================================================
         # 次要关卡：爆量 / 近新高 / 回撤 / 波动
@@ -592,7 +594,7 @@ if SENTIMENT_CODE == 0 and results:
         r['未过'] = ('情绪闸,' + r['未过']) if r['未过'] else '情绪闸'
     near_miss.extend(results)
     results = []
-    print(f"🚫 市场情绪红灯：{_n_down} 只「全条件通过」已全部降级为近失候选（情绪闸），建议空仓/仅观察！")
+    print(f"🚫 市场情绪红灯：{_n_down} 只「全条件通过」已降级为近失。今日空仓，禁止下单。")
 
 df = pd.DataFrame(results)
 df = df.sort_values(by='妖龙评分', ascending=False) if not df.empty else df
@@ -606,7 +608,11 @@ _disp_cols = [c for c in _display_base if c in _schema_src.columns]
 
 if len(results) == 0:
 
-    print("❌ 今日无「全条件通过」妖龙")
+    print("❌ 今日无「全条件通过」妖龙 → 空仓")
+    if SENTIMENT_CODE == 0:
+        print("📌 情绪红灯，禁止下单。")
+    else:
+        print("📌 不要拿近失候选凑单。")
 
 else:
 
@@ -614,8 +620,8 @@ else:
     table = ""
 
     for _t, _desc in (
-        ('连板妖', '情绪博弈：连板爆发力优先，快进快出'),
-        ('趋势妖', '机构推进：趋势质量优先，波段持有')
+        ('连板妖', '情绪博弈：连板爆发力优先，只做隔夜'),
+        ('趋势妖', '机构推进：趋势质量优先，同样只做隔夜，不波段')
     ):
 
         _sub = df[df['类型'] == _t] if '类型' in df.columns else df.iloc[0:0]
@@ -642,6 +648,7 @@ else:
     _n_qs = int(len(df)) - _n_lb
 
     print(f"\n✅ 共筛选出 {len(df)} 只高质量妖龙股（连板妖 {_n_lb} / 趋势妖 {_n_qs}）")
+    print("📌 持仓：只做隔夜（T+1 开盘买，T+1 收盘卖）。红灯空仓。拿 5–10 日回测为负。")
 
 # ============================================================
 # 近失候选（准妖龙）观察池：核心结构已过，仅次要关未过
@@ -786,7 +793,8 @@ while True:
         ) as f:
 
             f.write("=" * 60 + "\n")
-            f.write("妖龙第二天交易计划\n")
+            f.write("妖龙第二天交易计划（只做隔夜）\n")
+            f.write("次日开盘买，次日收盘必须卖。红灯则忽略本计划、空仓。\n")
             f.write("=" * 60 + "\n\n")
 
             for i, row in df.head(10).iterrows():

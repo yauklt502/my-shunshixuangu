@@ -76,8 +76,13 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     df["spread_ma5_ma60"] = np.where(df["ma60"] > 0, (df["ma5"] - df["ma60"]) / df["ma60"] * 100.0, np.nan)
     df["spread_ma20_ma60"] = np.where(df["ma60"] > 0, (df["ma20"] - df["ma60"]) / df["ma60"], np.nan)
 
-    hit_1095 = (close / prev >= 1.095)
-    df["consec_boards"] = hit_1095.groupby(code, sort=False).transform(_consec_true)
+    is_20cm = df["code"].str.startswith(("300", "688"))
+    hit_limit = np.where(is_20cm, close / prev >= 1.195, close / prev >= 1.095)
+    df["consec_limit"] = (
+        pd.Series(hit_limit, index=df.index).groupby(code, sort=False).transform(_consec_true)
+    )
+    # 兼容旧字段：龙头/妖龙一律用真实连板（20cm 用 19.5%）
+    df["consec_boards"] = df["consec_limit"]
     nobs = df.groupby(code).cumcount() + 1
     df["nobs"] = nobs
     df["tradable"] = (df["volume"] > 0) & (df["close"] > 0) & (df["open"] > 0) & (df["low"] > 0)

@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-极速精简选股·趋势王【稳健少而精版】—— pytdx 直连版
+主板趋势 · 稳健少而精（三套实盘入口之一）—— pytdx 直连版
 
-为什么换掉 mootdx：
-  原脚本走 mootdx，而 mootdx 的 ~/.mootdx/config.json 里配置的服务器 IP
-  已经全部失效，client.bars() 只会返回空 DataFrame，看起来像"连不上"。
-  本版改用 pytdx 直连通达信行情服务器（纯 socket，不受系统代理/v2rayN 影响），
-  并在启动时【自动探测一批服务器、挑最快的活服务器】，以后某台再挂也能自动切换。
-
-选股逻辑与原版完全一致：
+选股：
   初筛：涨幅 2%~5.5%  且  成交额≥1亿  且  振幅≤10%
   核验：现价>MA20>MA60>MA120  且  MA60向上  且 (MA20-MA60)/MA60>1%
-  评分：量比40% + 涨幅20% + 趋势强度40%，取综合评分前 5 名
-额外增强：量比用真实 K 线计算（当日量 / 前5日均量），比原版固定 1.0 更有意义。
+        且 量比≥1.2（当日量 / 前5日均量）
+  评分：量比40% + 涨幅20% + 趋势强度40%，最多取前 3 名
+交易：
+  今日不够 3 只也不凑数；一只都没有就空仓。
+  持有 3–5 个交易日；跌破 MA20 提前走。不要每天满仓换股。
 """
 from pytdx.hq import TdxHq_API
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -42,6 +39,9 @@ from tdx_source import (
 )
 
 MAX_WORKERS = 10
+MAX_PICKS = 3
+MIN_VOL_RATIO = 1.2
+HOLD_DAYS = "3–5"
 
 # 线程本地连接
 _local = threading.local()
@@ -155,7 +155,8 @@ def get_ma_data(code):
 
 def main():
     print("=" * 60)
-    print("[*] 极速精简选股·趋势王【稳健少而精版】(pytdx 直连)")
+    print("[*] 主板趋势 · 稳健少而精 (pytdx 直连)")
+    print(f"    最多 {MAX_PICKS} 只 · 量比≥{MIN_VOL_RATIO} · 持有 {HOLD_DAYS} 日 · 无票空仓")
     print("=" * 60)
 
     print("\n[1/4] 探测可用通达信行情服务器...")
@@ -231,7 +232,12 @@ def main():
             row = spot_map[code]
             price = row['price']
             # 均线条件（与原版一致）
-            if price > ma20 > ma60 > ma120 and ma60 > ma60_last and (ma20 - ma60) / ma60 > 0.01:
+            if (
+                price > ma20 > ma60 > ma120
+                and ma60 > ma60_last
+                and (ma20 - ma60) / ma60 > 0.01
+                and vol_ratio >= MIN_VOL_RATIO
+            ):
                 vol_sc = min(vol_ratio, 5) / 5 * 40
                 pct_sc = row['pct_chg'] / 5.5 * 20
                 trend_sc = (price / ma20 * 0.5 + ma20 / ma60 * 0.3 + ma60 / ma120 * 0.2)
@@ -245,7 +251,7 @@ def main():
     print("\n[4/4] 汇总结果...")
     if res_list:
         res_list.sort(key=lambda x: x[-1], reverse=True)
-        data = res_list[:5]
+        data = res_list[:MAX_PICKS]
         col_widths = [12, 10, 8, 8, 8, 8, 8, 12]
         line = "+" + "+".join(["-" * (w + 2) for w in col_widths]) + "+"
         headers = ["名称", "代码", "现价", "涨幅%", "量比", "换手率", "MA20", "综合评分"]
@@ -268,9 +274,10 @@ def main():
             ]
             print("| " + " | ".join(row_cells) + " |")
         print(line)
-        print("✅ 稳健精选标的已选出（少而精）")
+        print(f"✅ 选出 {len(data)} 只（上限 {MAX_PICKS}，不够不凑）")
+        print(f"📌 持有 {HOLD_DAYS} 个交易日；跌破 MA20 提前走。不要每天满仓换股。")
     else:
-        print("[i] 当前行情无符合强均线多头的稳健标的。")
+        print("[i] 今日无符合条件的稳健标的 → 空仓，不要用次优票凑满仓。")
 
     input("\n按回车键退出...")
 

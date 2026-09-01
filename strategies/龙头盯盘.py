@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-顺势选股 · 龙头盯盘（pytdx 直连版 · 情绪资金总龙头 + 板块龙头）
-定义：总龙头 = 市场涨幅领先、成交巨大、连续走强的个股（不限于涨停）
-数据源：复用桌面 tdx_source（与趋势王共用服务器）
+顺势选股 · 龙头盯盘（仅观察，禁止自动下单）
+
+总龙头 = 市场涨幅领先、成交巨大、连续走强的个股（不限于涨停）。
+涨停/连板只进「观察」栏；可买观察仅看未涨停的跟风（主板约 5%–9%）。
 """
 from __future__ import annotations
 
@@ -49,7 +50,7 @@ def get_all_stocks():
                 for item in lst:
                     code = str(item['code']).zfill(6)
                     name = item['name']
-                    if 'ST' in name or '退' in name or 'N' in name:
+                    if 'ST' in name or '退' in name:
                         continue
                     result[code] = name
     finally:
@@ -140,13 +141,21 @@ def get_kline(code, count=20):
     except:
         return []
 
+def _limit_ratio(code):
+    return 1.195 if code.startswith(('688', '300')) else 1.095
+
+
 def calc_consecutive_boards(code):
     bars = get_kline(code, 20)
     if len(bars) < 2:
         return 0
+    thr = _limit_ratio(code)
     cnt = 0
-    for i in range(len(bars)-2, -1, -1):
-        if bars[i+1]['close'] / bars[i]['close'] >= 1.095:
+    for i in range(len(bars) - 2, -1, -1):
+        prev = bars[i]['close']
+        if prev <= 0:
+            break
+        if bars[i + 1]['close'] / prev >= thr:
             cnt += 1
         else:
             break
@@ -183,7 +192,8 @@ def format_amount(v):
 # ---------- 主程序 ----------
 def main():
     print("=" * 70)
-    print("[*] 顺势选股 · 龙头盯盘 (pytdx 直连版 · 情绪龙头)")
+    print("[*] 顺势选股 · 龙头盯盘  【仅观察，禁止自动下单】")
+    print("    涨停/连板 = 观察；可买观察 = 未涨停跟风（主板 5%–9%）")
     print("=" * 70)
 
     # 服务器探测
@@ -236,8 +246,8 @@ def main():
             amount = float(q['amount'])
             name = stocks.get(code, code)
             # 涨停判断
-            if code.startswith(('688','300')):
-                is_limit = pct >= 19.0
+            if code.startswith(('688', '300')):
+                is_limit = pct >= 19.5
             else:
                 is_limit = pct >= 9.5
             stock_data.append({
@@ -298,9 +308,19 @@ def main():
         items.sort(key=lambda x: x['score'], reverse=True)
         industry_leaders[ind] = items[:3]
 
+    observe_limit = [s for s in total_leaders if s['is_limit']]
+    maybe_buy = [
+        s for s in candidates
+        if (not s['is_limit']) and s['pct'] >= 5.0
+        and (
+            (s['code'].startswith(('688', '300')) and s['pct'] < 15.0)
+            or ((not s['code'].startswith(('688', '300'))) and s['pct'] < 9.0)
+        )
+    ][:5]
+
     # ============ 输出 ============
     print("\n" + "=" * 70)
-    print("【全市场总龙头（情绪资金龙头）】")
+    print("【全市场总龙头（情绪资金龙头）· 仅观察】")
     if total_leaders:
         col_widths = [12, 10, 10, 10, 14, 10, 8, 10]
         headers = ["名称", "代码", "涨幅", "现价", "成交额", "换手%", "连板", "评分"]
@@ -356,7 +376,23 @@ def main():
             print("| " + " | ".join(cells) + " |")
         print(line2)
 
-    print("\n提示：评分算法 = 涨停奖励 + 连板×100 + 涨幅×2 + 成交额归一化×50")
+    print("\n" + "=" * 70)
+    print("【涨停观察】一字/涨停不追，只看谁是情绪核心")
+    if observe_limit:
+        for s in observe_limit:
+            print(f"  {s['name']} {s['code']}  {s['pct']:+.2f}%  连板{s.get('consecutive', 0)}")
+    else:
+        print("  （总龙头里今日无涨停）")
+
+    print("\n【可买观察】未涨停跟风，仍不要自动下单")
+    if maybe_buy:
+        for s in maybe_buy:
+            print(f"  {s['name']} {s['code']}  {s['pct']:+.2f}%  {format_amount(s['amount'])}")
+    else:
+        print("  （无 5%–涨停前的跟风票）")
+
+    print("\n提示：评分 = 涨停奖励 + 连板×100 + 涨幅×2 + 成交额归一化×50")
+    print("⚠️ 本脚本不下单、不导出交易指令。龙头按规则自动追涨，回测会亏穿。")
     input("\n按回车键退出...")
 
 if __name__ == "__main__":
