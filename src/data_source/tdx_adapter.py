@@ -84,6 +84,14 @@ class TdxAdapter(DataSource):
 
     def health_check(self) -> bool:
         try:
+            from src.data_source.tdx_source import health_check as pytdx_health
+
+            result = pytdx_health()
+            self._available = result.get("ok", False)
+            return self._available
+        except ImportError:
+            pass
+        try:
             client = _get_client()
             quotes = client.get_quote("sz000001")
             ok = bool(quotes and quotes[0].last_price > 0)
@@ -216,13 +224,17 @@ class TdxAdapter(DataSource):
         """从通达信拉取 A 股列表（分页，避免全量扫描过慢）."""
         try:
             client = _get_client()
+            from eltdx.protocol.unit import is_a_share_entry
+
             stocks: List[dict] = []
             per_exchange = max(limit // 2, 30)
             for exchange in ("sh", "sz"):
-                page = client.get_codes(exchange, start=0, limit=per_exchange)
+                page = client.get_codes(exchange, start=0, limit=per_exchange * 3)
                 for item in page.items or []:
                     fc = item.full_code
-                    if not fc or "ST" in (item.name or ""):
+                    if not fc or not is_a_share_entry(fc):
+                        continue
+                    if "ST" in (item.name or ""):
                         continue
                     code = to_plain_symbol(fc)
                     if code.startswith("688"):

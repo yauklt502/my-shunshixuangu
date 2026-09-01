@@ -21,7 +21,7 @@ from src.data_source.market import get_klines, get_market_overview, get_quote
 from src.data_source.market import check_data_source_health
 from src.data_source.pipeline import get_active_source, list_sources, set_active_source
 from src.live import LiveRunner
-from src.screener import screen_by_strategy
+from src.screener import screen_by_strategy, TREND_KING_ID
 from src.strategy.registry import STRATEGY_LABELS
 
 logger = logging.getLogger(__name__)
@@ -121,6 +121,20 @@ async def api_set_source(req: DataSourceRequest):
     return {"ok": True, "active": get_active_source(), "health": health}
 
 
+@app.get("/api/data/probe")
+async def api_data_probe(source: str | None = None):
+    """强制探测行情服务器（通达信测速选优）。"""
+    src = source or get_active_source()
+    if src == "tdx":
+        try:
+            from src.data_source.tdx_source import health_check
+
+            return health_check()
+        except ImportError:
+            return {"ok": False, "message": "请安装 pytdx: pip install pytdx"}
+    return check_data_source_health(src)
+
+
 @app.get("/api/data/health")
 async def api_data_health(source: str | None = None):
     src = source or get_active_source()
@@ -216,8 +230,11 @@ async def list_strategies():
     from src.strategy.registry import get_all_strategies
 
     return [
-        {"id": s.strategy_id, "name": STRATEGY_LABELS.get(s.strategy_id, s.strategy_id)}
-        for s in get_all_strategies()
+        {"id": TREND_KING_ID, "name": STRATEGY_LABELS.get(TREND_KING_ID, "趋势王"), "fast": True},
+        *[
+            {"id": s.strategy_id, "name": STRATEGY_LABELS.get(s.strategy_id, s.strategy_id), "fast": False}
+            for s in get_all_strategies()
+        ],
     ]
 
 

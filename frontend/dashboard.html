@@ -330,6 +330,7 @@
     <div class="form-group">
       <label>策略</label>
       <select id="cfg-strategy">
+        <option value="trend_king">趋势王·稳健精选 ⚡</option>
         <option value="ma5_climb">沿5日线爬升</option>
         <option value="triple_volume">三倍量战法</option>
         <option value="shrink_limit_up">缩量涨停</option>
@@ -529,6 +530,17 @@
       }
 
       setDataStatus("connected", sourceLabel);
+      if (source === "tdx") {
+        try {
+          const probe = await fetchWithTimeout(`${getApiBase()}/api/data/probe?source=tdx`, {}, 20000);
+          if (probe.ok) {
+            const pinfo = await probe.json();
+            if (pinfo.ip) {
+              document.getElementById("data-badge").textContent = "数据:TDX " + pinfo.ip;
+            }
+          }
+        } catch (_) {}
+      }
       await refreshOverview();
       if (!overviewTimer) overviewTimer = setInterval(refreshOverview, 30000);
       document.getElementById("env-badge").textContent = "API";
@@ -1086,7 +1098,7 @@
         const chg = s.change_pct ?? s.chg ?? 0;
         const cls = chg >= 0 ? "up" : "down";
         const price = s.price ? Number(s.price).toFixed(2) : "";
-        const reason = showReason && s.reason ? `<div class="stock-card-reason">${s.reason}</div>` : "";
+        const reason = showReason && s.reason ? `<div class="stock-card-reason">${s.reason}${s.score != null ? " · 评分" + s.score : ""}</div>` : "";
         return `
           <li class="stock-card" data-code="${code}" data-name="${s.name || ""}">
             <div class="stock-card-head">
@@ -1168,30 +1180,45 @@
       const strategy = document.getElementById("cfg-strategy").value;
       const period = document.getElementById("cfg-period").value;
       const status = document.getElementById("pick-status");
+      const isFast = strategy === "trend_king";
+      const dataPort = getDataPort();
+
+      if (isFast && dataPort !== "tdx") {
+        document.getElementById("data-port").value = "tdx";
+        await switchDataSource("tdx");
+      }
 
       btn.classList.add("loading");
-      btn.textContent = "扫描中...";
-      status.textContent = "正在扫描，请稍候...";
+      btn.textContent = isFast ? "极速扫描..." : "扫描中...";
+      status.textContent = isFast
+        ? "趋势王：探测服务器 → 批量行情 → 均线核验（约30~90秒）..."
+        : "正在扫描，请稍候...";
 
       let data;
       try {
-        const resp = await fetch(`${getApiBase()}/api/screen`, {
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/screen`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             strategy_id: strategy,
             period,
-            universe_limit: 60,
-            data_source: getDataPort(),
+            universe_limit: isFast ? 5000 : 60,
+            data_source: "tdx",
           }),
-          signal: AbortSignal.timeout(120000),
-        });
+        }, isFast ? 180000 : 120000);
         if (resp.ok) {
           data = await resp.json();
         } else {
-          throw new Error("API error");
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.message || "API error");
         }
-      } catch (_) {
+      } catch (e) {
+        if (isFast) {
+          status.textContent = "趋势王扫描失败: " + (e.message || "请确认 pytdx 已安装且通达信端口可用");
+          btn.classList.remove("loading");
+          btn.textContent = "选股";
+          return;
+        }
         data = await pickStocksLocal();
       }
 
@@ -1204,11 +1231,13 @@
         change_pct: r.change_pct,
         reason: r.reason,
         price: r.price,
+        score: r.score,
       }));
 
+      const srv = data.server?.ip ? ` · 服务器 ${data.server.ip}` : "";
       status.textContent = items.length
-        ? `「${data.strategy_name || strategy}」命中 ${items.length} 只 / 扫描 ${data.scanned || "?"} 只`
-        : `「${data.strategy_name || strategy}」暂无命中，可换策略重试`;
+        ? `「${data.strategy_name || strategy}」命中 ${items.length} 只 / 扫描 ${data.scanned || "?"} 只${data.prefilter != null ? " · 初筛 " + data.prefilter : ""}${srv}`
+        : (data.message || `「${data.strategy_name || strategy}」暂无命中，可换策略或交易时段重试`) + srv;
 
       document.getElementById("idx-signals").textContent = items.length;
       renderStockList(items, { showReason: true, emptyText: "暂无符合策略的个股" });

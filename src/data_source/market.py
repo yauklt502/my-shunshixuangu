@@ -31,11 +31,19 @@ def check_data_source_health(source: Optional[str] = None) -> dict:
 
     adapter = MockDataSource() if src == "mock" else SOURCE_REGISTRY[src]()
     ok = adapter.health_check()
+    extra: dict = {}
+    if src == "tdx":
+        try:
+            from src.data_source.tdx_source import get_server_info
+
+            extra["server"] = get_server_info()
+        except ImportError:
+            pass
     detail = ""
     if src == "eastmoney" and not ok:
         detail = "东方财富接口无响应，请检查网络或稍后重试"
     elif src == "tdx" and not ok:
-        detail = "通达信 TDX 连接失败，请确认已安装 eltdx 且网络可访问通达信服务器"
+        detail = "通达信 TDX 连接失败，请确认已安装 pytdx/eltdx 且网络可访问 7709 端口"
     elif src == "tushare" and not ok:
         detail = "Tushare 未配置 Token，请在环境变量 TUSHARE_TOKEN 中设置"
     elif not ok:
@@ -46,6 +54,7 @@ def check_data_source_health(source: Optional[str] = None) -> dict:
         "source": src,
         "name": name,
         "message": "连接正常" if ok else detail or f"{name} 连接失败",
+        **extra,
     }
 
 

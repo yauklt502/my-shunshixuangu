@@ -13,6 +13,7 @@ from src.strategy.strategies.triple_volume import TripleVolumeStrategy
 
 
 STRATEGY_LABELS = {
+    "trend_king": "趋势王·稳健精选",
     "ma5_climb": "沿5日线爬升",
     "triple_volume": "三倍量战法",
     "shrink_limit_up": "缩量涨停",

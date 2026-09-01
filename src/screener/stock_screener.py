@@ -63,6 +63,11 @@ def screen_by_strategy(
     universe_limit: int = 60,
     symbols: Optional[List[str]] = None,
 ) -> dict:
+    if strategy_id == "trend_king":
+        from .trend_king_screener import screen_trend_king
+
+        return screen_trend_king()
+
     strategy = get_strategy(strategy_id)
     if not strategy:
         return {"ok": False, "message": f"未知策略: {strategy_id}", "results": []}
