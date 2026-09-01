@@ -52,6 +52,12 @@ def set_active_source(source_id: str) -> bool:
     return True
 
 
+def _create_adapter(name: str, cache: DataCache) -> DataSource:
+    if name == "mock":
+        return MockDataSource()
+    return SOURCE_REGISTRY[name](cache)
+
+
 def build_pipeline(
     environment: Environment,
     primary: Optional[str] = None,
@@ -62,7 +68,7 @@ def build_pipeline(
 
     adapters: List[DataSource] = []
     if primary in SOURCE_REGISTRY:
-        adapters.append(SOURCE_REGISTRY[primary](cache))
+        adapters.append(_create_adapter(primary, cache))
 
     fallback_order = ["eastmoney", "mootdx", "tushare", "ths", "mock"]
     if environment == Environment.BACKTEST:
@@ -70,7 +76,7 @@ def build_pipeline(
 
     for name in fallback_order:
         if name != primary and name in SOURCE_REGISTRY:
-            adapters.append(SOURCE_REGISTRY[name](cache))
+            adapters.append(_create_adapter(name, cache))
 
     return FailoverDataSource(adapters)
 

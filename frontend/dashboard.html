@@ -100,6 +100,10 @@
     }
     .stock-item:hover, .stock-item.active { background: #21262d; }
     .stock-item .code { color: var(--accent); }
+    .stock-item .reason { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+    .pick-empty { color: var(--muted); font-size: 12px; padding: 12px 6px; text-align: center; }
+    .btn-pick { background: #8957e5 !important; font-weight: 600; }
+    .btn-pick.loading { opacity: 0.6; cursor: wait; }
     #chart {
       width: 100%;
       height: 320px;
@@ -242,7 +246,8 @@
     </div>
 
   <aside class="panel">
-    <div class="panel-title">选股列表</div>
+    <div class="panel-title">策略选股结果 <span id="pick-count" style="color:var(--accent)">(0)</span></div>
+    <div id="pick-status" style="font-size:11px;color:var(--muted);margin-bottom:8px">选择策略后点击「选股」</div>
     <ul class="stock-list" id="stock-list"></ul>
   </aside>
 
@@ -291,6 +296,7 @@
         <option value="kdj_oversold">KDJ超卖反弹</option>
       </select>
     </div>
+    <button id="btn-pick" class="btn-pick" type="button">选股</button>
     <div class="form-group">
       <label>单股最大仓位 (%)</label>
       <input type="number" id="cfg-max-pos" value="20" min="1" max="100" />
@@ -764,31 +770,136 @@
       document.getElementById("idx-signals").textContent = signals.length;
     }
 
-    function initStockList() {
-      const stocks = [
-        { code: "000001", name: "平安银行", chg: 1.2 },
-        { code: "600519", name: "贵州茅台", chg: -0.5 },
-        { code: "300750", name: "宁德时代", chg: 2.1 },
-        { code: "002594", name: "比亚迪", chg: 0.8 },
-        { code: "601318", name: "中国平安", chg: -1.1 },
-      ];
+    function renderStockList(stocks, options = {}) {
       const list = document.getElementById("stock-list");
-      list.innerHTML = stocks.map(s => `
-        <li class="stock-item" data-code="${s.code}">
-          <span><span class="code">${s.code}</span> ${s.name}</span>
-          <span class="${s.chg >= 0 ? "up" : "down"}">${s.chg >= 0 ? "+" : ""}${s.chg}%</span>
-        </li>
-      `).join("");
+      const { showReason = false, emptyText = "暂无符合条件的个股" } = options;
+
+      if (!stocks.length) {
+        list.innerHTML = `<li class="pick-empty">${emptyText}</li>`;
+        document.getElementById("pick-count").textContent = "(0)";
+        return;
+      }
+
+      document.getElementById("pick-count").textContent = `(${stocks.length})`;
+      list.innerHTML = stocks.map(s => {
+        const chg = s.change_pct ?? s.chg ?? 0;
+        const cls = chg >= 0 ? "up" : "down";
+        const reason = showReason && s.reason ? `<span class="reason">${s.reason}</span>` : "";
+        return `
+          <li class="stock-item" data-code="${s.code || s.symbol}">
+            <span>
+              <span class="code">${s.code || s.symbol}</span> ${s.name || ""}
+              ${reason}
+            </span>
+            <span class="${cls}">${chg >= 0 ? "+" : ""}${Number(chg).toFixed(2)}%</span>
+          </li>`;
+      }).join("");
 
       list.querySelectorAll(".stock-item").forEach(el => {
         el.addEventListener("click", () => {
           list.querySelectorAll(".stock-item").forEach(e => e.classList.remove("active"));
           el.classList.add("active");
           document.getElementById("cfg-symbol").value = el.dataset.code;
-          runBacktest();
+          runBacktestLocal();
         });
       });
       list.firstChild?.classList.add("active");
+    }
+
+    function initStockList() {
+      renderStockList([
+        { code: "000001", name: "平安银行", chg: 0 },
+        { code: "600519", name: "贵州茅台", chg: 0 },
+        { code: "300750", name: "宁德时代", chg: 0 },
+        { code: "002594", name: "比亚迪", chg: 0 },
+        { code: "601318", name: "中国平安", chg: 0 },
+      ], { emptyText: "点击「选股」扫描全市场" });
+    }
+
+    async function pickStocksLocal() {
+      const strategy = document.getElementById("cfg-strategy").value;
+      const universe = [
+        "000001","600519","300750","002594","601318","600036","000858",
+        "601012","002475","300059","601888","000333","600900","002415","601166",
+      ];
+      const results = [];
+      for (const code of universe) {
+        const bars = genMockBars(code, 80);
+        const signals = runStrategy(bars, strategy);
+        const lastBuy = signals.filter(s => s.type === "buy").pop();
+        if (lastBuy && lastBuy.idx >= bars.length - 3) {
+          results.push({
+            code,
+            name: code,
+            change_pct: ((bars.at(-1).close - bars.at(-2).close) / bars.at(-2).close * 100),
+            reason: lastBuy.reason,
+            price: lastBuy.price,
+          });
+        }
+      }
+      return {
+        ok: true,
+        count: results.length,
+        scanned: universe.length,
+        strategy_name: document.getElementById("cfg-strategy").selectedOptions[0].text,
+        results,
+      };
+    }
+
+    async function pickStocks() {
+      const btn = document.getElementById("btn-pick");
+      const strategy = document.getElementById("cfg-strategy").value;
+      const period = document.getElementById("cfg-period").value;
+      const status = document.getElementById("pick-status");
+
+      btn.classList.add("loading");
+      btn.textContent = "扫描中...";
+      status.textContent = "正在扫描，请稍候...";
+
+      let data;
+      try {
+        const resp = await fetch(`${getApiBase()}/api/screen`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            strategy_id: strategy,
+            period,
+            universe_limit: 60,
+            data_source: getDataPort(),
+          }),
+          signal: AbortSignal.timeout(120000),
+        });
+        if (resp.ok) {
+          data = await resp.json();
+        } else {
+          throw new Error("API error");
+        }
+      } catch (_) {
+        data = await pickStocksLocal();
+      }
+
+      btn.classList.remove("loading");
+      btn.textContent = "选股";
+
+      const items = (data.results || []).map(r => ({
+        code: r.symbol || r.code,
+        name: r.name,
+        change_pct: r.change_pct,
+        reason: r.reason,
+        price: r.price,
+      }));
+
+      status.textContent = items.length
+        ? `「${data.strategy_name || strategy}」命中 ${items.length} 只 / 扫描 ${data.scanned || "?"} 只`
+        : `「${data.strategy_name || strategy}」暂无命中，可换策略重试`;
+
+      document.getElementById("idx-signals").textContent = items.length;
+      renderStockList(items, { showReason: true, emptyText: "暂无符合策略的个股" });
+
+      if (items.length) {
+        document.getElementById("cfg-symbol").value = items[0].code;
+        runBacktestLocal();
+      }
     }
 
     function updateOverview() {
@@ -826,6 +937,7 @@
     function runBacktest() { runBacktestLocal(); }
 
     document.getElementById("btn-run").addEventListener("click", runBacktestLocal);
+    document.getElementById("btn-pick").addEventListener("click", pickStocks);
     document.getElementById("btn-api-run").addEventListener("click", runBackendBacktest);
     document.getElementById("btn-live-start").addEventListener("click", startLive);
     document.getElementById("btn-live-stop").addEventListener("click", stopLive);

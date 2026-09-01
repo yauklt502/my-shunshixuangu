@@ -193,6 +193,42 @@ class EastmoneyAdapter(DataSource):
 
         return overview
 
+    def fetch_stock_list(self, limit: int = 100) -> List[dict]:
+        """Fetch A-share list sorted by change pct (for stock screening)."""
+        try:
+            data = self._http_get(
+                BREADTH_URL,
+                {
+                    "pn": "1",
+                    "pz": str(limit),
+                    "po": "1",
+                    "np": "1",
+                    "fltt": "2",
+                    "invt": "2",
+                    "fid": "f3",
+                    "fs": "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23",
+                    "fields": "f2,f3,f12,f14",
+                },
+            )
+            items = data.get("data", {}).get("diff") or []
+            stocks: List[dict] = []
+            for i in items:
+                code = str(i.get("f12", "")).zfill(6)
+                if not code or code.startswith("688") or "ST" in str(i.get("f14", "")):
+                    continue
+                stocks.append(
+                    {
+                        "code": code,
+                        "name": i.get("f14", code),
+                        "price": float(i.get("f2", 0) or 0),
+                        "change_pct": float(i.get("f3", 0) or 0),
+                    }
+                )
+            return stocks
+        except Exception as e:
+            logger.warning("Eastmoney stock list failed: %s", e)
+            return []
+
     def _http_get(self, url: str, params: dict) -> dict:
         qs = urllib.parse.urlencode(params)
         req = urllib.request.Request(

@@ -20,6 +20,8 @@ from src.common import AppConfig, BarPeriod, Environment
 from src.data_source.market import get_klines, get_market_overview, get_quote
 from src.data_source.pipeline import get_active_source, list_sources, set_active_source
 from src.live import LiveRunner
+from src.screener import screen_by_strategy
+from src.strategy.registry import STRATEGY_LABELS
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,14 @@ class LiveStartRequest(BaseModel):
 
 class DataSourceRequest(BaseModel):
     source: str
+
+
+class ScreenRequest(BaseModel):
+    strategy_id: str = "ma5_climb"
+    period: str = "daily"
+    bar_limit: int = 80
+    universe_limit: int = 60
+    data_source: str | None = None
 
 
 async def _broadcast_ws(event_type: str, data: dict) -> None:
@@ -197,7 +207,25 @@ async def live_stop():
 async def list_strategies():
     from src.strategy.registry import get_all_strategies
 
-    return [{"id": s.strategy_id, "name": s.strategy_id} for s in get_all_strategies()]
+    return [
+        {"id": s.strategy_id, "name": STRATEGY_LABELS.get(s.strategy_id, s.strategy_id)}
+        for s in get_all_strategies()
+    ]
+
+
+@app.post("/api/screen")
+async def api_screen(req: ScreenRequest):
+    if req.data_source:
+        set_active_source(req.data_source)
+    period = BarPeriod(req.period)
+    result = screen_by_strategy(
+        strategy_id=req.strategy_id,
+        period=period,
+        bar_limit=req.bar_limit,
+        universe_limit=req.universe_limit,
+    )
+    await _broadcast_ws("screen_complete", {"count": result.get("count", 0), "strategy_id": req.strategy_id})
+    return result
 
 
 @app.websocket("/ws")

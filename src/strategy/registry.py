@@ -12,6 +12,15 @@ from src.strategy.strategies.shrink_limit_up import ShrinkLimitUpStrategy
 from src.strategy.strategies.triple_volume import TripleVolumeStrategy
 
 
+STRATEGY_LABELS = {
+    "ma5_climb": "沿5日线爬升",
+    "triple_volume": "三倍量战法",
+    "shrink_limit_up": "缩量涨停",
+    "macd_cross": "MACD金叉",
+    "kdj_oversold": "KDJ超卖反弹",
+}
+
+
 def get_all_strategies() -> List[Strategy]:
     return [
         Ma5ClimbStrategy(),
