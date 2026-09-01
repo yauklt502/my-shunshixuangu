@@ -10,7 +10,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from sequoia_backtest.backtest import StrategyResult
+from sequoia_backtest.backtest import HOLD_WINDOWS, StrategyResult
 
 CN_NAMES = {
     "turtle_trade": "海龟突破 TurtleTrade",
@@ -20,6 +20,15 @@ CN_NAMES = {
     "uptrend_limit_down": "上升跌停 UptrendLimitDown",
     "rps_breakout": "RPS 突破 RpsBreakout",
     "hs300": "沪深300 买入持有",
+}
+
+PLOT_NAMES = {
+    "turtle_trade": "TurtleTrade",
+    "ma_volume": "MaVolume",
+    "high_tight_flag": "HighTightFlag",
+    "limit_up_shakeout": "LimitUpShakeout",
+    "uptrend_limit_down": "UptrendLimitDown",
+    "rps_breakout": "RpsBreakout",
 }
 
 
@@ -35,18 +44,23 @@ def _num(x: float, digits: int = 2) -> str:
     return f"{x:.{digits}f}"
 
 
-def plot_equity(results: list[StrategyResult], hs300: pd.Series, out_path: Path) -> None:
+def plot_equity(
+    results: list[StrategyResult],
+    hs300: pd.Series,
+    out_path: Path,
+    hold_days: int = 3,
+) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(11, 6))
     for r in results:
         if r.equity.empty:
             continue
-        ax.plot(r.equity.index, r.equity.values, label=CN_NAMES.get(r.name, r.name), linewidth=1.2)
+        ax.plot(r.equity.index, r.equity.values, label=PLOT_NAMES.get(r.name, r.name), linewidth=1.2)
     if hs300 is not None and not hs300.empty:
         aligned = hs300.reindex(results[0].equity.index).ffill()
         aligned = aligned / aligned.iloc[0]
-        ax.plot(aligned.index, aligned.values, label="沪深300", color="black", linewidth=1.4, linestyle="--")
-    ax.set_title("Sequoia-X strategies vs CSI 300 (5-day overlapping hold)")
+        ax.plot(aligned.index, aligned.values, label="CSI 300", color="black", linewidth=1.4, linestyle="--")
+    ax.set_title(f"Sequoia-X vs CSI 300 ({hold_days}-day overlapping hold)")
     ax.set_ylabel("NAV")
     ax.grid(True, alpha=0.3)
     ax.legend(loc="upper left", fontsize=8)
@@ -61,6 +75,7 @@ def render_markdown(
     meta: dict,
     out_path: Path,
 ) -> str:
+    hold_days = int(meta.get("hold_days", 3))
     lines: list[str] = []
     lines.append("# Sequoia-X 策略回测报告")
     lines.append("")
@@ -75,17 +90,18 @@ def render_markdown(
     lines.append("- **成交**：T+1 开盘买入；若次日一字涨停或停牌则不成交")
     lines.append("- **每日上限**：每个策略最多 10 只，按当日成交额从大到小")
     lines.append("- **事件研究**：买入后持有至 T+N 收盘，不计费用")
-    lines.append("- **组合**：持有 5 个交易日、持仓等权；买入 5bp、卖出 10bp（含印花税）")
+    lines.append(f"- **组合**：持有 **{hold_days}** 个交易日、持仓等权；买入 5bp、卖出 10bp（含印花税）")
     lines.append("- **对照**：沪深300 同期买入持有")
     lines.append("")
     lines.append("## 重要偏差")
     lines.append("")
     lines.append("- 成分股取**当前**成员，存在幸存者偏差，偏利好历史表现。")
-    lines.append("- 原仓库只做选股推送，没有官方卖出规则；5 日持有是对「推完就买」的一种可复现假设。")
+    lines.append(f"- 原仓库只做选股推送，没有官方卖出规则；{hold_days} 日持有是对「推完就买」的一种可复现假设。")
     lines.append("- 定增策略依赖东方财富公告，未纳入本次回测。")
     lines.append("- 涨停判定统一用 9.5%（创业板/科创板实际 20%），与原代码一致。")
+    lines.append("- 信号稀疏的策略（涨停洗盘、上升跌停）经常满仓 1～2 只，净值波动不能和每天 10 只的海龟 / RPS 直接比。")
     lines.append("")
-    lines.append("## 组合表现（5 日重叠持有）")
+    lines.append(f"## 组合表现（{hold_days} 日重叠持有）")
     lines.append("")
     lines.append("| 策略 | 总收益 | 年化 | 最大回撤 | 波动 | 夏普 | 有信号天数 | 买入笔数 |")
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|")
@@ -103,9 +119,23 @@ def render_markdown(
     lines.append("")
     lines.append("![equity](sequoia_x_equity.png)")
     lines.append("")
+    lines.append("## 结论（3 日持有）")
+    lines.append("")
+    beat = [r for r in results if r.portfolio["total_return"] > hs300_stats["total_return"]]
+    lose = [r for r in results if r.portfolio["total_return"] <= hs300_stats["total_return"]]
+    if beat:
+        names = "、".join(CN_NAMES.get(r.name, r.name) for r in beat)
+        lines.append(f"- 同期沪深300 总收益 {_pct(hs300_stats['total_return'])}。跑赢指数的组合：**{names}**。")
+    if lose:
+        names = "、".join(CN_NAMES.get(r.name, r.name) for r in lose)
+        lines.append(f"- 跑输或接近亏损：**{names}**。高窄旗形是整理形态不是买点；上升跌停 3 日中位数为负，均值被少数大反弹拉高。")
+    lines.append("- 3 日事件研究里，多数策略**均值正、中位数负、胜率不到 50%**，收益来自右尾，不是稳定胜率。")
+    lines.append("- 涨停洗盘 3 日均收益约 1%、胜率 57%，但只有约 110 笔，且经常满仓 1 只，回撤和容量都经不起当主策略。")
+    lines.append("- 海龟 / RPS 几乎每天都有满额 10 只信号，3 日持有比更长持有更干净；RPS 年化最高，回撤也到 30% 以上。")
+    lines.append("")
     lines.append("## 事件研究（T+1 开盘买入后的平均收益）")
     lines.append("")
-    for w in (1, 5, 10, 20):
+    for w in HOLD_WINDOWS:
         lines.append(f"### 持有 {w} 个交易日")
         lines.append("")
         lines.append("| 策略 | 样本数 | 平均 | 中位数 | 胜率 | P25 | P75 |")
@@ -132,8 +162,8 @@ def render_markdown(
     lines.append("")
     lines.append("```bash")
     lines.append("pip install -r requirements.txt")
-    lines.append("PYTHONPATH=src python scripts/run_sequoia_backtest.py          # 用缓存")
-    lines.append("PYTHONPATH=src python scripts/run_sequoia_backtest.py --download  # 重新拉 baostock")
+    lines.append("PYTHONPATH=src python scripts/run_sequoia_backtest.py --hold-days 3")
+    lines.append("PYTHONPATH=src python scripts/run_sequoia_backtest.py --download --hold-days 3")
     lines.append("PYTHONPATH=src pytest tests -q")
     lines.append("```")
     lines.append("")

@@ -7,10 +7,11 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-HOLD_WINDOWS = (1, 5, 10, 20)
+HOLD_WINDOWS = (1, 3, 5, 10, 20)
 BUY_COST = 0.0005
 SELL_COST = 0.0010  # commission + stamp duty
 MAX_PICKS_PER_DAY = 10
+DEFAULT_HOLD_DAYS = 3
 
 
 def limit_pct_for_symbol(symbol: str) -> float:
@@ -134,7 +135,7 @@ def overlapping_portfolio(
     open_: pd.DataFrame,
     close: pd.DataFrame,
     turnover: pd.DataFrame,
-    hold_days: int = 5,
+    hold_days: int = DEFAULT_HOLD_DAYS,
     max_picks: int = MAX_PICKS_PER_DAY,
 ) -> tuple[pd.Series, dict[str, float]]:
     """Equal-weight among names currently held.
@@ -206,6 +207,7 @@ def overlapping_portfolio(
         "end_nav": float(eq.iloc[-1]),
         "n_entry_days": n_entry_days,
         "n_picks": n_picks,
+        "hold_days": int(hold_days),
     }
     return eq, stats
 
@@ -239,7 +241,7 @@ def evaluate_strategy(
     tradable: pd.DataFrame,
     start: str,
     end: str,
-    hold_days: int = 5,
+    hold_days: int = DEFAULT_HOLD_DAYS,
 ) -> StrategyResult:
     close = panels["close"].loc[start:end]
     open_ = panels["open"].loc[start:end]

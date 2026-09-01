@@ -166,11 +166,13 @@ def test_event_study_uses_next_open_entry():
     signal = pd.DataFrame(False, index=idx, columns=["600000"])
     tradable = pd.DataFrame(True, index=idx, columns=["600000"])
     signal.iloc[1, 0] = True  # T = second bar, buy next open 10.5
-    trades, stats = event_study(signal, tradable, open_, close, turnover, windows=(1, 5))
+    trades, stats = event_study(signal, tradable, open_, close, turnover, windows=(1, 3, 5))
     assert len(trades) == 1
     # T+1 close is 11, entry 10.5 → 11/10.5 - 1
     assert abs(trades.iloc[0]["ret_1d"] - (11 / 10.5 - 1)) < 1e-9
+    assert abs(trades.iloc[0]["ret_3d"] - (13 / 10.5 - 1)) < 1e-9
     assert stats[1]["n"] == 1
+    assert stats[3]["n"] == 1
 
 
 def test_overlapping_portfolio_earns_known_open_to_close():

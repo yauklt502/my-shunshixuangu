@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument("--data-start", default="2023-01-01")
     parser.add_argument("--data-end", default="2026-09-01")
     parser.add_argument("--workers", type=int, default=12)
-    parser.add_argument("--hold-days", type=int, default=5)
+    parser.add_argument("--hold-days", type=int, default=3, help="Portfolio holding period in trading days")
     args = parser.parse_args()
 
     print("loading data...", flush=True)
@@ -68,12 +68,7 @@ def main() -> None:
     hs300_eq, hs300_stats = buy_hold_index(index_df, args.start, args.end)
     out_dir = ROOT / "output"
     docs_dir = ROOT / "docs"
-    plot_equity(results, hs300_eq, out_dir / "sequoia_x_equity.png")
-    # copy chart next to markdown for relative image path
     import shutil
-
-    docs_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(out_dir / "sequoia_x_equity.png", docs_dir / "sequoia_x_equity.png")
 
     meta = {
         "eval_start": args.start,
@@ -81,7 +76,11 @@ def main() -> None:
         "data_start": str(ohlcv["date"].min().date()),
         "data_end": str(ohlcv["date"].max().date()),
         "n_symbols": int(ohlcv["symbol"].nunique()),
+        "hold_days": int(args.hold_days),
     }
+    plot_equity(results, hs300_eq, out_dir / "sequoia_x_equity.png", hold_days=args.hold_days)
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(out_dir / "sequoia_x_equity.png", docs_dir / "sequoia_x_equity.png")
     render_markdown(results, hs300_stats, meta, docs_dir / "sequoia_x_backtest.md")
 
     summary = {
