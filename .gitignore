@@ -1,0 +1,8 @@
+data/*.parquet
+data/download_failed.csv
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+results/trades.parquet
+results/daily.parquet
