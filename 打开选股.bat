@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 echo.
-echo  Sequoia-X  http://127.0.0.1:8787/
+echo  Sequoia-X  http://127.0.0.1:8788/
 echo  点「扫描主板」或「扫描创业板」，不会扫全市场
 echo.
 where python >nul 2>&1
@@ -16,5 +16,5 @@ if not defined PY (
   pause
   goto :eof
 )
-start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8787/"
+start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8788/"
 %PY% serve_web.py

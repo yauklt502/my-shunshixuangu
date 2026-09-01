@@ -27,7 +27,13 @@ def test_old_pr19_strategies_removed():
         assert f"function {fn}" not in text
 
 
-def test_scan_controls_and_proxy_unchanged():
+def test_sequoia_uses_port_8788_not_pr19():
+    serve = (Path(__file__).resolve().parents[1] / "serve_web.py").read_text(encoding="utf-8")
+    bat = (Path(__file__).resolve().parents[1] / "打开选股.bat").read_text(encoding="utf-8")
+    assert "port = 8788" in serve
+    assert "8787" not in serve
+    assert "8788" in bat
+    assert "8787" not in bat
     text = HTML.read_text(encoding="utf-8")
     assert "扫描主板" in text
     assert "扫描创业板" in text

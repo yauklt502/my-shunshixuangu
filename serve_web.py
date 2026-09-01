@@ -139,7 +139,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    port = 8787
+    port = 8788
     print(f"Sequoia-X  http://127.0.0.1:{port}/")
     print(f"页面目录 {ROOT}")
     print("点「扫描主板」或「扫描创业板」，只扫该板块非 ST，不会扫全市场。")

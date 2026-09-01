@@ -15,7 +15,7 @@ chcp 65001 >nul
 cd /d "%~dp0"
 echo.
 echo  Sequoia-X  解压后双击本文件
-echo  浏览器将打开 http://127.0.0.1:8787/
+echo  浏览器将打开 http://127.0.0.1:8788/
 echo  点「扫描主板」或「扫描创业板」，不会扫全市场
 echo.
 where python >nul 2>&1
@@ -29,7 +29,7 @@ if not defined PY (
   pause
   goto :eof
 )
-start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8787/"
+start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8788/"
 %PY% serve_web.py
 """
 
@@ -38,7 +38,8 @@ README_TXT = """Sequoia-X 本地部署
 1. 解压本 zip，进入 Sequoia-X 文件夹
 2. 安装 Python 3：https://www.python.org/downloads/  安装时勾选 Add python.exe to PATH
 3. 双击 打开选股.bat
-4. 浏览器打开 http://127.0.0.1:8787/
+4. 浏览器打开 http://127.0.0.1:8788/
+   顺势选股仍用 8787，本页用 8788，互不影响。
 5. 点「扫描主板」或「扫描创业板」，或四套规则下的「只扫这套」
    - 海龟突破 / 均线放量 / 高窄旗形 / 涨停洗盘
    - 主板：600/601/603/605/000/001/002，非 ST、非次新

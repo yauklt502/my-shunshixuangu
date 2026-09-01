@@ -17,7 +17,7 @@
 
 **https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
 
-不要用 `file://` 直接打开 html。
+不要用 `file://` 直接打开 html。顺势选股继续用 http://127.0.0.1:8787/ ，Sequoia-X 用 **http://127.0.0.1:8788/** ，互不影响。
 
 ## 网页
 
@@ -25,7 +25,9 @@
 python3 serve_web.py
 ```
 
-Windows 可双击 `打开选股.bat`，打开 http://127.0.0.1:8787/
+Windows 可双击 `打开选股.bat`，打开 http://127.0.0.1:8788/
+
+顺势选股（PR #19）仍用 **8787**，本页用 **8788**，两套可以同时开。
 
 - 「扫描主板」：新浪 `sh_a`+`sz_a`，只留 `600/601/603/605/000/001/002` 非 ST、非次新
 - 「扫描创业板」：新浪 `cyb`，只留 `300` 开头非 ST、非次新
