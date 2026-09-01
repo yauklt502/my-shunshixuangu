@@ -11,6 +11,14 @@
 | 高窄旗形 | 近 40 日高低点比 > 1.6，近 10 日振幅 < 15%，缩量 |
 | 涨停洗盘 | 昨日涨停，今日阴线放量且最低价不破昨收 |
 
+## 本地下载
+
+解压后双击 `打开选股.bat`（需已安装 Python 3 并勾选 Add to PATH）：
+
+**https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
+
+不要用 `file://` 直接打开 html。
+
 ## 网页
 
 ```bash
