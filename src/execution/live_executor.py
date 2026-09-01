@@ -1,4 +1,4 @@
-"""Live executor with async order queue — broker adapter placeholder."""
+"""Live executor with async order queue and broker adapter."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
 from src.common import Order, OrderSide, OrderStatus, Position, SignalType, StrategySignal
+from src.execution.broker import BrokerAdapter, create_broker
 
 from .base import Executor
 
@@ -17,33 +18,30 @@ logger = logging.getLogger(__name__)
 
 
 class LiveExecutor(Executor):
-    """
-    Async order queue for live trading.
-    Replace _send_to_broker with actual broker API (e.g. 券商原生 API).
-    """
+    """Async order queue; delegates to BrokerAdapter (mock/rest/easytrader)."""
 
-    def __init__(self, broker_send: Optional[Callable[[Order], bool]] = None):
+    def __init__(
+        self,
+        broker: Optional[BrokerAdapter] = None,
+        on_fill: Optional[Callable[[Order], None]] = None,
+    ):
+        self.broker = broker or create_broker()
+        self.on_fill = on_fill
         self._queue: queue.Queue[Order] = queue.Queue()
         self._orders: Dict[str, Order] = {}
-        self._positions: Dict[str, Position] = {}
-        self._broker_send = broker_send or self._mock_broker_send
         self._worker = threading.Thread(target=self._process_queue, daemon=True)
         self._worker.start()
-
-    def _mock_broker_send(self, order: Order) -> bool:
-        logger.info("Mock broker: %s %s %d @ %.2f", order.side.value, order.symbol, order.quantity, order.price)
-        order.status = OrderStatus.FILLED
-        order.filled_quantity = order.quantity
-        order.filled_price = order.price
-        return True
 
     def _process_queue(self) -> None:
         while True:
             order = self._queue.get()
             try:
-                if self._broker_send(order):
-                    order.status = OrderStatus.SUBMITTED
-                    self._broker_send(order)
+                result = self.broker.submit_order(order)
+                order.status = result.status
+                order.filled_quantity = result.filled_quantity
+                order.filled_price = result.filled_price
+                if result.success and result.status == OrderStatus.FILLED and self.on_fill:
+                    self.on_fill(order)
             except Exception as e:
                 logger.error("Order failed: %s", e)
                 order.status = OrderStatus.REJECTED
@@ -69,12 +67,14 @@ class LiveExecutor(Executor):
     def cancel(self, order_id: str) -> bool:
         order = self._orders.get(order_id)
         if order and order.status in (OrderStatus.PENDING, OrderStatus.SUBMITTED):
-            order.status = OrderStatus.CANCELLED
-            return True
+            if self.broker.cancel_order(order_id):
+                order.status = OrderStatus.CANCELLED
+                return True
         return False
 
     def sync_positions(self) -> List[Position]:
-        return list(self._positions.values())
+        return self.broker.query_positions()
 
     def sync_orders(self) -> List[Order]:
-        return list(self._orders.values())
+        broker_orders = self.broker.query_orders()
+        return broker_orders or list(self._orders.values())

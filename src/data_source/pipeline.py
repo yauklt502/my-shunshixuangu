@@ -12,6 +12,7 @@ from .cache import DataCache
 from .failover import FailoverDataSource
 from .mock_adapter import MockDataSource
 from .mootdx_adapter import MootdxAdapter
+from .ths_adapter import ThsAdapter
 from .tushare_adapter import TushareAdapter
 
 
@@ -27,9 +28,9 @@ class DataPipeline:
                 [TushareAdapter(cache), MootdxAdapter(cache), MockDataSource()]
             )
         else:
-            # Live: realtime stream sources
+            # Live: realtime stream sources (mootdx → tushare → ths)
             self._source: DataSource = FailoverDataSource(
-                [MootdxAdapter(cache), TushareAdapter(cache)]
+                [MootdxAdapter(cache), TushareAdapter(cache), ThsAdapter(cache), MockDataSource()]
             )
 
     def get_historical(

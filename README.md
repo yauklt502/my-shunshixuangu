@@ -8,69 +8,82 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  前端复盘看板 (frontend/dashboard.html)                      │
+│  前端复盘看板 (frontend/dashboard.html) + WebSocket          │
 ├─────────────────────────────────────────────────────────────┤
-│  策略引擎层 → 风控层 → 交易执行层                            │
+│  API 服务 (FastAPI) — 回测 / 实盘 / 实时推送                  │
+├─────────────────────────────────────────────────────────────┤
+│  策略引擎层 → 风控层 → 交易执行层 → 券商适配器               │
 ├─────────────────────────────────────────────────────────────┤
 │  数据计算层 (指标预计算)                                      │
 ├─────────────────────────────────────────────────────────────┤
-│  数据源层 (多源降级 + 缓存)                                   │
+│  数据源层 (Tushare / Mootdx / 同花顺 / Mock + 实时流)         │
 ├─────────────────────────────────────────────────────────────┤
 │  存储层 (时序 JSON + SQLite + 审计日志)                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-| 层级 | 目录 | 职责 |
-|------|------|------|
-| 数据源层 | `src/data_source/` | 行情接入、缓存、故障切换、回测/实盘管道隔离 |
-| 数据计算层 | `src/compute/` | numpy 向量化指标、预计算缓存 |
-| 策略引擎层 | `src/strategy/` | 回测/实盘模式、信号输出（无下单逻辑） |
-| 风控层 | `src/risk/` | 信号前置校验，不通过则丢弃 |
-| 交易执行层 | `src/execution/` | 回测模拟撮合 / 实盘异步订单队列 |
-| 存储层 | `src/storage/` | K 线时序、交易记录、审计日志 |
-| 前端 | `frontend/` | 深色复盘看板，支持 localStorage |
-
 ## 快速开始
 
 ```bash
 pip install -r requirements.txt
-python -m src.main --mode backtest --symbol 000001 --limit 200
+
+# 回测
+python3 -m src.main --mode backtest --symbol 000001 --limit 200
+
+# 实盘（Mock 券商，纸面交易）
+python3 -m src.main --mode live --symbols 000001,600519 --poll-interval 5
+
+# 启动 API + 看板（浏览器访问 http://localhost:8000）
+python3 -m src.main --mode api --port 8000
 ```
 
-浏览器打开 `frontend/dashboard.html` 可本地运行简单回测演示。
+也可直接打开 `frontend/dashboard.html` 进行本地轻量回测；通过 API 模式可使用后端回测、WebSocket 实时信号和实盘控制。
 
 ## 环境变量
 
 | 变量 | 说明 |
 |------|------|
-| `TUSHARE_TOKEN` | Tushare Pro token（可选） |
+| `TUSHARE_TOKEN` | Tushare Pro token |
+| `BROKER_TYPE` | 券商类型：`mock`（默认）/ `rest` / `easytrader` |
+| `BROKER_API_URL` | REST 券商网关地址 |
+| `BROKER_API_TOKEN` | REST 网关鉴权 token |
+| `BROKER_CLIENT` | easytrader 客户端类型（如 `yh_client`） |
+| `BROKER_ACCOUNT` | easytrader 账户配置路径 |
+| `THS_API_URL` | 同花顺开放平台 HTTP 地址 |
+| `THS_API_TOKEN` | 同花顺 API token |
 
-无 token 时自动降级到 mootdx 或内置 Mock 数据源。
+## 内置策略
 
-## 策略规范
+| ID | 名称 |
+|----|------|
+| `ma5_climb` | 沿 5 日线台阶爬升 |
+| `triple_volume` | 三倍量战法 |
+| `shrink_limit_up` | 缩量涨停 |
+| `macd_cross` | MACD 金叉死叉 |
+| `kdj_oversold` | KDJ 超卖反弹 |
 
-- 信号仅三种：`none` / `open_long` / `close`
-- 策略只产信号，禁止内部下单
-- 示例策略：沿 5 日线爬升 (`Ma5ClimbStrategy`)、三倍量战法 (`TripleVolumeStrategy`)
+## API 端点
 
-## 风控规则
-
-- 单股/总仓位上限
-- ST、科创板过滤
-- 单日亏损阈值、连续亏损暂停
-- 涨跌停规避、防重复开仓
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/backtest` | 运行回测 |
+| POST | `/api/live/start` | 启动实盘 |
+| POST | `/api/live/stop` | 停止实盘 |
+| GET | `/api/live/status` | 实盘状态 |
+| GET | `/api/strategies` | 策略列表 |
+| WS | `/ws` | 实时事件推送 |
 
 ## 目录结构
 
 ```
 src/
-├── common/          # 领域模型与配置
-├── data_source/     # 数据源适配器
-├── compute/         # 技术指标
-├── strategy/        # 策略引擎
-├── risk/            # 风控
-├── execution/       # 执行层
-├── storage/         # 存储
+├── api/             # FastAPI 服务
+├── live/            # 实盘运行器
+├── trading/         # 信号→风控→执行管道
+├── execution/
+│   └── broker/      # 券商适配器 (mock/rest/easytrader)
+├── data_source/     # 数据源 + 实时流
+├── strategy/        # 策略引擎 + 注册表
 ├── backtest/        # 回测运行器
 └── main.py          # CLI 入口
 frontend/
@@ -80,6 +93,6 @@ frontend/
 ## 扩展指南
 
 1. **新增数据源**：继承 `DataSource`，注册到 `DataPipeline`
-2. **新增策略**：继承 `Strategy`，实现 `on_bar()`，注册到 `StrategyEngine`
-3. **新增风控规则**：继承 `RiskRule`，加入 `RiskController.rules`
-4. **实盘对接**：实现 `LiveExecutor._broker_send` 对接券商 API
+2. **新增策略**：继承 `Strategy`，加入 `strategy/registry.py`
+3. **对接券商 REST**：配置 `BROKER_TYPE=rest` 和 `BROKER_API_URL`
+4. **对接 easytrader**：`pip install easytrader`，配置 `BROKER_TYPE=easytrader`

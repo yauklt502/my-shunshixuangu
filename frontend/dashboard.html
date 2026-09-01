@@ -159,7 +159,8 @@
   <header>
     <h1>顺时选股 · 复盘看板</h1>
     <span class="badge">BACKTEST</span>
-    <span class="badge" id="env-badge">本地单文件模式</span>
+    <span class="badge" id="env-badge">本地模式</span>
+    <span class="badge" id="ws-badge">WS: 未连接</span>
   </header>
 
   <div class="layout">
@@ -227,6 +228,9 @@
       <select id="cfg-strategy">
         <option value="ma5_climb">沿5日线爬升</option>
         <option value="triple_volume">三倍量战法</option>
+        <option value="shrink_limit_up">缩量涨停</option>
+        <option value="macd_cross">MACD金叉</option>
+        <option value="kdj_oversold">KDJ超卖反弹</option>
       </select>
     </div>
     <div class="form-group">
@@ -234,12 +238,134 @@
       <input type="number" id="cfg-max-pos" value="20" min="1" max="100" />
     </div>
     <button id="btn-run">运行回测</button>
+    <button id="btn-api-run" style="background:#238636">后端回测 (API)</button>
+    <button id="btn-live-start" style="background:#8957e5">启动实盘</button>
+    <button id="btn-live-stop" style="background:#da3633">停止实盘</button>
     <button id="btn-save" style="background:#30363d;color:var(--text)">保存配置到本地</button>
   </aside>
   </div>
 
   <script>
     const STORAGE_KEY = "shunshi_dashboard_config";
+    const API_BASE = window.location.origin;
+    let ws = null;
+    let useBackend = false;
+
+    function setWsStatus(connected) {
+      const el = document.getElementById("ws-badge");
+      el.textContent = connected ? "WS: 已连接" : "WS: 未连接";
+      el.style.color = connected ? "var(--down)" : "var(--muted)";
+    }
+
+    function connectWebSocket() {
+      if (ws && ws.readyState <= 1) return;
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(`${proto}://${location.host}/ws`);
+      ws.onopen = () => setWsStatus(true);
+      ws.onclose = () => { setWsStatus(false); setTimeout(connectWebSocket, 3000); };
+      ws.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          handleWsEvent(msg.type, msg.data);
+        } catch (_) {}
+      };
+    }
+
+    function handleWsEvent(type, data) {
+      if (type === "signal") {
+        appendLiveSignal(data);
+      } else if (type === "bar_closed") {
+        document.getElementById("env-badge").textContent = "LIVE";
+        document.getElementById("idx-signals").textContent = data.signals || 0;
+      } else if (type === "backtest_complete" && data.report) {
+        applyBackendReport(data.report);
+      } else if (type === "live_started") {
+        document.getElementById("env-badge").textContent = "LIVE";
+      } else if (type === "live_stopped") {
+        document.getElementById("env-badge").textContent = "BACKTEST";
+      }
+    }
+
+    function appendLiveSignal(data) {
+      const tbody = document.getElementById("signal-table");
+      const row = document.createElement("tr");
+      const isBuy = data.signal === "open_long";
+      row.innerHTML = `<td>实时</td><td>${data.strategy_id}</td>
+        <td class="${isBuy ? "up" : "down"}">${isBuy ? "开多" : "平仓"}</td>
+        <td>${Number(data.price).toFixed(2)}</td><td>${data.reason || ""}</td>`;
+      tbody.prepend(row);
+    }
+
+    function applyBackendReport(report) {
+      if (report.total_return != null) {
+        const pct = (report.total_return * 100).toFixed(2);
+        document.getElementById("m-return").textContent = `${pct}%`;
+        document.getElementById("m-return").className = "m-val " + (report.total_return >= 0 ? "up" : "down");
+      }
+      if (report.win_rate != null)
+        document.getElementById("m-winrate").textContent = `${(report.win_rate * 100).toFixed(1)}%`;
+      if (report.profit_loss_ratio != null)
+        document.getElementById("m-pl").textContent = Number(report.profit_loss_ratio).toFixed(2);
+      if (report.max_drawdown != null)
+        document.getElementById("m-dd").textContent = `${(report.max_drawdown * 100).toFixed(2)}%`;
+    }
+
+    async function runBackendBacktest() {
+      const symbol = document.getElementById("cfg-symbol").value;
+      const period = document.getElementById("cfg-period").value;
+      document.getElementById("env-badge").textContent = "API";
+      try {
+        const resp = await fetch(`${API_BASE}/api/backtest`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol, period, limit: 200 }),
+        });
+        if (!resp.ok) throw new Error("API unavailable");
+        const data = await resp.json();
+        useBackend = true;
+        document.getElementById("idx-signals").textContent = data.signal_count || 0;
+        if (data.report) applyBackendReport(data.report);
+        if (data.signals?.length) {
+          const tbody = document.getElementById("signal-table");
+          tbody.innerHTML = data.signals.slice(-20).reverse().map(s => {
+            const isBuy = String(s.signal).includes("OPEN_LONG");
+            return `<tr><td>${s.timestamp || "-"}</td><td>${s.strategy_id}</td>
+              <td class="${isBuy ? "up" : "down"}">${isBuy ? "开多" : "平仓"}</td>
+              <td>${Number(s.price).toFixed(2)}</td><td>${s.reason || ""}</td></tr>`;
+          }).join("");
+        }
+        runBacktestLocal();
+      } catch (e) {
+        alert("后端不可用，使用本地回测: " + e.message);
+        runBacktestLocal();
+      }
+    }
+
+    async function startLive() {
+      const symbol = document.getElementById("cfg-symbol").value;
+      const period = document.getElementById("cfg-period").value;
+      try {
+        const resp = await fetch(`${API_BASE}/api/live/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbols: [symbol], poll_interval: 5, period }),
+        });
+        const data = await resp.json();
+        if (!data.ok) alert(data.message || "启动失败");
+        else document.getElementById("env-badge").textContent = "LIVE";
+      } catch (e) {
+        alert("启动实盘失败: " + e.message);
+      }
+    }
+
+    async function stopLive() {
+      try {
+        await fetch(`${API_BASE}/api/live/stop`, { method: "POST" });
+        document.getElementById("env-badge").textContent = "BACKTEST";
+      } catch (e) {
+        alert("停止失败: " + e.message);
+      }
+    }
 
     function rand(seed) {
       let s = seed;
@@ -291,6 +417,22 @@
           if (vr >= 3 && closes[i] > bars[i].open) signal = { type: "buy", reason: "三倍量阳线" };
           if (i > 5 && volumes[i - 1] / volMa5[i - 1] >= 3 && closes[i] < closes[i - 1] * 0.97)
             signal = { type: "sell", reason: "倍量后回落止损" };
+        } else if (strategyId === "shrink_limit_up") {
+          const prev = closes[i - 1];
+          const chg = (closes[i] - prev) / prev;
+          if (vr < 0.6 && chg >= 0.095) signal = { type: "buy", reason: "缩量涨停" };
+          if (chg >= 0.095 && closes[i] < closes[i - 1]) signal = { type: "sell", reason: "涨停打开" };
+        } else if (strategyId === "macd_cross") {
+          const e12 = ma(closes, 12), e26 = ma(closes, 26);
+          const dif = e12[i] - e26[i], prevDif = e12[i-1] - e26[i-1];
+          const dea = ma(closes.map((_, j) => (e12[j]||0)-(e26[j]||0)), 9)[i];
+          const prevDea = ma(closes.map((_, j) => (e12[j]||0)-(e26[j]||0)), 9)[i-1];
+          if (prevDif <= prevDea && dif > dea) signal = { type: "buy", reason: "MACD金叉" };
+          if (prevDif >= prevDea && dif < dea) signal = { type: "sell", reason: "MACD死叉" };
+        } else if (strategyId === "kdj_oversold") {
+          const k = 50 + (closes[i] - Math.min(...closes.slice(i-8,i+1))) * 2;
+          if (k < 30) signal = { type: "buy", reason: "KDJ超卖" };
+          if (k > 80) signal = { type: "sell", reason: "KDJ超买" };
         }
 
         if (signal) signals.push({ idx: i, ...signal, price: closes[i] });
@@ -421,7 +563,7 @@
       document.getElementById("idx-north").innerHTML = `<span class="up">+42.6亿</span>`;
     }
 
-    function runBacktest() {
+    function runBacktestLocal() {
       const symbol = document.getElementById("cfg-symbol").value;
       const strategy = document.getElementById("cfg-strategy").value;
       document.getElementById("current-symbol").textContent = symbol;
@@ -449,7 +591,12 @@
       }));
     }
 
-    document.getElementById("btn-run").addEventListener("click", runBacktest);
+    function runBacktest() { runBacktestLocal(); }
+
+    document.getElementById("btn-run").addEventListener("click", runBacktestLocal);
+    document.getElementById("btn-api-run").addEventListener("click", runBackendBacktest);
+    document.getElementById("btn-live-start").addEventListener("click", startLive);
+    document.getElementById("btn-live-stop").addEventListener("click", stopLive);
     document.getElementById("btn-save").addEventListener("click", () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         symbol: document.getElementById("cfg-symbol").value,
@@ -473,7 +620,11 @@
 
     initStockList();
     updateOverview();
-    runBacktest();
+    connectWebSocket();
+    if (location.port === "8000" || location.pathname === "/") {
+      document.getElementById("env-badge").textContent = "API";
+    }
+    runBacktestLocal();
   </script>
 </body>
 </html>

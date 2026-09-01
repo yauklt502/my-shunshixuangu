@@ -36,9 +36,27 @@ class StorageConfig:
 
 
 @dataclass
+class BrokerConfig:
+    broker_type: str = "mock"  # mock | rest | easytrader
+    api_url: str = ""
+    api_token: str = ""
+    client_type: str = "yh_client"
+    initial_cash: float = 1_000_000.0
+
+
+@dataclass
+class LiveConfig:
+    poll_interval_seconds: float = 5.0
+    symbols: List[str] = field(default_factory=lambda: ["000001"])
+    bar_period: str = "daily"
+
+
+@dataclass
 class AppConfig:
     environment: Environment = Environment.BACKTEST
     initial_capital: float = 1_000_000.0
     risk: RiskConfig = field(default_factory=RiskConfig)
     data_source: DataSourceConfig = field(default_factory=DataSourceConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
+    broker: BrokerConfig = field(default_factory=BrokerConfig)
+    live: LiveConfig = field(default_factory=LiveConfig)
