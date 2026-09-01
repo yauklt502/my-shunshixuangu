@@ -6,10 +6,16 @@ const TX_KLINE = [
   "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=",
   "https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=",
 ];
+const SINA_NODES = new Set(["sh_a", "sz_a", "cyb"]);
 const SINA_COUNT =
-  "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=hs_a";
+    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=";
 const SINA_LIST =
-  "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData";
+    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData";
+
+function sinaNode(raw) {
+  const n = (raw || "").trim();
+  return SINA_NODES.has(n) ? n : "cyb";
+}
 
 async function proxy(url, init = {}) {
   const r = await fetch(url, {
@@ -62,13 +68,14 @@ export default {
     }
 
     if (p === "/api/sina/count") {
-      return proxy(SINA_COUNT);
+      return proxy(SINA_COUNT + sinaNode(url.searchParams.get("node")));
     }
 
     if (p === "/api/sina/list") {
       const page = url.searchParams.get("page") || "1";
       const num = url.searchParams.get("num") || "80";
-      const u = `${SINA_LIST}?page=${page}&num=${num}&sort=symbol&asc=1&node=hs_a&symbol=&_s_r_a=page`;
+      const node = sinaNode(url.searchParams.get("node"));
+      const u = `${SINA_LIST}?page=${page}&num=${num}&sort=symbol&asc=1&node=${node}&symbol=&_s_r_a=page`;
       return proxy(u);
     }
 

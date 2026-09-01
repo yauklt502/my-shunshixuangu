@@ -85,7 +85,7 @@
   <aside class="side">
     <div class="card">
       <h3>怎么用</h3>
-      <div class="note">只扫<strong style="color:var(--txt)">主板</strong>或<strong style="color:var(--txt)">创业板</strong>，过滤 ST / 退市 / 科创板。点一次只拉该板块行情，不会扫全市场 4000+ 只。</div>
+      <div class="note">只扫<strong style="color:var(--txt)">主板</strong>（约 3000）或<strong style="color:var(--txt)">创业板 300</strong>（约 900），非 ST。名单不拉沪深全 A，不会出现 4970。</div>
       <button class="btn primary" id="scanMain" style="width:100%;margin-top:12px">扫描主板</button>
       <button class="btn" id="scanCyb" style="width:100%;margin-top:8px">扫描创业板</button>
       <div class="note" id="prog" style="margin-top:10px">尚未扫描</div>
@@ -99,7 +99,7 @@
     </div>
     <div class="card">
       <h3>数据源</h3>
-      <div class="note">行情：web.sqt.gtimg.cn / qt.gtimg.cn<br>日K：ifzq.gtimg.cn 前复权<br>列表：新浪 A 股节点（缓存 12 小时）</div>
+      <div class="note">行情：web.sqt.gtimg.cn / qt.gtimg.cn<br>日K：ifzq.gtimg.cn 前复权<br>名单：新浪 sh_a / sz_a / cyb，不拉 hs_a</div>
     </div>
   </aside>
 
@@ -119,7 +119,7 @@
       <button class="tab" data-tab="drag">龙头观察 <span class="c" id="cDrag">0</span></button>
     </div>
     <div class="card">
-      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」或「扫描创业板」。非 ST，不含科创板。休市用最近交易日。</div>
+      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」或「扫描创业板」。非 ST，不含科创 / 北交 / 301。休市用最近交易日。</div>
       <div class="scroll" id="panel"></div>
     </div>
   </main>
@@ -146,14 +146,20 @@ function klineUrl(code, count) {
   if (USE_PROXY) return `/api/kline?code=${encodeURIComponent(code)}&count=${count}`;
   return `https://${cur().kline}/appstock/app/fqkline/get?param=${code},day,,,${count},qfq`;
 }
-function sinaCountUrl() {
-  if (USE_PROXY) return "/api/sina/count";
-  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=hs_a";
+const SINA_NODE_OK = { sh_a: 1, sz_a: 1, cyb: 1 };
+function sinaNode(node) {
+  return SINA_NODE_OK[node] ? node : "cyb";
 }
-function sinaListUrl(page, pageSize) {
-  if (USE_PROXY) return `/api/sina/list?page=${page}&num=${pageSize}`;
+function sinaCountUrl(node) {
+  node = sinaNode(node);
+  if (USE_PROXY) return `/api/sina/count?node=${encodeURIComponent(node)}`;
+  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=" + node;
+}
+function sinaListUrl(node, page, pageSize) {
+  node = sinaNode(node);
+  if (USE_PROXY) return `/api/sina/list?node=${encodeURIComponent(node)}&page=${page}&num=${pageSize}`;
   return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
-    + `?page=${page}&num=${pageSize}&sort=symbol&asc=1&node=hs_a&symbol=&_s_r_a=page`;
+    + `?page=${page}&num=${pageSize}&sort=symbol&asc=1&node=${node}&symbol=&_s_r_a=page`;
 }
 function numOf(code) {
   return String(code).replace(/^(sh|sz|bj)/i, "");
@@ -304,44 +310,51 @@ function filterUniverse(rows) {
   return out;
 }
 
-async function getList() {
-  const keys = [
-    ["hs_a_list_v2", "hs_a_list_v2_ts"],
-    ["hs_a_list", "hs_a_list_ts"],
-  ];
-  for (const [ck, tk] of keys) {
-    const cache = localStorage.getItem(ck);
-    const ts = +localStorage.getItem(tk) || 0;
-    if (cache && Date.now() - ts < 12 * 3600 * 1000) {
-      try {
-        const filtered = filterUniverse(JSON.parse(cache));
-        if (filtered.length > 200) return filtered;
-      } catch (e) {}
-    }
-  }
-  const countUrl = sinaCountUrl();
-  const cr = await safeFetch(countUrl, { json: false });
+async function fetchSinaNode(node, label) {
+  const cr = await safeFetch(sinaCountUrl(node), { json: false });
   const raw = (await decodeGBK(cr)).replace(/"/g, "").trim();
-  const total = parseInt(raw, 10) || 4500;
+  const total = parseInt(raw, 10) || 0;
+  if (total < 10) throw new Error(label + "为空");
   const pageSize = 80;
   const pages = Math.ceil(total / pageSize);
   const rows = [];
   const idxs = Array.from({ length: pages }, (_, i) => i + 1);
   await mapLimit(idxs, 6, async page => {
-    const url = sinaListUrl(page, pageSize);
+    const url = sinaListUrl(node, page, pageSize);
     try {
       const r = await safeFetch(url, { json: false, timeout: 20000 });
       const txt = await decodeGBK(r);
       const batch = JSON.parse(txt);
       if (Array.isArray(batch)) rows.push(...batch);
     } catch (e) {}
-    if (rows.length % 400 < 80) setProg(`名单 ${rows.length}/${total}（稍后只扫主板或创业板）`);
+    setProg(`${label} ${Math.min(rows.length, total)}/${total}`);
   });
-  const out = filterUniverse(rows);
-  if (out.length > 200) {
+  return rows;
+}
+
+async function getList(board) {
+  board = board === "cyb" ? "cyb" : "main";
+  const cacheKey = board === "cyb" ? "board_list_cyb_v1" : "board_list_main_v1";
+  const tsKey = cacheKey + "_ts";
+  const cache = localStorage.getItem(cacheKey);
+  const ts = +localStorage.getItem(tsKey) || 0;
+  if (cache && Date.now() - ts < 12 * 3600 * 1000) {
     try {
-      localStorage.setItem("hs_a_list_v2", JSON.stringify(out));
-      localStorage.setItem("hs_a_list_v2_ts", String(Date.now()));
+      const filtered = filterUniverse(JSON.parse(cache)).filter(m => inBoard(m.symbol, board));
+      if (filtered.length > 50) return filtered;
+    } catch (e) {}
+  }
+  const rows = board === "cyb"
+    ? await fetchSinaNode("cyb", "创业板名单")
+    : (await Promise.all([
+        fetchSinaNode("sh_a", "沪市名单"),
+        fetchSinaNode("sz_a", "深市名单"),
+      ])).flat();
+  const out = filterUniverse(rows).filter(m => inBoard(m.symbol, board));
+  if (out.length > 50) {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(out));
+      localStorage.setItem(tsKey, String(Date.now()));
     } catch (e) {}
   }
   return out;
@@ -624,9 +637,8 @@ async function scanAll(board) {
   setScanBusy(true);
   const boardName = board === "cyb" ? "创业板" : "主板";
   try {
-    setProg(`名单（只要${boardName}、非 ST）…`);
-    const universe = await getList();
-    const meta = universe.filter(m => inBoard(m.symbol, board) && !isSTName(m.name));
+    setProg(`${boardName}名单（非 ST）…`);
+    const meta = await getList(board);
     if (meta.length < 50) throw new Error(boardName + "列表过短");
     setProg(`${boardName}非 ST ${meta.length} 只，拉行情…`);
     const quotes = await fetchTXQuotes(meta.map(m => m.symbol));

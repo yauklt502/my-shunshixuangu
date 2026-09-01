@@ -29,14 +29,20 @@ TX_KLINE = [
     "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=",
     "https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=",
 ]
+SINA_NODES = frozenset({"sh_a", "sz_a", "cyb"})
 SINA_COUNT = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
-    "Market_Center.getHQNodeStockCount?node=hs_a"
+    "Market_Center.getHQNodeStockCount?node="
 )
 SINA_LIST = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
     "Market_Center.getHQNodeData"
 )
+
+
+def _sina_node(raw: str) -> str:
+    n = (raw or "").strip()
+    return n if n in SINA_NODES else "cyb"
 
 
 def _get(url: str) -> tuple[int, bytes, str]:
@@ -88,16 +94,18 @@ class Handler(SimpleHTTPRequestHandler):
                     last = str(e).encode()
             return self._send(502, last, "text/plain; charset=utf-8")
         if parsed.path == "/api/sina/count":
+            node = _sina_node((q.get("node") or ["cyb"])[0])
             try:
-                status, body, ctype = _get(SINA_COUNT)
+                status, body, ctype = _get(SINA_COUNT + node)
                 return self._send(status, body, ctype or "text/plain; charset=gbk")
             except Exception as e:
                 return self._send(502, str(e).encode(), "text/plain; charset=utf-8")
         if parsed.path == "/api/sina/list":
             page = (q.get("page") or ["1"])[0]
             num = (q.get("num") or ["80"])[0]
+            node = _sina_node((q.get("node") or ["cyb"])[0])
             url = (
-                f"{SINA_LIST}?page={page}&num={num}&sort=symbol&asc=1&node=hs_a"
+                f"{SINA_LIST}?page={page}&num={num}&sort=symbol&asc=1&node={node}"
                 f"&symbol=&_s_r_a=page"
             )
             try:
