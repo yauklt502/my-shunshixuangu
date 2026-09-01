@@ -367,7 +367,76 @@ def conv(x):
     return x
 
 
+OFFICIAL = Params(
+    vol_lo=0.8,
+    vol_hi=5.0,
+    mv_lo=25.0,
+    mv_hi=100.0,
+    auction_lo=-0.08,
+    auction_hi=-0.02,
+    range_lo=0.015,
+    market_fb_lo=20,
+    market_fb_hi=160,
+    idx_open_lo=-0.02,
+    rank="auction_pct",
+    rank_asc=True,
+    top_n=3,
+    tp=0.015,
+    sl=0.0,
+    cost=0.0015,
+)
+
+TRADE_COLS = [
+    "next_date",
+    "date",
+    "code",
+    "name",
+    "auction_pct",
+    "buy_open",
+    "sell_high",
+    "sell_low",
+    "sell_close",
+    "ret",
+    "exit",
+    "win",
+    "rank_in_day",
+    "vol_ratio",
+    "float_mv_yi",
+    "range_pct",
+    "y_one_word",
+    "market_fb_n",
+    "idx_open_pct",
+]
+
+
+def write_official(uni: pd.DataFrame, train_end: str) -> dict:
+    trades = select_and_trade(uni, OFFICIAL)
+    trades = trades.copy()
+    report = {
+        "name": "shouban_auction_lowopen_tp15",
+        "train_end": train_end,
+        "params": asdict(OFFICIAL),
+        "full": summarize(trades, "full"),
+        "train": summarize(trades.loc[trades["next_date"] <= train_end], "train"),
+        "test": summarize(trades.loc[trades["next_date"] > train_end], "test"),
+        "by_year": {},
+    }
+    years = trades["next_date"].astype(str).str[:4]
+    for y, g in trades.groupby(years):
+        report["by_year"][str(y)] = summarize(g, str(y))
+    (RESULTS / "best_report.json").write_text(json.dumps(conv(report), ensure_ascii=False, indent=2))
+    keep = [c for c in TRADE_COLS if c in trades.columns]
+    trades[keep].to_csv(RESULTS / "best_trades.csv", index=False, encoding="utf-8-sig")
+    return report
+
+
 def main():
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--grid", action="store_true", help="also run the exploratory EOD/TP-SL grid")
+    args = ap.parse_args()
+
     kline, names, idx = load_frames()
     uni = build_universe(kline, names, idx)
     uni.to_parquet(RESULTS / "universe.parquet", index=False)
@@ -390,48 +459,27 @@ def main():
         train_end = dates[int(len(dates) * 0.62)]
     print("train_end", train_end, "range", dates[0], dates[-1], "n_dates", len(dates))
 
-    g = grid_search(uni, train_end)
-    best = pick_best(g)
-    p = params_from_row(best)
-    trades = select_and_trade(uni, p)
-    train = trades.loc[trades["next_date"] <= train_end]
-    test = trades.loc[trades["next_date"] > train_end]
-    report = {
-        "train_end": train_end,
-        "params": asdict(p),
-        "full": summarize(trades, "full"),
-        "train": summarize(train, "train"),
-        "test": summarize(test, "test"),
-    }
-    (RESULTS / "best_report.json").write_text(json.dumps(conv(report), ensure_ascii=False, indent=2))
-    cols = [
-        "next_date",
-        "date",
-        "code",
-        "name",
-        "auction_pct",
-        "buy_open",
-        "sell_high",
-        "sell_low",
-        "sell_close",
-        "ret",
-        "exit",
-        "win",
-        "rank_in_day",
-        "vol_ratio",
-        "float_mv_yi",
-        "range_pct",
-        "y_one_word",
-        "market_fb_n",
-        "idx_open_pct",
-    ]
-    trades[cols].to_csv(RESULTS / "best_trades.csv", index=False, encoding="utf-8-sig")
+    report = write_official(uni, train_end)
     print(json.dumps(conv(report), ensure_ascii=False, indent=2))
 
-    # also dump a few high-win EOD (no tp/sl) rows for honesty
-    eod = g.loc[g["tp"] == 0].sort_values(["test_win", "train_win", "test_avg"], ascending=False).head(15)
-    eod.to_csv(RESULTS / "best_eod.csv", index=False, encoding="utf-8-sig")
-    print("best EOD test_win", float(eod.iloc[0]["test_win"]) if len(eod) else None)
+    if args.grid:
+        g = grid_search(uni, train_end)
+        best = pick_best(g)
+        p = params_from_row(best)
+        trades = select_and_trade(uni, p)
+        eod_report = {
+            "train_end": train_end,
+            "params": asdict(p),
+            "full": summarize(trades, "full"),
+            "train": summarize(trades.loc[trades["next_date"] <= train_end], "train"),
+            "test": summarize(trades.loc[trades["next_date"] > train_end], "test"),
+        }
+        (RESULTS / "eod_best_report.json").write_text(
+            json.dumps(conv(eod_report), ensure_ascii=False, indent=2)
+        )
+        eod = g.loc[g["tp"] == 0].sort_values(["test_win", "train_win", "test_avg"], ascending=False).head(15)
+        eod.to_csv(RESULTS / "best_eod.csv", index=False, encoding="utf-8-sig")
+        print("exploratory grid best test_win", float(best["test_win"]))
 
 
 if __name__ == "__main__":
