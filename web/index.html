@@ -77,15 +77,17 @@
   <div class="clock" id="clock">--:--:--</div>
   <div class="conn" id="conn">● 未测连接</div>
   <button class="btn" id="connBtn">测连接</button>
-  <button class="btn primary" id="scanBtn">扫描四套</button>
+  <button class="btn primary" id="scanMainTop">扫描主板</button>
+  <button class="btn" id="scanCybTop">扫描创业板</button>
 </header>
 
 <div class="layout">
   <aside class="side">
     <div class="card">
       <h3>怎么用</h3>
-      <div class="note">点「扫描四套」：新浪拉股票列表，腾讯批量行情 + 前复权日 K（和 <a href="https://zt.mininas.cc/" style="color:#93c5fd">zt.mininas.cc</a> 同一套公网源）。浏览器直连，不用通达信。</div>
-      <button class="btn primary" id="scanBtn2" style="width:100%;margin-top:12px">扫描四套</button>
+      <div class="note">只扫<strong style="color:var(--txt)">主板</strong>或<strong style="color:var(--txt)">创业板</strong>，过滤 ST / 退市 / 科创板。点一次只拉该板块行情，不会扫全市场 4000+ 只。</div>
+      <button class="btn primary" id="scanMain" style="width:100%;margin-top:12px">扫描主板</button>
+      <button class="btn" id="scanCyb" style="width:100%;margin-top:8px">扫描创业板</button>
       <div class="note" id="prog" style="margin-top:10px">尚未扫描</div>
     </div>
     <div class="card">
@@ -117,7 +119,7 @@
       <button class="tab" data-tab="drag">龙头观察 <span class="c" id="cDrag">0</span></button>
     </div>
     <div class="card">
-      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后点扫描。休市时用最近交易日行情。</div>
+      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」或「扫描创业板」。非 ST，不含科创板。休市用最近交易日。</div>
       <div class="scroll" id="panel"></div>
     </div>
   </main>
@@ -153,15 +155,42 @@ function sinaListUrl(page, pageSize) {
   return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
     + `?page=${page}&num=${pageSize}&sort=symbol&asc=1&node=hs_a&symbol=&_s_r_a=page`;
 }
+function numOf(code) {
+  return String(code).replace(/^(sh|sz|bj)/i, "");
+}
+function isSTName(name) {
+  return /ST|退|摘牌/.test(name || "");
+}
+function isMainCode(code) {
+  return /^(600|601|603|605|000|001|002)/.test(numOf(code));
+}
+function isCybCode(code) {
+  return /^300/.test(numOf(code));
+}
+function inBoard(code, board) {
+  return board === "cyb" ? isCybCode(code) : isMainCode(code);
+}
+
+const SCAN_BTNS = [
+  { id: "scanMain", idle: "扫描主板" },
+  { id: "scanCyb", idle: "扫描创业板" },
+  { id: "scanMainTop", idle: "扫描主板" },
+  { id: "scanCybTop", idle: "扫描创业板" },
+];
+
 const state = {
-  running: false,
   tab: "main",
+  running: false,
   main: [],
   cyb: [],
   yao: [],
   yaoNear: [],
   drag: [],
+  dragMain: [],
+  dragCyb: [],
   maybe: [],
+  maybeMain: [],
+  maybeCyb: [],
   lamp: { code: 1, label: "未测", score: null },
   src: "",
 };
@@ -205,13 +234,14 @@ async function fetchTXQuotes(codes) {
         if (!m) return;
         const code = m[1], f = m[2].split("~");
         if (f.length < 45) return;
+        const name = f[1] || "";
+        if (isSTName(name)) return;
+        if (!isMainCode(code) && !isCybCode(code)) return;
         const price = +f[3], prev = +f[4], open = +f[5];
         const high = +f[33], low = +f[34];
         const volHand = +f[6];
         const amountWan = +f[37];
         if (!(price > 0) || !(prev > 0)) return;
-        const name = f[1] || "";
-        if (/ST|退/.test(name)) return;
         out[code] = {
           code, name, price, prev, open, high, low,
           pct: +((price / prev - 1) * 100).toFixed(2),
@@ -253,11 +283,41 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
+function universeRow(it) {
+  const code = String(it.code || "").padStart(6, "0");
+  const symbol = String(it.symbol || (code.startsWith("6") ? "sh" + code : "sz" + code));
+  const name = it.name || "";
+  if (isSTName(name)) return null;
+  if (!isMainCode(symbol) && !isCybCode(symbol)) return null;
+  return { code, symbol, name };
+}
+
+function filterUniverse(rows) {
+  const seen = new Set();
+  const out = [];
+  (rows || []).forEach(it => {
+    const row = universeRow(it);
+    if (!row || seen.has(row.symbol)) return;
+    seen.add(row.symbol);
+    out.push(row);
+  });
+  return out;
+}
+
 async function getList() {
-  const cache = localStorage.getItem("hs_a_list");
-  const ts = +localStorage.getItem("hs_a_list_ts") || 0;
-  if (cache && Date.now() - ts < 12 * 3600 * 1000) {
-    try { return JSON.parse(cache); } catch (e) {}
+  const keys = [
+    ["hs_a_list_v2", "hs_a_list_v2_ts"],
+    ["hs_a_list", "hs_a_list_ts"],
+  ];
+  for (const [ck, tk] of keys) {
+    const cache = localStorage.getItem(ck);
+    const ts = +localStorage.getItem(tk) || 0;
+    if (cache && Date.now() - ts < 12 * 3600 * 1000) {
+      try {
+        const filtered = filterUniverse(JSON.parse(cache));
+        if (filtered.length > 200) return filtered;
+      } catch (e) {}
+    }
   }
   const countUrl = sinaCountUrl();
   const cr = await safeFetch(countUrl, { json: false });
@@ -275,23 +335,13 @@ async function getList() {
       const batch = JSON.parse(txt);
       if (Array.isArray(batch)) rows.push(...batch);
     } catch (e) {}
-    if (rows.length % 400 < 80) setProg(`列表 ${rows.length}/${total}`);
+    if (rows.length % 400 < 80) setProg(`名单 ${rows.length}/${total}（稍后只扫主板或创业板）`);
   });
-  const prefix = /^(000|001|002|300|301|600|601|603|605|688)/;
-  const out = [];
-  const seen = new Set();
-  rows.forEach(it => {
-    const code = String(it.code || "").padStart(6, "0");
-    const symbol = String(it.symbol || (code.startsWith("6") ? "sh" + code : "sz" + code));
-    const name = it.name || "";
-    if (!prefix.test(code) || /ST|退/.test(name) || seen.has(symbol)) return;
-    seen.add(symbol);
-    out.push({ code, symbol, name });
-  });
-  if (out.length > 500) {
+  const out = filterUniverse(rows);
+  if (out.length > 200) {
     try {
-      localStorage.setItem("hs_a_list", JSON.stringify(out));
-      localStorage.setItem("hs_a_list_ts", String(Date.now()));
+      localStorage.setItem("hs_a_list_v2", JSON.stringify(out));
+      localStorage.setItem("hs_a_list_v2_ts", String(Date.now()));
     } catch (e) {}
   }
   return out;
@@ -546,21 +596,45 @@ async function checkConn() {
   }
 }
 
-async function scanAll() {
+function setScanBusy(busy) {
+  SCAN_BTNS.forEach(({ id, idle }) => {
+    const el = $(id);
+    if (!el) return;
+    el.disabled = busy;
+    el.textContent = busy ? "扫描中…" : idle;
+  });
+}
+
+function mergeDragon() {
+  const drag = [...state.dragMain, ...state.dragCyb].sort((a, b) => b.score - a.score);
+  state.drag = drag.slice(0, 3);
+  const maybe = [...state.maybeMain, ...state.maybeCyb].sort((a, b) => b.amount - a.amount);
+  state.maybe = maybe.slice(0, 5);
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+}
+
+async function scanAll(board) {
+  board = board === "cyb" ? "cyb" : "main";
   if (state.running) return;
   state.running = true;
-  ["scanBtn", "scanBtn2"].forEach(id => { $(id).disabled = true; $(id).textContent = "扫描中…"; });
+  setScanBusy(true);
+  const boardName = board === "cyb" ? "创业板" : "主板";
   try {
-    setProg("股票列表…");
-    const meta = await getList();
-    if (meta.length < 100) throw new Error("列表过短");
-    setProg(`列表 ${meta.length}，拉行情…`);
+    setProg(`名单（只要${boardName}、非 ST）…`);
+    const universe = await getList();
+    const meta = universe.filter(m => inBoard(m.symbol, board) && !isSTName(m.name));
+    if (meta.length < 50) throw new Error(boardName + "列表过短");
+    setProg(`${boardName}非 ST ${meta.length} 只，拉行情…`);
     const quotes = await fetchTXQuotes(meta.map(m => m.symbol));
     const nameBySym = new Map(meta.map(m => [m.symbol, m.name]));
     Object.values(quotes).forEach(q => {
       if (!q.name) q.name = nameBySym.get(q.code) || "";
     });
-    const all = Object.values(quotes);
+    const all = Object.values(quotes).filter(q => inBoard(q.code, board) && !isSTName(q.name));
     if (!all.length) throw new Error("无行情");
     state.src = "tx";
     $("conn").textContent = "● 实时已连 · 腾讯";
@@ -572,10 +646,13 @@ async function scanAll() {
     const needK = new Map();
     const add = q => { if (!needK.has(q.code)) needK.set(q.code, q); };
     all.forEach(q => {
-      const num = q.code.replace(/^(sh|sz)/, "");
-      if (/^(600|601|603|605|000|001|002)/.test(num) && q.pct > 2 && q.pct < 5.5 && q.amount >= 1e8 && q.amp <= 10) add(q);
-      if (num.startsWith("300") && q.pct >= 3 && q.pct <= 12 && (q.volRatio == null || q.volRatio >= 1.2)) add(q);
-      if (/^(600|601|603|605|000|001)/.test(num) && !num.startsWith("002") && q.pct >= 2 && q.amount >= 8e8) add(q);
+      const num = numOf(q.code);
+      if (board === "main") {
+        if (isMainCode(q.code) && q.pct > 2 && q.pct < 5.5 && q.amount >= 1e8 && q.amp <= 10) add(q);
+        if (/^(600|601|603|605|000|001)/.test(num) && !num.startsWith("002") && q.pct >= 2 && q.amount >= 8e8) add(q);
+      } else if (isCybCode(q.code) && q.pct >= 3 && q.pct <= 12 && (q.volRatio == null || q.volRatio >= 1.2)) {
+        add(q);
+      }
     });
     const dragonPool = all.filter(q => q.pct > 3 || q.amount > 2e8)
       .sort((a, b) => b.amount - a.amount);
@@ -588,50 +665,68 @@ async function scanAll() {
       try { feats[q.code] = feat(await fetchKline(q.code, 130), q); }
       catch (e) {}
       done++;
-      if (done % 8 === 0 || done === jobs.length) setProg(`核验 K 线 ${done}/${jobs.length}`);
+      if (done % 8 === 0 || done === jobs.length) setProg(`${boardName}核验 K 线 ${done}/${jobs.length}`);
     });
 
-    const main = [], cyb = [], yao = [], yaoNear = [];
-    jobs.forEach(q => {
-      const f = feats[q.code];
-      if (!f) return;
-      const m = screenMain(q, f); if (m) main.push(m);
-      const c = screenCyb(q, f); if (c) cyb.push(c);
-      const y = screenYao(q, f);
-      if (y && !y.skip) {
-        if (y.near) yaoNear.push(y);
-        else yao.push(y);
-      }
-    });
-    main.sort((a, b) => b.score - a.score);
-    cyb.sort((a, b) => b.score - a.score);
-    yao.sort((a, b) => b.score - a.score);
-    yaoNear.sort((a, b) => b.score - a.score);
-    state.main = main.slice(0, 3);
-    state.cyb = cyb.slice(0, 8);
-    if (state.lamp.code === 0) { state.yao = []; state.yaoNear = yao.concat(yaoNear); }
-    else { state.yao = yao; state.yaoNear = yaoNear; }
+    if (board === "main") {
+      const main = [], yao = [], yaoNear = [];
+      jobs.forEach(q => {
+        const f = feats[q.code];
+        if (!f) return;
+        const m = screenMain(q, f); if (m) main.push(m);
+        const y = screenYao(q, f);
+        if (y && !y.skip) {
+          if (y.near) yaoNear.push(y);
+          else yao.push(y);
+        }
+      });
+      main.sort((a, b) => b.score - a.score);
+      yao.sort((a, b) => b.score - a.score);
+      yaoNear.sort((a, b) => b.score - a.score);
+      state.main = main.slice(0, 3);
+      if (state.lamp.code === 0) { state.yao = []; state.yaoNear = yao.concat(yaoNear); }
+      else { state.yao = yao; state.yaoNear = yaoNear; }
+      switchTab("main");
+    } else {
+      const cyb = [];
+      jobs.forEach(q => {
+        const f = feats[q.code];
+        if (!f) return;
+        const c = screenCyb(q, f); if (c) cyb.push(c);
+      });
+      cyb.sort((a, b) => b.score - a.score);
+      state.cyb = cyb.slice(0, 8);
+      switchTab("cyb");
+    }
 
-    const dscore = [...dragonPool];
+    const dscore = dragonPool.map(q => ({ ...q }));
     const maxAmt = Math.max(...dscore.map(x => x.amount), 1);
     dscore.forEach(q => {
-      const num = q.code.replace(/^(sh|sz)/, "");
-      const is20 = /^(300|688)/.test(num);
+      const num = numOf(q.code);
+      const is20 = num.startsWith("300");
       q.isLimit = is20 ? q.pct >= 19.5 : q.pct >= 9.5;
       q.consec = feats[q.code] ? feats[q.code].consec : 0;
       q.score = (q.isLimit ? 1000 : 0) + q.consec * 100 + q.pct * 2 + (q.amount / maxAmt) * 50;
     });
     dscore.sort((a, b) => b.score - a.score);
-    state.drag = dscore.slice(0, 3);
-    state.maybe = dscore.filter(q => {
+    const maybe = dscore.filter(q => {
       if (q.isLimit || q.pct < 5) return false;
-      const num = q.code.replace(/^(sh|sz)/, "");
-      if (/^(300|688)/.test(num)) return q.pct < 15;
+      const num = numOf(q.code);
+      if (num.startsWith("300")) return q.pct < 15;
       return q.pct < 9;
     }).slice(0, 5);
+    if (board === "main") {
+      state.dragMain = dscore.slice(0, 3);
+      state.maybeMain = maybe;
+    } else {
+      state.dragCyb = dscore.slice(0, 3);
+      state.maybeCyb = maybe;
+    }
+    mergeDragon();
 
-    $("snapInfo").textContent = `扫描完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · 腾讯 · 列表 ${meta.length} · 行情 ${all.length} · K线 ${jobs.length}`;
-    setProg("完成");
+    $("snapInfo").textContent =
+      `${boardName}扫描完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · 腾讯 · 非ST ${meta.length} 只 · 行情 ${all.length} · K线 ${jobs.length}（未扫全市场）`;
+    setProg(`${boardName}完成 · ${meta.length} 只`);
     hideHint();
     render();
   } catch (e) {
@@ -639,13 +734,15 @@ async function scanAll() {
     setProg("失败");
   } finally {
     state.running = false;
-    ["scanBtn", "scanBtn2"].forEach(id => { $(id).disabled = false; $(id).textContent = "扫描四套"; });
+    setScanBusy(false);
   }
 }
 
 $("connBtn").onclick = checkConn;
-$("scanBtn").onclick = scanAll;
-$("scanBtn2").onclick = scanAll;
+$("scanMain").onclick = () => scanAll("main");
+$("scanCyb").onclick = () => scanAll("cyb");
+$("scanMainTop").onclick = () => scanAll("main");
+$("scanCybTop").onclick = () => scanAll("cyb");
 render();
 checkConn();
 </script>

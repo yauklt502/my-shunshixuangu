@@ -8,7 +8,18 @@ import urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent / "web"
+
+def _web_root() -> Path:
+    here = Path(__file__).resolve().parent
+    if (here / "index.html").is_file():
+        return here
+    web = here / "web"
+    if (web / "index.html").is_file():
+        return web
+    return here.parent / "web"
+
+
+ROOT = _web_root()
 UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -99,5 +110,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = 8787
-    print(f"http://127.0.0.1:{port}/")
+    print(f"打开 http://127.0.0.1:{port}/")
+    print(f"页面目录 {ROOT}")
+    print("点「扫描主板」或「扫描创业板」，只扫该板块非 ST，不会扫全市场。")
     ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
