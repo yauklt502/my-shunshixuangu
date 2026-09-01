@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>顺时选股 · 复盘看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --panel: #121826;
+      --panel2: #1a2234;
+      --border: #2a3548;
+      --text: #e8edf5;
+      --muted: #8b95a8;
+      --accent: #5b9cf5;
+      --up: #ef4444;
+      --down: #22c55e;
+      --warn: #f59e0b;
+      --font: "PingFang SC", "Microsoft YaHei", "JetBrains Mono", sans-serif;
+      --mono: "JetBrains Mono", "Consolas", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 13px;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      background: var(--panel);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      flex-wrap: nowrap;
+      min-height: 49px;
+    }
+    .header-spacer { flex: 1; min-width: 12px; }
+    header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      grid-template-rows: auto 1fr;
+      gap: 1px;
+      background: var(--border);
+      height: calc(100vh - 49px);
+    }
+    .panel {
+      background: var(--panel);
+      padding: 12px;
+      overflow: auto;
+    }
+    .panel-title {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      grid-column: 1 / -1;
+    }
+    .overview-item {
+      background: var(--panel);
+      padding: 12px 16px;
+    }
+    .overview-item .label { color: var(--muted); font-size: 11px; }
+    .overview-item .value { font-size: 18px; margin-top: 4px; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .stock-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .stock-card {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .stock-card:hover { border-color: var(--accent); }
+    .stock-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(91,156,245,0.3); }
+    .stock-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .stock-card-name { font-size: 13px; font-weight: 600; }
+    .stock-card-code { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+    .stock-card-price { text-align: right; font-family: var(--mono); }
+    .stock-card-price .pct { font-size: 13px; font-weight: 600; }
+    .stock-card-reason { font-size: 10px; color: var(--warn); margin-top: 4px; }
+    .stock-card canvas.sparkline { width: 100%; height: 36px; display: block; margin-top: 4px; border-radius: 4px; }
+    .pick-empty { color: var(--muted); font-size: 12px; padding: 12px 6px; text-align: center; }
+    .btn-pick { background: linear-gradient(135deg, #7c3aed, #8957e5) !important; font-weight: 600; }
+    .btn-pick.loading { opacity: 0.6; cursor: wait; }
+    .chart-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .chart-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 10px 14px;
+      background: var(--panel2);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .chart-info .ci-item { display: flex; gap: 6px; align-items: baseline; }
+    .chart-info .ci-label { color: var(--muted); }
+    .chart-info .ci-val { font-family: var(--mono); font-weight: 600; }
+    .chart-info .ci-val.big { font-size: 18px; }
+    #kline-chart { width: 100%; height: 380px; }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 6px 14px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    .chart-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .leg-box { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .leg-line { width: 16px; height: 2px; display: inline-block; border-radius: 1px; }
+    #equity-chart { height: 130px; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; background: var(--bg); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: 11px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      font-family: var(--font);
+      font-size: 12px;
+    }
+    button {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      padding: 8px 14px;
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      width: 100%;
+      margin-top: 6px;
+    }
+    button:hover { opacity: 0.9; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .metric-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .metric-box .m-label { font-size: 10px; color: var(--muted); }
+    .metric-box .m-val { font-size: 14px; margin-top: 2px; }
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .header-label {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .header-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 4px;
+      height: 30px;
+      min-width: 108px;
+    }
+    .header-select:focus { outline: 1px solid var(--accent); }
+    .header-connect {
+      background: #238636;
+      color: #fff;
+      border: none;
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 5px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      height: 30px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .header-connect:hover { opacity: 0.9; }
+    .header-connect.connected {
+      background: #30363d;
+      color: var(--down);
+      border: 1px solid var(--down);
+    }
+    .header-connect.connecting { opacity: 0.7; cursor: wait; }
+    #data-badge.connected { color: var(--down); border-color: var(--down); }
+    #data-badge.error { color: var(--up); border-color: var(--up); }
+    #ws-badge.connected { color: var(--down); border-color: var(--down); }
+    #ws-badge.connecting { color: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <h1>顺时选股 · 复盘看板</h1>
+      <span class="badge">BACKTEST</span>
+      <span class="badge" id="env-badge">本地模式</span>
+      <span class="badge" id="ws-badge">WS:未连接</span>
+      <span class="badge" id="data-badge">数据:未连接</span>
+      <span class="header-spacer"></span>
+      <div class="header-tools">
+        <span class="header-label">数据端口</span>
+        <select id="data-port" class="header-select" title="行情数据源">
+          <option value="eastmoney" selected>东方财富</option>
+          <option value="tdx">通达信 TDX</option>
+          <option value="tushare">Tushare</option>
+          <option value="mootdx">Mootdx</option>
+          <option value="ths">同花顺</option>
+          <option value="mock">本地模拟</option>
+        </select>
+        <button id="btn-connect" class="header-connect" type="button">连接</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="overview-grid">
+      <div class="overview-item">
+        <div class="label">上证指数</div>
+        <div class="value" id="idx-sh">—</div>
+      </div>
+      <div class="overview-item">
+        <div class="label">涨跌家数</div>
+        <div class="value" id="idx-breadth">—</div>
+      </div>
+      <div class="overview-item">
+        <div class="label">北向资金</div>
+        <div class="value" id="idx-north">—</div>
+      </div>
+      <div class="overview-item">
+        <div class="label">策略信号数</div>
+        <div class="value" id="idx-signals">0</div>
+      </div>
+    </div>
+
+  <aside class="panel">
+    <div class="panel-title">策略选股结果 <span id="pick-count" style="color:var(--accent)">(0)</span></div>
+    <div id="pick-status" style="font-size:11px;color:var(--muted);margin-bottom:8px">选择策略后点击「选股」</div>
+    <ul class="stock-list" id="stock-list"></ul>
+  </aside>
+
+  <main class="panel">
+    <div class="panel-title">K 线 · <span id="current-symbol">000001</span> <span id="current-name" style="color:var(--muted);font-weight:400"></span></div>
+    <div class="chart-wrap">
+      <div class="chart-info" id="chart-info">
+        <div class="ci-item"><span class="ci-label">现价</span><span class="ci-val big" id="ci-price">—</span></div>
+        <div class="ci-item"><span class="ci-label">涨跌</span><span class="ci-val" id="ci-change">—</span></div>
+        <div class="ci-item"><span class="ci-label">最高</span><span class="ci-val" id="ci-high">—</span></div>
+        <div class="ci-item"><span class="ci-label">最低</span><span class="ci-val" id="ci-low">—</span></div>
+        <div class="ci-item"><span class="ci-label">成交量</span><span class="ci-val" id="ci-vol">—</span></div>
+      </div>
+      <div id="kline-chart"></div>
+      <div class="chart-legend">
+        <span><i class="leg-box" style="background:var(--up)"></i>阳线</span>
+        <span><i class="leg-box" style="background:var(--down)"></i>阴线</span>
+        <span><i class="leg-line" style="background:#f59e0b"></i>MA5</span>
+        <span><i class="leg-line" style="background:var(--accent)"></i>MA10</span>
+        <span><i class="leg-line" style="background:#a78bfa"></i>MA20</span>
+        <span style="color:var(--up)">▲ 开多</span>
+        <span style="color:var(--down)">▼ 平仓</span>
+      </div>
+    </div>
+    <div class="panel-title" style="margin-top:12px">策略信号</div>
+    <table>
+      <thead><tr><th>时间</th><th>策略</th><th>信号</th><th>价格</th><th>原因</th></tr></thead>
+      <tbody id="signal-table"></tbody>
+    </table>
+  </main>
+
+  <aside class="panel">
+    <div class="panel-title">回测曲线</div>
+    <div id="equity-chart"></div>
+    <div class="metrics">
+      <div class="metric-box"><div class="m-label">总收益</div><div class="m-val" id="m-return">—</div></div>
+      <div class="metric-box"><div class="m-label">胜率</div><div class="m-val" id="m-winrate">—</div></div>
+      <div class="metric-box"><div class="m-label">盈亏比</div><div class="m-val" id="m-pl">—</div></div>
+      <div class="metric-box"><div class="m-label">最大回撤</div><div class="m-val" id="m-dd">—</div></div>
+    </div>
+    <div class="panel-title" style="margin-top:16px">参数配置</div>
+    <div class="form-group">
+      <label>标的代码</label>
+      <input type="text" id="cfg-symbol" value="000001" />
+    </div>
+    <div class="form-group">
+      <label>K 线周期</label>
+      <select id="cfg-period">
+        <option value="daily">日线</option>
+        <option value="60min">60分钟</option>
+        <option value="5min">5分钟</option>
+        <option value="1min">1分钟</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>策略</label>
+      <select id="cfg-strategy">
+        <option value="trend_king">趋势王·稳健精选 ⚡</option>
+        <option value="ma5_climb">沿5日线爬升</option>
+        <option value="triple_volume">三倍量战法</option>
+        <option value="shrink_limit_up">缩量涨停</option>
+        <option value="macd_cross">MACD金叉</option>
+        <option value="kdj_oversold">KDJ超卖反弹</option>
+      </select>
+    </div>
+    <button id="btn-pick" class="btn-pick" type="button">选股</button>
+    <div class="form-group">
+      <label>单股最大仓位 (%)</label>
+      <input type="number" id="cfg-max-pos" value="20" min="1" max="100" />
+    </div>
+    <button id="btn-run">运行回测</button>
+    <button id="btn-api-run" style="background:#238636">后端回测 (API)</button>
+    <button id="btn-live-start" style="background:#8957e5">启动实盘</button>
+    <button id="btn-live-stop" style="background:#da3633">停止实盘</button>
+    <button id="btn-save" style="background:#30363d;color:var(--text)">保存配置到本地</button>
+  </aside>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "shunshi_dashboard_config";
+    let ws = null;
+    let wsRetryTimer = null;
+    let overviewTimer = null;
+    let wsManualConnect = false;
+    let useBackend = false;
+    let apiBase = null;
+    let klineChart = null;
+    let equityChart = null;
+    let lastBars = [];
+
+    const API_PROBE_PORTS = [8000, 8080, 3000];
+
+    function fetchWithTimeout(url, options = {}, ms = 3000) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+    }
+
+    function getApiBase() {
+      if (apiBase) return apiBase;
+      if (location.protocol !== "file:" && location.host) return location.origin;
+      return "http://127.0.0.1:8000";
+    }
+
+    function getWsUrl() {
+      const base = getApiBase();
+      const u = new URL(base);
+      const proto = u.protocol === "https:" ? "wss:" : "ws:";
+      return `${proto}//${u.host}/ws`;
+    }
+
+    async function resolveApiBase() {
+      if (location.protocol !== "file:" && location.host) {
+        apiBase = location.origin;
+        return apiBase;
+      }
+      for (const port of API_PROBE_PORTS) {
+        const base = `http://127.0.0.1:${port}`;
+        try {
+          const resp = await fetchWithTimeout(`${base}/api/data/sources`, {}, 1500);
+          if (resp.ok) {
+            apiBase = base;
+            return apiBase;
+          }
+        } catch (_) {}
+      }
+      apiBase = "http://127.0.0.1:8000";
+      return apiBase;
+    }
+
+    async function ensureApiBase() {
+      if (!apiBase) await resolveApiBase();
+      return apiBase;
+    }
+
+    function getDataPort() {
+      return document.getElementById("data-port").value;
+    }
+
+    function setDataStatus(state, label) {
+      const el = document.getElementById("data-badge");
+      const btn = document.getElementById("btn-connect");
+      el.className = "badge";
+      btn.classList.remove("connected", "connecting");
+      if (state === "connected") {
+        el.textContent = "数据:" + (label || "已连接");
+        el.classList.add("connected");
+        btn.textContent = "已连接";
+        btn.classList.add("connected");
+      } else if (state === "connecting") {
+        el.textContent = "数据:连接中";
+        btn.textContent = "连接中";
+        btn.classList.add("connecting");
+      } else if (state === "error") {
+        el.textContent = "数据:连接失败";
+        el.classList.add("error");
+        btn.textContent = "连接";
+      } else {
+        el.textContent = "数据:未连接";
+        btn.textContent = "连接";
+      }
+    }
+
+    function setWsStatus(state) {
+      const el = document.getElementById("ws-badge");
+      el.className = "badge";
+      if (state === "connected") {
+        el.textContent = "WS:已连接";
+        el.classList.add("connected");
+      } else if (state === "connecting") {
+        el.textContent = "WS:连接中";
+        el.classList.add("connecting");
+      } else {
+        el.textContent = "WS:未连接";
+      }
+    }
+
+    async function testBackendConnection() {
+      try {
+        await ensureApiBase();
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/data/sources`, {}, 3000);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function testDataSourceHealth(source) {
+      try {
+        const resp = await fetchWithTimeout(
+          `${getApiBase()}/api/data/health?source=${encodeURIComponent(source)}`,
+          {},
+          15000
+        );
+        if (!resp.ok) return { ok: false, message: "健康检查失败" };
+        return await resp.json();
+      } catch (_) {
+        return { ok: false, message: "数据端口请求超时" };
+      }
+    }
+
+    async function connectBackend() {
+      wsManualConnect = true;
+      setWsStatus("connecting");
+      setDataStatus("connecting");
+      const source = getDataPort();
+      const sourceLabel = document.getElementById("data-port").selectedOptions[0].text;
+
+      const ok = await testBackendConnection();
+      if (!ok) {
+        apiBase = null;
+        setWsStatus("disconnected");
+        setDataStatus("error");
+        alert(
+          "无法连接本地服务\n\n" +
+          "「连接」需要先启动后端，不是直接连东方财富。\n\n" +
+          "请按顺序操作：\n" +
+          "1. 双击 deploy.bat 或 一键部署到E盘.bat\n" +
+          "2. 双击 start.bat 启动服务\n" +
+          "3. 浏览器打开 http://127.0.0.1:8000\n" +
+          "4. 再点右上角「连接」\n\n" +
+          "不要直接双击 dashboard.html 文件打开。"
+        );
+        return;
+      }
+
+      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      connectWebSocket(true);
+
+      try {
+        const setResp = await fetchWithTimeout(`${getApiBase()}/api/data/source`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source }),
+        }, 8000);
+        if (!setResp.ok) throw new Error("set source failed");
+      } catch (_) {
+        setDataStatus("error");
+        alert("后端已连接，但切换数据端口失败，请重试。");
+        return;
+      }
+
+      const health = await testDataSourceHealth(source);
+      if (!health.ok) {
+        setDataStatus("error");
+        const tip = source === "eastmoney"
+          ? "东方财富接口暂时不可用，可切换到「通达信 TDX」或「本地模拟」。"
+          : source === "tdx"
+          ? "通达信 TDX 连接失败，请确认 deploy 已安装 eltdx，或切换「本地模拟」。"
+          : (health.message || "当前数据源不可用");
+        alert("数据端口连接失败\n\n" + tip);
+        document.getElementById("env-badge").textContent = "API";
+        return;
+      }
+
+      setDataStatus("connected", sourceLabel);
+      if (source === "tdx") {
+        try {
+          const probe = await fetchWithTimeout(`${getApiBase()}/api/data/probe?source=tdx`, {}, 20000);
+          if (probe.ok) {
+            const pinfo = await probe.json();
+            if (pinfo.ip) {
+              document.getElementById("data-badge").textContent = "数据:TDX " + pinfo.ip;
+            }
+          }
+        } catch (_) {}
+      }
+      await refreshOverview();
+      if (!overviewTimer) overviewTimer = setInterval(refreshOverview, 30000);
+      document.getElementById("env-badge").textContent = "API";
+      const symbol = document.getElementById("cfg-symbol").value;
+      if (source === "eastmoney" || source === "tdx" || source === "mock") await loadMarketBars(symbol);
+      else runBacktestLocal();
+    }
+
+    function connectWebSocket(manual) {
+      if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+        return;
+      }
+      clearTimeout(wsRetryTimer);
+      setWsStatus("connecting");
+      try {
+        ws = new WebSocket(getWsUrl());
+      } catch (_) {
+        setWsStatus("disconnected");
+        wsRetryTimer = setTimeout(connectWebSocket, 5000);
+        return;
+      }
+      ws.onopen = () => setWsStatus("connected");
+      ws.onclose = () => {
+        setWsStatus("disconnected");
+        if (wsManualConnect) {
+          wsRetryTimer = setTimeout(() => connectWebSocket(false), 5000);
+        }
+      };
+      ws.onerror = () => setWsStatus("disconnected");
+      ws.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          handleWsEvent(msg.type, msg.data);
+        } catch (_) {}
+      };
+    }
+
+    async function switchDataSource(source) {
+      localStorage.setItem("data_port", source);
+      setDataStatus("connecting");
+      try {
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/data/source`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source }),
+        }, 8000);
+        if (!resp.ok) throw new Error("switch failed");
+        const data = await resp.json();
+        const health = data.health || await testDataSourceHealth(source);
+        if (health.ok) {
+          const label = document.getElementById("data-port").selectedOptions[0].text;
+          setDataStatus("connected", label);
+          await refreshOverview();
+        } else {
+          setDataStatus("error");
+        }
+      } catch (_) {
+        setDataStatus("disconnected");
+      }
+      const symbol = document.getElementById("cfg-symbol").value;
+      if (source === "eastmoney" || source === "tdx" || source === "mock") await loadMarketBars(symbol);
+      else runBacktestLocal();
+    }
+
+    async function refreshOverview() {
+      const source = getDataPort();
+      try {
+        const resp = await fetch(`${getApiBase()}/api/market/overview?source=${source}`);
+        if (!resp.ok) throw new Error("overview failed");
+        const data = await resp.json();
+        if (data.index_sh) {
+          const sh = data.index_sh;
+          const cls = sh.change_pct >= 0 ? "up" : "down";
+          document.getElementById("idx-sh").innerHTML =
+            `<span class="${cls}">${sh.price.toFixed(2)} ${sh.change_pct >= 0 ? "+" : ""}${sh.change_pct.toFixed(2)}%</span>`;
+        }
+        if (data.breadth_up != null) {
+          document.getElementById("idx-breadth").innerHTML =
+            `<span class="up">${data.breadth_up}</span> / <span class="down">${data.breadth_down || 0}</span>`;
+        }
+        if (data.north_flow != null) {
+          const cls = data.north_flow >= 0 ? "up" : "down";
+          document.getElementById("idx-north").innerHTML =
+            `<span class="${cls}">${data.north_flow >= 0 ? "+" : ""}${data.north_flow.toFixed(1)}亿</span>`;
+        }
+      } catch (_) {
+        document.getElementById("idx-sh").innerHTML = `<span class="muted">—</span>`;
+      }
+    }
+
+    async function loadMarketBars(symbol) {
+      const period = document.getElementById("cfg-period").value;
+      const strategy = document.getElementById("cfg-strategy").value;
+      document.getElementById("current-symbol").textContent = symbol;
+      try {
+        const resp = await fetch(
+          `${getApiBase()}/api/market/klines/${symbol}?period=${period}&limit=80&source=${getDataPort()}`
+        );
+        if (!resp.ok) throw new Error("klines failed");
+        const data = await resp.json();
+        const bars = (data.bars || []).map((b, i) => ({
+          open: b.open, high: b.high, low: b.low, close: b.close,
+          volume: b.volume, idx: i, timestamp: b.timestamp,
+        }));
+        if (!bars.length) throw new Error("empty bars");
+        const signals = runStrategy(bars, strategy);
+        const result = backtest(bars, signals);
+        renderChart(bars, signals);
+        renderSignals(signals, bars);
+        renderEquity(result.equity);
+        applyLocalMetrics(result);
+        document.getElementById("env-badge").textContent =
+          getDataPort() === "tdx" ? "通达信TDX" : getDataPort() === "eastmoney" ? "东方财富" : "API";
+      } catch (e) {
+        console.warn("Market bars load failed, fallback mock:", e);
+        runBacktestLocal();
+      }
+    }
+
+    function applyLocalMetrics(result) {
+      const retPct = (result.totalReturn * 100).toFixed(2);
+      document.getElementById("m-return").textContent = `${retPct}%`;
+      document.getElementById("m-return").className = "m-val " + (result.totalReturn >= 0 ? "up" : "down");
+      document.getElementById("m-winrate").textContent = `${(result.winRate * 100).toFixed(1)}%`;
+      document.getElementById("m-pl").textContent = result.profitLossRatio.toFixed(2);
+      document.getElementById("m-dd").textContent = `${(result.maxDrawdown * 100).toFixed(2)}%`;
+    }
+
+    function handleWsEvent(type, data) {
+      if (type === "signal") {
+        appendLiveSignal(data);
+      } else if (type === "bar_closed") {
+        document.getElementById("env-badge").textContent = "LIVE";
+        document.getElementById("idx-signals").textContent = data.signals || 0;
+      } else if (type === "backtest_complete" && data.report) {
+        applyBackendReport(data.report);
+      } else if (type === "live_started") {
+        document.getElementById("env-badge").textContent = "LIVE";
+      } else if (type === "live_stopped") {
+        document.getElementById("env-badge").textContent = "BACKTEST";
+      } else if (type === "data_source_changed") {
+        document.getElementById("data-port").value = data.source;
+        refreshOverview();
+      }
+    }
+
+    function appendLiveSignal(data) {
+      const tbody = document.getElementById("signal-table");
+      const row = document.createElement("tr");
+      const isBuy = data.signal === "open_long";
+      row.innerHTML = `<td>实时</td><td>${data.strategy_id}</td>
+        <td class="${isBuy ? "up" : "down"}">${isBuy ? "开多" : "平仓"}</td>
+        <td>${Number(data.price).toFixed(2)}</td><td>${data.reason || ""}</td>`;
+      tbody.prepend(row);
+    }
+
+    function applyBackendReport(report) {
+      if (report.total_return != null) {
+        const pct = (report.total_return * 100).toFixed(2);
+        document.getElementById("m-return").textContent = `${pct}%`;
+        document.getElementById("m-return").className = "m-val " + (report.total_return >= 0 ? "up" : "down");
+      }
+      if (report.win_rate != null)
+        document.getElementById("m-winrate").textContent = `${(report.win_rate * 100).toFixed(1)}%`;
+      if (report.profit_loss_ratio != null)
+        document.getElementById("m-pl").textContent = Number(report.profit_loss_ratio).toFixed(2);
+      if (report.max_drawdown != null)
+        document.getElementById("m-dd").textContent = `${(report.max_drawdown * 100).toFixed(2)}%`;
+    }
+
+    async function runBackendBacktest() {
+      const symbol = document.getElementById("cfg-symbol").value;
+      const period = document.getElementById("cfg-period").value;
+      const data_source = getDataPort();
+      document.getElementById("env-badge").textContent = "API";
+      try {
+        const resp = await fetch(`${getApiBase()}/api/backtest`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol, period, limit: 200, data_source }),
+        });
+        if (!resp.ok) throw new Error("API unavailable");
+        const data = await resp.json();
+        useBackend = true;
+        document.getElementById("idx-signals").textContent = data.signal_count || 0;
+        if (data.report) applyBackendReport(data.report);
+        if (data.signals?.length) {
+          const tbody = document.getElementById("signal-table");
+          tbody.innerHTML = data.signals.slice(-20).reverse().map(s => {
+            const isBuy = String(s.signal).includes("OPEN_LONG");
+            return `<tr><td>${s.timestamp || "-"}</td><td>${s.strategy_id}</td>
+              <td class="${isBuy ? "up" : "down"}">${isBuy ? "开多" : "平仓"}</td>
+              <td>${Number(s.price).toFixed(2)}</td><td>${s.reason || ""}</td></tr>`;
+          }).join("");
+        }
+        runBacktestLocal();
+      } catch (e) {
+        alert("后端不可用，使用本地回测: " + e.message);
+        runBacktestLocal();
+      }
+    }
+
+    async function startLive() {
+      const symbol = document.getElementById("cfg-symbol").value;
+      const period = document.getElementById("cfg-period").value;
+      const data_source = getDataPort();
+      try {
+        const resp = await fetch(`${getApiBase()}/api/live/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbols: [symbol], poll_interval: 5, period, data_source }),
+        });
+        const data = await resp.json();
+        if (!data.ok) alert(data.message || "启动失败");
+        else document.getElementById("env-badge").textContent = "LIVE";
+      } catch (e) {
+        alert("启动实盘失败: " + e.message);
+      }
+    }
+
+    async function stopLive() {
+      try {
+        await fetch(`${getApiBase()}/api/live/stop`, { method: "POST" });
+        document.getElementById("env-badge").textContent = "BACKTEST";
+      } catch (e) {
+        alert("停止失败: " + e.message);
+      }
+    }
+
+    function rand(seed) {
+      let s = seed;
+      return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    }
+
+    function genMockBars(symbol, count = 60) {
+      const r = rand(symbol.charCodeAt(0) * 1000);
+      let price = 10 + r() * 20;
+      const bars = [];
+      for (let i = 0; i < count; i++) {
+        const change = (r() - 0.48) * 0.04;
+        const open = price;
+        const close = Math.max(0.01, price * (1 + change));
+        const high = Math.max(open, close) * (1 + r() * 0.01);
+        const low = Math.min(open, close) * (1 - r() * 0.01);
+        const vol = 1e6 + r() * 4e6;
+        bars.push({ open, high, low, close, volume: vol, idx: i });
+        price = close;
+      }
+      return bars;
+    }
+
+    function ma(arr, n) {
+      return arr.map((_, i) => {
+        if (i < n - 1) return null;
+        const slice = arr.slice(i - n + 1, i + 1);
+        return slice.reduce((a, b) => a + b, 0) / n;
+      });
+    }
+
+    function runStrategy(bars, strategyId) {
+      const closes = bars.map(b => b.close);
+      const volumes = bars.map(b => b.volume);
+      const ma5 = ma(closes, 5);
+      const volMa5 = ma(volumes, 5);
+      const signals = [];
+
+      for (let i = 5; i < bars.length; i++) {
+        const vr = volMa5[i] ? volumes[i] / volMa5[i] : 0;
+        let signal = null;
+
+        if (strategyId === "ma5_climb") {
+          const step = ma5.slice(i - 4, i + 1).every((v, j, a) => j === 0 || v > a[j - 1]);
+          if (step && closes[i] >= ma5[i]) signal = { type: "buy", reason: "沿5日线台阶爬升" };
+          if (closes[i] >= Math.max(...closes.slice(i - 20, i)) * 0.98 && closes[i] < closes[i - 1])
+            signal = { type: "sell", reason: "见顶预警" };
+        } else if (strategyId === "triple_volume") {
+          if (vr >= 3 && closes[i] > bars[i].open) signal = { type: "buy", reason: "三倍量阳线" };
+          if (i > 5 && volumes[i - 1] / volMa5[i - 1] >= 3 && closes[i] < closes[i - 1] * 0.97)
+            signal = { type: "sell", reason: "倍量后回落止损" };
+        } else if (strategyId === "shrink_limit_up") {
+          const prev = closes[i - 1];
+          const chg = (closes[i] - prev) / prev;
+          if (vr < 0.6 && chg >= 0.095) signal = { type: "buy", reason: "缩量涨停" };
+          if (chg >= 0.095 && closes[i] < closes[i - 1]) signal = { type: "sell", reason: "涨停打开" };
+        } else if (strategyId === "macd_cross") {
+          const e12 = ma(closes, 12), e26 = ma(closes, 26);
+          const dif = e12[i] - e26[i], prevDif = e12[i-1] - e26[i-1];
+          const dea = ma(closes.map((_, j) => (e12[j]||0)-(e26[j]||0)), 9)[i];
+          const prevDea = ma(closes.map((_, j) => (e12[j]||0)-(e26[j]||0)), 9)[i-1];
+          if (prevDif <= prevDea && dif > dea) signal = { type: "buy", reason: "MACD金叉" };
+          if (prevDif >= prevDea && dif < dea) signal = { type: "sell", reason: "MACD死叉" };
+        } else if (strategyId === "kdj_oversold") {
+          const k = 50 + (closes[i] - Math.min(...closes.slice(i-8,i+1))) * 2;
+          if (k < 30) signal = { type: "buy", reason: "KDJ超卖" };
+          if (k > 80) signal = { type: "sell", reason: "KDJ超买" };
+        }
+
+        if (signal) signals.push({ idx: i, ...signal, price: closes[i] });
+      }
+      return signals;
+    }
+
+    function backtest(bars, signals, initial = 1e6) {
+      let cash = initial;
+      let pos = 0;
+      let entry = 0;
+      const equity = [initial];
+      const trades = [];
+      const signalMap = Object.fromEntries(signals.map(s => [s.idx, s]));
+
+      for (let i = 0; i < bars.length; i++) {
+        const sig = signalMap[i];
+        if (sig?.type === "buy" && pos === 0) {
+          const qty = Math.floor(cash * 0.2 / bars[i].close / 100) * 100;
+          if (qty > 0) {
+            cash -= qty * bars[i].close;
+            pos = qty;
+            entry = bars[i].close;
+            trades.push({ side: "buy", price: bars[i].close, idx: i });
+          }
+        } else if (sig?.type === "sell" && pos > 0) {
+          cash += pos * bars[i].close;
+          trades.push({ side: "sell", price: bars[i].close, pnl: (bars[i].close - entry) / entry, idx: i });
+          pos = 0;
+        }
+        equity.push(cash + pos * bars[i].close);
+      }
+
+      const roundTrips = trades.filter(t => t.side === "sell");
+      const wins = roundTrips.filter(t => t.pnl > 0);
+      const losses = roundTrips.filter(t => t.pnl <= 0);
+      const winRate = roundTrips.length ? wins.length / roundTrips.length : 0;
+      const avgWin = wins.length ? wins.reduce((a, t) => a + t.pnl, 0) / wins.length : 0;
+      const avgLoss = losses.length ? Math.abs(losses.reduce((a, t) => a + t.pnl, 0) / losses.length) : 1;
+      let peak = equity[0], maxDD = 0;
+      equity.forEach(e => {
+        if (e > peak) peak = e;
+        const dd = (peak - e) / peak;
+        if (dd > maxDD) maxDD = dd;
+      });
+
+      return {
+        equity,
+        totalReturn: (equity[equity.length - 1] - initial) / initial,
+        winRate,
+        profitLossRatio: avgWin / avgLoss,
+        maxDrawdown: maxDD,
+        trades,
+      };
+    }
+
+    function renderChart(bars, signals) {
+      lastBars = bars;
+      if (!klineChart) {
+        klineChart = echarts.init(document.getElementById("kline-chart"), null, { renderer: "canvas" });
+        window.addEventListener("resize", () => { klineChart?.resize(); equityChart?.resize(); });
+      }
+
+      const dates = bars.map((b, i) => {
+        if (b.timestamp) {
+          const s = String(b.timestamp);
+          return s.includes("T") ? s.slice(5, 10).replace("-", "/") : s.slice(0, 10);
+        }
+        const d = new Date();
+        d.setDate(d.getDate() - (bars.length - 1 - i));
+        return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+      });
+
+      const ohlc = bars.map(b => [b.open, b.close, b.low, b.high]);
+      const closes = bars.map(b => b.close);
+      const volumes = bars.map(b => b.volume || 0);
+      const ma5 = ma(closes, 5);
+      const ma10 = ma(closes, 10);
+      const ma20 = ma(closes, 20);
+
+      const markPoints = signals.map(s => ({
+        name: s.type,
+        coord: [s.idx, s.type === "buy" ? bars[s.idx].low * 0.998 : bars[s.idx].high * 1.002],
+        symbol: "triangle",
+        symbolSize: 10,
+        symbolRotate: s.type === "buy" ? 0 : 180,
+        itemStyle: { color: s.type === "buy" ? "#ef4444" : "#22c55e" },
+        label: { show: false },
+      }));
+
+      klineChart.setOption({
+        backgroundColor: "transparent",
+        animation: false,
+        tooltip: {
+          trigger: "axis",
+          axisPointer: { type: "cross", lineStyle: { color: "#2a3548" } },
+          backgroundColor: "#1a2234",
+          borderColor: "#2a3548",
+          textStyle: { color: "#e8edf5", fontSize: 12 },
+          formatter(params) {
+            const k = params.find(p => p.seriesName === "K线");
+            if (!k) return "";
+            const [o, c, l, h] = k.data;
+            const chg = o ? ((c - o) / o * 100).toFixed(2) : "0";
+            return `<b>${k.axisValue}</b><br/>开 ${o?.toFixed(2)} 收 ${c?.toFixed(2)}<br/>高 ${h?.toFixed(2)} 低 ${l?.toFixed(2)}<br/>涨跌 ${chg}%`;
+          },
+        },
+        axisPointer: { link: [{ xAxisIndex: [0, 1] }] },
+        grid: [
+          { left: 56, right: 16, top: 16, height: "58%" },
+          { left: 56, right: 16, top: "76%", height: "14%" },
+        ],
+        xAxis: [
+          { type: "category", data: dates, boundaryGap: true, axisLine: { lineStyle: { color: "#2a3548" } }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { show: false }, min: "dataMin", max: "dataMax" },
+          { type: "category", gridIndex: 1, data: dates, boundaryGap: true, axisLine: { lineStyle: { color: "#2a3548" } }, axisLabel: { show: false }, splitLine: { show: false }, min: "dataMin", max: "dataMax" },
+        ],
+        yAxis: [
+          { scale: true, splitNumber: 4, axisLine: { show: false }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { lineStyle: { color: "#1a2234", type: "dashed" } } },
+          { scale: true, gridIndex: 1, splitNumber: 2, axisLine: { show: false }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { show: false } },
+        ],
+        dataZoom: [
+          { type: "inside", xAxisIndex: [0, 1], start: bars.length > 40 ? 50 : 0, end: 100 },
+          { type: "slider", xAxisIndex: [0, 1], bottom: 4, height: 18, borderColor: "#2a3548", fillerColor: "rgba(91,156,245,0.15)", handleStyle: { color: "#5b9cf5" }, textStyle: { color: "#8b95a8" }, start: bars.length > 40 ? 50 : 0, end: 100 },
+        ],
+        series: [
+          {
+            name: "K线",
+            type: "candlestick",
+            data: ohlc,
+            itemStyle: { color: "#ef4444", color0: "#22c55e", borderColor: "#ef4444", borderColor0: "#22c55e" },
+            markPoint: { data: markPoints, animation: false },
+          },
+          { name: "MA5", type: "line", data: ma5, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#f59e0b" } },
+          { name: "MA10", type: "line", data: ma10, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#5b9cf5" } },
+          { name: "MA20", type: "line", data: ma20, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#a78bfa" } },
+          {
+            name: "成交量",
+            type: "bar",
+            xAxisIndex: 1,
+            yAxisIndex: 1,
+            data: volumes.map((v, i) => ({
+              value: v,
+              itemStyle: { color: bars[i].close >= bars[i].open ? "rgba(239,68,68,0.55)" : "rgba(34,197,94,0.55)" },
+            })),
+          },
+        ],
+      }, true);
+
+      updateChartInfo(bars);
+    }
+
+    function updateChartInfo(bars) {
+      if (!bars.length) return;
+      const last = bars[bars.length - 1];
+      const prev = bars.length > 1 ? bars[bars.length - 2] : last;
+      const chg = prev.close ? ((last.close - prev.close) / prev.close * 100) : 0;
+      const cls = chg >= 0 ? "up" : "down";
+      document.getElementById("ci-price").textContent = last.close.toFixed(2);
+      document.getElementById("ci-price").className = "ci-val big " + cls;
+      document.getElementById("ci-change").textContent = `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`;
+      document.getElementById("ci-change").className = "ci-val " + cls;
+      document.getElementById("ci-high").textContent = last.high.toFixed(2);
+      document.getElementById("ci-low").textContent = last.low.toFixed(2);
+      document.getElementById("ci-vol").textContent = formatVolume(last.volume);
+    }
+
+    function formatVolume(v) {
+      if (!v) return "—";
+      if (v >= 1e8) return (v / 1e8).toFixed(2) + "亿";
+      if (v >= 1e4) return (v / 1e4).toFixed(0) + "万";
+      return String(Math.round(v));
+    }
+
+    function renderEquity(equity) {
+      if (!equityChart) {
+        equityChart = echarts.init(document.getElementById("equity-chart"), null, { renderer: "canvas" });
+      }
+      const labels = equity.map((_, i) => i);
+      equityChart.setOption({
+        backgroundColor: "transparent",
+        animation: false,
+        grid: { left: 8, right: 8, top: 8, bottom: 8 },
+        xAxis: { type: "category", data: labels, show: false },
+        yAxis: { type: "value", show: false, scale: true },
+        series: [{
+          type: "line",
+          data: equity,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: { width: 1.5, color: "#5b9cf5" },
+          areaStyle: { color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+            { offset: 0, color: "rgba(91,156,245,0.35)" },
+            { offset: 1, color: "rgba(91,156,245,0.02)" },
+          ]}},
+        }],
+      }, true);
+    }
+
+    function genSparklinePoints(code, n = 24) {
+      const r = rand((code || "0").charCodeAt(0) * 777);
+      let p = 10 + r() * 10;
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        p *= 1 + (r() - 0.48) * 0.06;
+        pts.push(p);
+      }
+      return pts;
+    }
+
+    function drawSparkline(canvas, points) {
+      if (!canvas || !points.length) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.offsetWidth * 2 || 480;
+      const h = canvas.height = 72;
+      ctx.clearRect(0, 0, w, h);
+      const min = Math.min(...points);
+      const max = Math.max(...points);
+      const range = max - min || 1;
+      const step = w / (points.length - 1);
+      for (let i = 1; i < points.length; i++) {
+        const x0 = (i - 1) * step, x1 = i * step;
+        const y0 = h - ((points[i - 1] - min) / range) * (h - 8) - 4;
+        const y1 = h - ((points[i] - min) / range) * (h - 8) - 4;
+        ctx.strokeStyle = points[i] >= points[i - 1] ? "#ef4444" : "#22c55e";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+    }
+
+    function renderSignals(signals, bars) {
+      const tbody = document.getElementById("signal-table");
+      tbody.innerHTML = signals.slice(-20).reverse().map(s => `
+        <tr>
+          <td>第${s.idx}根</td>
+          <td>${document.getElementById("cfg-strategy").value}</td>
+          <td class="${s.type === "buy" ? "up" : "down"}">${s.type === "buy" ? "开多" : "平仓"}</td>
+          <td>${s.price.toFixed(2)}</td>
+          <td>${s.reason}</td>
+        </tr>
+      `).join("");
+      document.getElementById("idx-signals").textContent = signals.length;
+    }
+
+    function renderStockList(stocks, options = {}) {
+      const list = document.getElementById("stock-list");
+      const { showReason = false, emptyText = "暂无符合条件的个股" } = options;
+
+      if (!stocks.length) {
+        list.innerHTML = `<li class="pick-empty">${emptyText}</li>`;
+        document.getElementById("pick-count").textContent = "(0)";
+        return;
+      }
+
+      document.getElementById("pick-count").textContent = `(${stocks.length})`;
+      list.innerHTML = stocks.map(s => {
+        const code = s.code || s.symbol;
+        const chg = s.change_pct ?? s.chg ?? 0;
+        const cls = chg >= 0 ? "up" : "down";
+        const price = s.price ? Number(s.price).toFixed(2) : "";
+        const reason = showReason && s.reason ? `<div class="stock-card-reason">${s.reason}${s.score != null ? " · 评分" + s.score : ""}</div>` : "";
+        return `
+          <li class="stock-card" data-code="${code}" data-name="${s.name || ""}">
+            <div class="stock-card-head">
+              <div>
+                <div class="stock-card-name">${s.name || code}</div>
+                <div class="stock-card-code">${code}</div>
+                ${reason}
+              </div>
+              <div class="stock-card-price">
+                ${price ? `<div>${price}</div>` : ""}
+                <div class="pct ${cls}">${chg >= 0 ? "+" : ""}${Number(chg).toFixed(2)}%</div>
+              </div>
+            </div>
+            <canvas class="sparkline" data-code="${code}"></canvas>
+          </li>`;
+      }).join("");
+
+      list.querySelectorAll(".stock-card").forEach(el => {
+        const canvas = el.querySelector(".sparkline");
+        drawSparkline(canvas, genSparklinePoints(el.dataset.code));
+        el.addEventListener("click", () => {
+          list.querySelectorAll(".stock-card").forEach(e => e.classList.remove("active"));
+          el.classList.add("active");
+          document.getElementById("cfg-symbol").value = el.dataset.code;
+          const nameEl = document.getElementById("current-name");
+          if (nameEl) nameEl.textContent = el.dataset.name ? `· ${el.dataset.name}` : "";
+          runBacktestLocal();
+        });
+      });
+      list.firstChild?.classList.add("active");
+      const first = list.firstChild;
+      if (first?.dataset?.name) {
+        document.getElementById("current-name").textContent = `· ${first.dataset.name}`;
+      }
+    }
+
+    function initStockList() {
+      renderStockList([
+        { code: "000001", name: "平安银行", chg: 0 },
+        { code: "600519", name: "贵州茅台", chg: 0 },
+        { code: "300750", name: "宁德时代", chg: 0 },
+        { code: "002594", name: "比亚迪", chg: 0 },
+        { code: "601318", name: "中国平安", chg: 0 },
+      ], { emptyText: "点击「选股」扫描全市场" });
+    }
+
+    async function pickStocksLocal() {
+      const strategy = document.getElementById("cfg-strategy").value;
+      const universe = [
+        "000001","600519","300750","002594","601318","600036","000858",
+        "601012","002475","300059","601888","000333","600900","002415","601166",
+      ];
+      const results = [];
+      for (const code of universe) {
+        const bars = genMockBars(code, 80);
+        const signals = runStrategy(bars, strategy);
+        const lastBuy = signals.filter(s => s.type === "buy").pop();
+        if (lastBuy && lastBuy.idx >= bars.length - 3) {
+          results.push({
+            code,
+            name: code,
+            change_pct: ((bars.at(-1).close - bars.at(-2).close) / bars.at(-2).close * 100),
+            reason: lastBuy.reason,
+            price: lastBuy.price,
+          });
+        }
+      }
+      return {
+        ok: true,
+        count: results.length,
+        scanned: universe.length,
+        strategy_name: document.getElementById("cfg-strategy").selectedOptions[0].text,
+        results,
+      };
+    }
+
+    async function pickStocks() {
+      const btn = document.getElementById("btn-pick");
+      const strategy = document.getElementById("cfg-strategy").value;
+      const period = document.getElementById("cfg-period").value;
+      const status = document.getElementById("pick-status");
+      const isFast = strategy === "trend_king";
+      const dataPort = getDataPort();
+
+      if (isFast && dataPort !== "tdx") {
+        document.getElementById("data-port").value = "tdx";
+        await switchDataSource("tdx");
+      }
+
+      btn.classList.add("loading");
+      btn.textContent = isFast ? "极速扫描..." : "扫描中...";
+      status.textContent = isFast
+        ? "趋势王：探测服务器 → 批量行情 → 均线核验（约30~90秒）..."
+        : "正在扫描，请稍候...";
+
+      let data;
+      try {
+        const resp = await fetchWithTimeout(`${getApiBase()}/api/screen`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            strategy_id: strategy,
+            period,
+            universe_limit: isFast ? 5000 : 60,
+            data_source: "tdx",
+          }),
+        }, isFast ? 180000 : 120000);
+        if (resp.ok) {
+          data = await resp.json();
+        } else {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.message || "API error");
+        }
+      } catch (e) {
+        if (isFast) {
+          status.textContent = "趋势王扫描失败: " + (e.message || "请确认 pytdx 已安装且通达信端口可用");
+          btn.classList.remove("loading");
+          btn.textContent = "选股";
+          return;
+        }
+        data = await pickStocksLocal();
+      }
+
+      btn.classList.remove("loading");
+      btn.textContent = "选股";
+
+      const items = (data.results || []).map(r => ({
+        code: r.symbol || r.code,
+        name: r.name,
+        change_pct: r.change_pct,
+        reason: r.reason,
+        price: r.price,
+        score: r.score,
+      }));
+
+      const srv = data.server?.ip ? ` · 服务器 ${data.server.ip}` : "";
+      status.textContent = items.length
+        ? `「${data.strategy_name || strategy}」命中 ${items.length} 只 / 扫描 ${data.scanned || "?"} 只${data.prefilter != null ? " · 初筛 " + data.prefilter : ""}${srv}`
+        : (data.message || `「${data.strategy_name || strategy}」暂无命中，可换策略或交易时段重试`) + srv;
+
+      document.getElementById("idx-signals").textContent = items.length;
+      renderStockList(items, { showReason: true, emptyText: "暂无符合策略的个股" });
+
+      if (items.length) {
+        document.getElementById("cfg-symbol").value = items[0].code;
+        document.getElementById("current-name").textContent = items[0].name ? `· ${items[0].name}` : "";
+        runBacktestLocal();
+      }
+    }
+
+    function updateOverview() {
+      refreshOverview();
+    }
+
+    async function runBacktestLocal() {
+      const symbol = document.getElementById("cfg-symbol").value;
+      if (getDataPort() === "eastmoney" || getDataPort() === "tdx") {
+        await loadMarketBars(symbol);
+        return;
+      }
+      const strategy = document.getElementById("cfg-strategy").value;
+      document.getElementById("current-symbol").textContent = symbol;
+      const nameEl = document.getElementById("current-name");
+      const activeCard = document.querySelector(`.stock-card[data-code="${symbol}"]`);
+      if (nameEl && activeCard?.dataset?.name) nameEl.textContent = `· ${activeCard.dataset.name}`;
+
+      const bars = genMockBars(symbol, 80);
+      const signals = runStrategy(bars, strategy);
+      const result = backtest(bars, signals);
+
+      renderChart(bars, signals);
+      renderSignals(signals, bars);
+      renderEquity(result.equity);
+      applyLocalMetrics(result);
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        symbol, strategy,
+        maxPos: document.getElementById("cfg-max-pos").value,
+        period: document.getElementById("cfg-period").value,
+        dataPort: getDataPort(),
+        lastResult: { totalReturn: result.totalReturn, winRate: result.winRate },
+      }));
+    }
+
+    function runBacktest() { runBacktestLocal(); }
+
+    document.getElementById("btn-run").addEventListener("click", runBacktestLocal);
+    document.getElementById("btn-pick").addEventListener("click", pickStocks);
+    document.getElementById("btn-api-run").addEventListener("click", runBackendBacktest);
+    document.getElementById("btn-live-start").addEventListener("click", startLive);
+    document.getElementById("btn-live-stop").addEventListener("click", stopLive);
+    document.getElementById("btn-save").addEventListener("click", () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        symbol: document.getElementById("cfg-symbol").value,
+        strategy: document.getElementById("cfg-strategy").value,
+        maxPos: document.getElementById("cfg-max-pos").value,
+        period: document.getElementById("cfg-period").value,
+        dataPort: getDataPort(),
+      }));
+      alert("配置已保存到 localStorage");
+    });
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const cfg = JSON.parse(saved);
+        if (cfg.symbol) document.getElementById("cfg-symbol").value = cfg.symbol;
+        if (cfg.strategy) document.getElementById("cfg-strategy").value = cfg.strategy;
+        if (cfg.maxPos) document.getElementById("cfg-max-pos").value = cfg.maxPos;
+        if (cfg.period) document.getElementById("cfg-period").value = cfg.period;
+        if (cfg.dataPort) document.getElementById("data-port").value = cfg.dataPort;
+      } catch (_) {}
+    }
+
+    document.getElementById("btn-connect").addEventListener("click", connectBackend);
+    document.getElementById("data-port").addEventListener("change", (e) => switchDataSource(e.target.value));
+
+    initStockList();
+    setWsStatus("disconnected");
+    setDataStatus("disconnected");
+    if (location.protocol !== "file:" && location.host) {
+      apiBase = location.origin;
+      document.getElementById("env-badge").textContent = "API";
+      connectBackend();
+    } else {
+      document.getElementById("env-badge").textContent = "本地模式";
+      resolveApiBase().then(async (base) => {
+        try {
+          const resp = await fetchWithTimeout(`${base}/api/data/sources`, {}, 1500);
+          if (resp.ok) connectBackend();
+        } catch (_) {}
+      });
+    }
+    runBacktestLocal();
+  </script>
+</body>
+</html>
