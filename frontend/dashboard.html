@@ -36,15 +36,6 @@
       padding: 10px 16px;
       flex-wrap: wrap;
     }
-    .header-tools {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      background: #0d1117;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
     header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; }
     .badge {
       font-size: 11px;
@@ -59,7 +50,7 @@
       grid-template-rows: auto 1fr;
       gap: 1px;
       background: var(--border);
-      height: calc(100vh - 96px);
+      height: calc(100vh - 49px);
     }
     .panel {
       background: var(--panel);
@@ -170,28 +161,43 @@
     }
     .metric-box .m-label { font-size: 10px; color: var(--muted); }
     .metric-box .m-val { font-size: 14px; margin-top: 2px; }
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .header-label {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
     .header-select {
       background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text);
       font-family: var(--font);
-      font-size: 11px;
-      padding: 4px 8px;
+      font-size: 12px;
+      padding: 6px 8px;
       border-radius: 4px;
+      height: 32px;
     }
     .header-select:focus { outline: 1px solid var(--accent); }
-    .header-btn {
+    .header-connect {
       background: #238636;
       color: #fff;
       border: none;
       font-family: var(--font);
-      font-size: 11px;
-      padding: 5px 10px;
+      font-size: 12px;
+      padding: 6px 14px;
       border-radius: 4px;
       cursor: pointer;
+      height: 32px;
+      line-height: 1;
+      white-space: nowrap;
     }
-    .header-btn.secondary { background: #30363d; color: var(--text); }
+    .header-connect:hover { opacity: 0.9; }
     #ws-badge.connected { color: var(--down); border-color: var(--down); }
     #ws-badge.connecting { color: var(--accent); border-color: var(--accent); }
   </style>
@@ -203,25 +209,23 @@
       <span class="badge">BACKTEST</span>
       <span class="badge" id="env-badge">本地模式</span>
       <span class="badge" id="ws-badge">WS: 未连接</span>
-    </div>
-    <div class="header-tools">
-      <span style="font-size:11px;color:var(--muted)">数据端口</span>
-      <select id="data-port" class="header-select" title="行情数据源">
-        <option value="eastmoney" selected>东方财富实时</option>
-        <option value="tushare">Tushare</option>
-        <option value="mootdx">Mootdx</option>
-        <option value="ths">同花顺</option>
-        <option value="mock">本地模拟</option>
-      </select>
-      <button id="btn-connect" class="header-btn" type="button">连接</button>
-      <span style="font-size:11px;color:var(--muted);margin-left:8px">API端口</span>
-      <select id="api-port" class="header-select" title="后端 API 端口">
-        <option value="8000" selected>8000</option>
-        <option value="8080">8080</option>
-        <option value="3000">3000</option>
-      </select>
-      <button id="btn-open-dashboard" class="header-btn secondary" type="button">打开看板</button>
-      <span id="connect-hint" style="font-size:11px;color:var(--muted)">请先运行 start.bat，再点「连接」</span>
+      <div class="header-right">
+        <span class="header-label">数据端口</span>
+        <select id="data-port" class="header-select" title="行情数据源">
+          <option value="eastmoney" selected>东方财富实时</option>
+          <option value="tushare">Tushare</option>
+          <option value="mootdx">Mootdx</option>
+          <option value="ths">同花顺</option>
+          <option value="mock">本地模拟</option>
+        </select>
+        <button id="btn-connect" class="header-connect" type="button">连接</button>
+        <span class="header-label">API端口</span>
+        <select id="api-port" class="header-select" title="后端 API 端口">
+          <option value="8000" selected>8000</option>
+          <option value="8080">8080</option>
+          <option value="3000">3000</option>
+        </select>
+      </div>
     </div>
   </header>
 
