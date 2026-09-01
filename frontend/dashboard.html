@@ -4,17 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>顺时选股 · 复盘看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
   <style>
     :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --up: #f85149;
-      --down: #3fb950;
-      --font: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+      --bg: #0a0e17;
+      --panel: #121826;
+      --panel2: #1a2234;
+      --border: #2a3548;
+      --text: #e8edf5;
+      --muted: #8b95a8;
+      --accent: #5b9cf5;
+      --up: #ef4444;
+      --down: #22c55e;
+      --warn: #f59e0b;
+      --font: "PingFang SC", "Microsoft YaHei", "JetBrains Mono", sans-serif;
+      --mono: "JetBrains Mono", "Consolas", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -48,7 +52,7 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 280px 1fr 320px;
+      grid-template-columns: 300px 1fr 300px;
       grid-template-rows: auto 1fr;
       gap: 1px;
       background: var(--border);
@@ -83,40 +87,60 @@
     .overview-item .value { font-size: 18px; margin-top: 4px; }
     .up { color: var(--up); }
     .down { color: var(--down); }
-    .stock-list { list-style: none; }
-    .stock-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 6px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-    }
-    .stock-item:hover, .stock-item.active { background: #21262d; }
-    .stock-item .code { color: var(--accent); }
-    .stock-item .reason { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
-    .pick-empty { color: var(--muted); font-size: 12px; padding: 12px 6px; text-align: center; }
-    .btn-pick { background: #8957e5 !important; font-weight: 600; }
-    .btn-pick.loading { opacity: 0.6; cursor: wait; }
-    #chart {
-      width: 100%;
-      height: 320px;
-      background: #0d1117;
+    .stock-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .stock-card {
+      background: var(--panel2);
       border: 1px solid var(--border);
-      position: relative;
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
     }
-    .chart-bars { display: flex; align-items: flex-end; height: 280px; gap: 2px; padding: 10px; }
-    .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-    .bar {
-      width: 80%;
-      min-height: 2px;
-      border-radius: 1px;
+    .stock-card:hover { border-color: var(--accent); }
+    .stock-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(91,156,245,0.3); }
+    .stock-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .stock-card-name { font-size: 13px; font-weight: 600; }
+    .stock-card-code { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+    .stock-card-price { text-align: right; font-family: var(--mono); }
+    .stock-card-price .pct { font-size: 13px; font-weight: 600; }
+    .stock-card-reason { font-size: 10px; color: var(--warn); margin-top: 4px; }
+    .stock-card canvas.sparkline { width: 100%; height: 36px; display: block; margin-top: 4px; border-radius: 4px; }
+    .pick-empty { color: var(--muted); font-size: 12px; padding: 12px 6px; text-align: center; }
+    .btn-pick { background: linear-gradient(135deg, #7c3aed, #8957e5) !important; font-weight: 600; }
+    .btn-pick.loading { opacity: 0.6; cursor: wait; }
+    .chart-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
     }
-    .signal-marker {
-      font-size: 10px;
-      margin-top: 2px;
+    .chart-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 10px 14px;
+      background: var(--panel2);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
     }
-    .signal-buy { color: var(--up); }
-    .signal-sell { color: var(--down); }
+    .chart-info .ci-item { display: flex; gap: 6px; align-items: baseline; }
+    .chart-info .ci-label { color: var(--muted); }
+    .chart-info .ci-val { font-family: var(--mono); font-weight: 600; }
+    .chart-info .ci-val.big { font-size: 18px; }
+    #kline-chart { width: 100%; height: 380px; }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 6px 14px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    .chart-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .leg-box { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .leg-line { width: 16px; height: 2px; display: inline-block; border-radius: 1px; }
+    #equity-chart { height: 130px; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; background: var(--bg); }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--muted); font-size: 11px; }
@@ -144,16 +168,6 @@
       margin-top: 6px;
     }
     button:hover { opacity: 0.9; }
-    #equity-chart {
-      height: 120px;
-      border: 1px solid var(--border);
-      margin-top: 8px;
-      display: flex;
-      align-items: flex-end;
-      gap: 1px;
-      padding: 4px;
-    }
-    .eq-bar { flex: 1; background: var(--accent); min-height: 2px; opacity: 0.7; }
     .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
     .metric-box {
       background: var(--bg);
@@ -262,9 +276,25 @@
   </aside>
 
   <main class="panel">
-    <div class="panel-title">K 线预览 · <span id="current-symbol">000001</span></div>
-    <div id="chart">
-      <div class="chart-bars" id="chart-bars"></div>
+    <div class="panel-title">K 线 · <span id="current-symbol">000001</span> <span id="current-name" style="color:var(--muted);font-weight:400"></span></div>
+    <div class="chart-wrap">
+      <div class="chart-info" id="chart-info">
+        <div class="ci-item"><span class="ci-label">现价</span><span class="ci-val big" id="ci-price">—</span></div>
+        <div class="ci-item"><span class="ci-label">涨跌</span><span class="ci-val" id="ci-change">—</span></div>
+        <div class="ci-item"><span class="ci-label">最高</span><span class="ci-val" id="ci-high">—</span></div>
+        <div class="ci-item"><span class="ci-label">最低</span><span class="ci-val" id="ci-low">—</span></div>
+        <div class="ci-item"><span class="ci-label">成交量</span><span class="ci-val" id="ci-vol">—</span></div>
+      </div>
+      <div id="kline-chart"></div>
+      <div class="chart-legend">
+        <span><i class="leg-box" style="background:var(--up)"></i>阳线</span>
+        <span><i class="leg-box" style="background:var(--down)"></i>阴线</span>
+        <span><i class="leg-line" style="background:#f59e0b"></i>MA5</span>
+        <span><i class="leg-line" style="background:var(--accent)"></i>MA10</span>
+        <span><i class="leg-line" style="background:#a78bfa"></i>MA20</span>
+        <span style="color:var(--up)">▲ 开多</span>
+        <span style="color:var(--down)">▼ 平仓</span>
+      </div>
     </div>
     <div class="panel-title" style="margin-top:12px">策略信号</div>
     <table>
@@ -327,6 +357,9 @@
     let wsManualConnect = false;
     let useBackend = false;
     let apiBase = null;
+    let klineChart = null;
+    let equityChart = null;
+    let lastBars = [];
 
     const API_PROBE_PORTS = [8000, 8080, 3000];
 
@@ -589,12 +622,13 @@
       document.getElementById("current-symbol").textContent = symbol;
       try {
         const resp = await fetch(
-          `${getApiBase()}/api/market/klines/${symbol}?period=${period}&limit=80&source=eastmoney`
+          `${getApiBase()}/api/market/klines/${symbol}?period=${period}&limit=80&source=${getDataPort()}`
         );
         if (!resp.ok) throw new Error("klines failed");
         const data = await resp.json();
         const bars = (data.bars || []).map((b, i) => ({
-          open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume, idx: i,
+          open: b.open, high: b.high, low: b.low, close: b.close,
+          volume: b.volume, idx: i, timestamp: b.timestamp,
         }));
         if (!bars.length) throw new Error("empty bars");
         const signals = runStrategy(bars, strategy);
@@ -843,30 +877,179 @@
     }
 
     function renderChart(bars, signals) {
-      const container = document.getElementById("chart-bars");
-      const maxH = Math.max(...bars.map(b => b.high));
-      const minL = Math.min(...bars.map(b => b.low));
-      const range = maxH - minL || 1;
-      const signalMap = Object.fromEntries(signals.map(s => [s.idx, s]));
+      lastBars = bars;
+      if (!klineChart) {
+        klineChart = echarts.init(document.getElementById("kline-chart"), null, { renderer: "canvas" });
+        window.addEventListener("resize", () => { klineChart?.resize(); equityChart?.resize(); });
+      }
 
-      container.innerHTML = bars.map((b, i) => {
-        const h = ((b.high - minL) / range) * 260;
-        const color = b.close >= b.open ? "var(--up)" : "var(--down)";
-        const sig = signalMap[i];
-        const marker = sig
-          ? `<div class="signal-marker ${sig.type === "buy" ? "signal-buy" : "signal-sell"}">${sig.type === "buy" ? "▲" : "▼"}</div>`
-          : "";
-        return `<div class="bar-wrap">${marker}<div class="bar" style="height:${h}px;background:${color}"></div></div>`;
-      }).join("");
+      const dates = bars.map((b, i) => {
+        if (b.timestamp) {
+          const s = String(b.timestamp);
+          return s.includes("T") ? s.slice(5, 10).replace("-", "/") : s.slice(0, 10);
+        }
+        const d = new Date();
+        d.setDate(d.getDate() - (bars.length - 1 - i));
+        return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+      });
+
+      const ohlc = bars.map(b => [b.open, b.close, b.low, b.high]);
+      const closes = bars.map(b => b.close);
+      const volumes = bars.map(b => b.volume || 0);
+      const ma5 = ma(closes, 5);
+      const ma10 = ma(closes, 10);
+      const ma20 = ma(closes, 20);
+
+      const markPoints = signals.map(s => ({
+        name: s.type,
+        coord: [s.idx, s.type === "buy" ? bars[s.idx].low * 0.998 : bars[s.idx].high * 1.002],
+        symbol: "triangle",
+        symbolSize: 10,
+        symbolRotate: s.type === "buy" ? 0 : 180,
+        itemStyle: { color: s.type === "buy" ? "#ef4444" : "#22c55e" },
+        label: { show: false },
+      }));
+
+      klineChart.setOption({
+        backgroundColor: "transparent",
+        animation: false,
+        tooltip: {
+          trigger: "axis",
+          axisPointer: { type: "cross", lineStyle: { color: "#2a3548" } },
+          backgroundColor: "#1a2234",
+          borderColor: "#2a3548",
+          textStyle: { color: "#e8edf5", fontSize: 12 },
+          formatter(params) {
+            const k = params.find(p => p.seriesName === "K线");
+            if (!k) return "";
+            const [o, c, l, h] = k.data;
+            const chg = o ? ((c - o) / o * 100).toFixed(2) : "0";
+            return `<b>${k.axisValue}</b><br/>开 ${o?.toFixed(2)} 收 ${c?.toFixed(2)}<br/>高 ${h?.toFixed(2)} 低 ${l?.toFixed(2)}<br/>涨跌 ${chg}%`;
+          },
+        },
+        axisPointer: { link: [{ xAxisIndex: [0, 1] }] },
+        grid: [
+          { left: 56, right: 16, top: 16, height: "58%" },
+          { left: 56, right: 16, top: "76%", height: "14%" },
+        ],
+        xAxis: [
+          { type: "category", data: dates, boundaryGap: true, axisLine: { lineStyle: { color: "#2a3548" } }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { show: false }, min: "dataMin", max: "dataMax" },
+          { type: "category", gridIndex: 1, data: dates, boundaryGap: true, axisLine: { lineStyle: { color: "#2a3548" } }, axisLabel: { show: false }, splitLine: { show: false }, min: "dataMin", max: "dataMax" },
+        ],
+        yAxis: [
+          { scale: true, splitNumber: 4, axisLine: { show: false }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { lineStyle: { color: "#1a2234", type: "dashed" } } },
+          { scale: true, gridIndex: 1, splitNumber: 2, axisLine: { show: false }, axisLabel: { color: "#8b95a8", fontSize: 10 }, splitLine: { show: false } },
+        ],
+        dataZoom: [
+          { type: "inside", xAxisIndex: [0, 1], start: bars.length > 40 ? 50 : 0, end: 100 },
+          { type: "slider", xAxisIndex: [0, 1], bottom: 4, height: 18, borderColor: "#2a3548", fillerColor: "rgba(91,156,245,0.15)", handleStyle: { color: "#5b9cf5" }, textStyle: { color: "#8b95a8" }, start: bars.length > 40 ? 50 : 0, end: 100 },
+        ],
+        series: [
+          {
+            name: "K线",
+            type: "candlestick",
+            data: ohlc,
+            itemStyle: { color: "#ef4444", color0: "#22c55e", borderColor: "#ef4444", borderColor0: "#22c55e" },
+            markPoint: { data: markPoints, animation: false },
+          },
+          { name: "MA5", type: "line", data: ma5, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#f59e0b" } },
+          { name: "MA10", type: "line", data: ma10, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#5b9cf5" } },
+          { name: "MA20", type: "line", data: ma20, smooth: true, showSymbol: false, lineStyle: { width: 1.2, color: "#a78bfa" } },
+          {
+            name: "成交量",
+            type: "bar",
+            xAxisIndex: 1,
+            yAxisIndex: 1,
+            data: volumes.map((v, i) => ({
+              value: v,
+              itemStyle: { color: bars[i].close >= bars[i].open ? "rgba(239,68,68,0.55)" : "rgba(34,197,94,0.55)" },
+            })),
+          },
+        ],
+      }, true);
+
+      updateChartInfo(bars);
+    }
+
+    function updateChartInfo(bars) {
+      if (!bars.length) return;
+      const last = bars[bars.length - 1];
+      const prev = bars.length > 1 ? bars[bars.length - 2] : last;
+      const chg = prev.close ? ((last.close - prev.close) / prev.close * 100) : 0;
+      const cls = chg >= 0 ? "up" : "down";
+      document.getElementById("ci-price").textContent = last.close.toFixed(2);
+      document.getElementById("ci-price").className = "ci-val big " + cls;
+      document.getElementById("ci-change").textContent = `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`;
+      document.getElementById("ci-change").className = "ci-val " + cls;
+      document.getElementById("ci-high").textContent = last.high.toFixed(2);
+      document.getElementById("ci-low").textContent = last.low.toFixed(2);
+      document.getElementById("ci-vol").textContent = formatVolume(last.volume);
+    }
+
+    function formatVolume(v) {
+      if (!v) return "—";
+      if (v >= 1e8) return (v / 1e8).toFixed(2) + "亿";
+      if (v >= 1e4) return (v / 1e4).toFixed(0) + "万";
+      return String(Math.round(v));
     }
 
     function renderEquity(equity) {
-      const max = Math.max(...equity);
-      const min = Math.min(...equity);
+      if (!equityChart) {
+        equityChart = echarts.init(document.getElementById("equity-chart"), null, { renderer: "canvas" });
+      }
+      const labels = equity.map((_, i) => i);
+      equityChart.setOption({
+        backgroundColor: "transparent",
+        animation: false,
+        grid: { left: 8, right: 8, top: 8, bottom: 8 },
+        xAxis: { type: "category", data: labels, show: false },
+        yAxis: { type: "value", show: false, scale: true },
+        series: [{
+          type: "line",
+          data: equity,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: { width: 1.5, color: "#5b9cf5" },
+          areaStyle: { color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+            { offset: 0, color: "rgba(91,156,245,0.35)" },
+            { offset: 1, color: "rgba(91,156,245,0.02)" },
+          ]}},
+        }],
+      }, true);
+    }
+
+    function genSparklinePoints(code, n = 24) {
+      const r = rand((code || "0").charCodeAt(0) * 777);
+      let p = 10 + r() * 10;
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        p *= 1 + (r() - 0.48) * 0.06;
+        pts.push(p);
+      }
+      return pts;
+    }
+
+    function drawSparkline(canvas, points) {
+      if (!canvas || !points.length) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.offsetWidth * 2 || 480;
+      const h = canvas.height = 72;
+      ctx.clearRect(0, 0, w, h);
+      const min = Math.min(...points);
+      const max = Math.max(...points);
       const range = max - min || 1;
-      document.getElementById("equity-chart").innerHTML = equity.map(e =>
-        `<div class="eq-bar" style="height:${((e - min) / range) * 100}%"></div>`
-      ).join("");
+      const step = w / (points.length - 1);
+      for (let i = 1; i < points.length; i++) {
+        const x0 = (i - 1) * step, x1 = i * step;
+        const y0 = h - ((points[i - 1] - min) / range) * (h - 8) - 4;
+        const y1 = h - ((points[i] - min) / range) * (h - 8) - 4;
+        ctx.strokeStyle = points[i] >= points[i - 1] ? "#ef4444" : "#22c55e";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
     }
 
     function renderSignals(signals, bars) {
@@ -895,28 +1078,45 @@
 
       document.getElementById("pick-count").textContent = `(${stocks.length})`;
       list.innerHTML = stocks.map(s => {
+        const code = s.code || s.symbol;
         const chg = s.change_pct ?? s.chg ?? 0;
         const cls = chg >= 0 ? "up" : "down";
-        const reason = showReason && s.reason ? `<span class="reason">${s.reason}</span>` : "";
+        const price = s.price ? Number(s.price).toFixed(2) : "";
+        const reason = showReason && s.reason ? `<div class="stock-card-reason">${s.reason}</div>` : "";
         return `
-          <li class="stock-item" data-code="${s.code || s.symbol}">
-            <span>
-              <span class="code">${s.code || s.symbol}</span> ${s.name || ""}
-              ${reason}
-            </span>
-            <span class="${cls}">${chg >= 0 ? "+" : ""}${Number(chg).toFixed(2)}%</span>
+          <li class="stock-card" data-code="${code}" data-name="${s.name || ""}">
+            <div class="stock-card-head">
+              <div>
+                <div class="stock-card-name">${s.name || code}</div>
+                <div class="stock-card-code">${code}</div>
+                ${reason}
+              </div>
+              <div class="stock-card-price">
+                ${price ? `<div>${price}</div>` : ""}
+                <div class="pct ${cls}">${chg >= 0 ? "+" : ""}${Number(chg).toFixed(2)}%</div>
+              </div>
+            </div>
+            <canvas class="sparkline" data-code="${code}"></canvas>
           </li>`;
       }).join("");
 
-      list.querySelectorAll(".stock-item").forEach(el => {
+      list.querySelectorAll(".stock-card").forEach(el => {
+        const canvas = el.querySelector(".sparkline");
+        drawSparkline(canvas, genSparklinePoints(el.dataset.code));
         el.addEventListener("click", () => {
-          list.querySelectorAll(".stock-item").forEach(e => e.classList.remove("active"));
+          list.querySelectorAll(".stock-card").forEach(e => e.classList.remove("active"));
           el.classList.add("active");
           document.getElementById("cfg-symbol").value = el.dataset.code;
+          const nameEl = document.getElementById("current-name");
+          if (nameEl) nameEl.textContent = el.dataset.name ? `· ${el.dataset.name}` : "";
           runBacktestLocal();
         });
       });
       list.firstChild?.classList.add("active");
+      const first = list.firstChild;
+      if (first?.dataset?.name) {
+        document.getElementById("current-name").textContent = `· ${first.dataset.name}`;
+      }
     }
 
     function initStockList() {
@@ -1011,6 +1211,7 @@
 
       if (items.length) {
         document.getElementById("cfg-symbol").value = items[0].code;
+        document.getElementById("current-name").textContent = items[0].name ? `· ${items[0].name}` : "";
         runBacktestLocal();
       }
     }
@@ -1027,6 +1228,9 @@
       }
       const strategy = document.getElementById("cfg-strategy").value;
       document.getElementById("current-symbol").textContent = symbol;
+      const nameEl = document.getElementById("current-name");
+      const activeCard = document.querySelector(`.stock-card[data-code="${symbol}"]`);
+      if (nameEl && activeCard?.dataset?.name) nameEl.textContent = `· ${activeCard.dataset.name}`;
 
       const bars = genMockBars(symbol, 80);
       const signals = runStrategy(bars, strategy);
