@@ -153,6 +153,19 @@
     }
     .metric-box .m-label { font-size: 10px; color: var(--muted); }
     .metric-box .m-val { font-size: 14px; margin-top: 2px; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .header-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .header-select:focus { outline: 1px solid var(--accent); }
+    #ws-badge.connected { color: var(--down); border-color: var(--down); }
+    #ws-badge.connecting { color: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -161,6 +174,22 @@
     <span class="badge">BACKTEST</span>
     <span class="badge" id="env-badge">本地模式</span>
     <span class="badge" id="ws-badge">WS: 未连接</span>
+    <div class="header-right">
+      <label style="font-size:11px;color:var(--muted)">数据端口</label>
+      <select id="data-port" class="header-select" title="行情数据源">
+        <option value="eastmoney" selected>东方财富实时</option>
+        <option value="tushare">Tushare</option>
+        <option value="mootdx">Mootdx</option>
+        <option value="ths">同花顺</option>
+        <option value="mock">本地模拟</option>
+      </select>
+      <label style="font-size:11px;color:var(--muted)">API</label>
+      <select id="api-port" class="header-select" title="后端 API 端口">
+        <option value="8000" selected>:8000</option>
+        <option value="8080">:8080</option>
+        <option value="3000">:3000</option>
+      </select>
+    </div>
   </header>
 
   <div class="layout">
@@ -247,28 +276,152 @@
 
   <script>
     const STORAGE_KEY = "shunshi_dashboard_config";
-    const API_BASE = window.location.origin;
     let ws = null;
+    let wsRetryTimer = null;
+    let overviewTimer = null;
     let useBackend = false;
 
-    function setWsStatus(connected) {
+    function getApiBase() {
+      if (location.protocol !== "file:" && location.host) {
+        return window.location.origin;
+      }
+      const port = document.getElementById("api-port")?.value || localStorage.getItem("api_port") || "8000";
+      return `http://localhost:${port}`;
+    }
+
+    function getWsUrl() {
+      const base = getApiBase();
+      try {
+        const u = new URL(base);
+        const proto = u.protocol === "https:" ? "wss:" : "ws:";
+        return `${proto}//${u.host}/ws`;
+      } catch (_) {
+        return "ws://localhost:8000/ws";
+      }
+    }
+
+    function getDataPort() {
+      return document.getElementById("data-port").value;
+    }
+
+    function setWsStatus(state) {
       const el = document.getElementById("ws-badge");
-      el.textContent = connected ? "WS: 已连接" : "WS: 未连接";
-      el.style.color = connected ? "var(--down)" : "var(--muted)";
+      el.className = "badge";
+      if (state === "connected") {
+        el.textContent = "WS: 已连接";
+        el.classList.add("connected");
+      } else if (state === "connecting") {
+        el.textContent = "WS: 连接中...";
+        el.classList.add("connecting");
+      } else {
+        el.textContent = location.protocol === "file:" ? "WS: 未连接(请启动API)" : "WS: 未连接";
+      }
     }
 
     function connectWebSocket() {
-      if (ws && ws.readyState <= 1) return;
-      const proto = location.protocol === "https:" ? "wss" : "ws";
-      ws = new WebSocket(`${proto}://${location.host}/ws`);
-      ws.onopen = () => setWsStatus(true);
-      ws.onclose = () => { setWsStatus(false); setTimeout(connectWebSocket, 3000); };
+      if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+        return;
+      }
+      clearTimeout(wsRetryTimer);
+      setWsStatus("connecting");
+      try {
+        ws = new WebSocket(getWsUrl());
+      } catch (_) {
+        setWsStatus("disconnected");
+        wsRetryTimer = setTimeout(connectWebSocket, 5000);
+        return;
+      }
+      ws.onopen = () => setWsStatus("connected");
+      ws.onclose = () => {
+        setWsStatus("disconnected");
+        wsRetryTimer = setTimeout(connectWebSocket, 3000);
+      };
+      ws.onerror = () => setWsStatus("disconnected");
       ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
           handleWsEvent(msg.type, msg.data);
         } catch (_) {}
       };
+    }
+
+    async function switchDataSource(source) {
+      localStorage.setItem("data_port", source);
+      try {
+        const resp = await fetch(`${getApiBase()}/api/data/source`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source }),
+        });
+        if (resp.ok) await refreshOverview();
+      } catch (_) {
+        // 无 API 时仅本地记录选择
+      }
+      const symbol = document.getElementById("cfg-symbol").value;
+      if (source === "eastmoney") await loadEastmoneyBars(symbol);
+      else runBacktestLocal();
+    }
+
+    async function refreshOverview() {
+      const source = getDataPort();
+      try {
+        const resp = await fetch(`${getApiBase()}/api/market/overview?source=${source}`);
+        if (!resp.ok) throw new Error("overview failed");
+        const data = await resp.json();
+        if (data.index_sh) {
+          const sh = data.index_sh;
+          const cls = sh.change_pct >= 0 ? "up" : "down";
+          document.getElementById("idx-sh").innerHTML =
+            `<span class="${cls}">${sh.price.toFixed(2)} ${sh.change_pct >= 0 ? "+" : ""}${sh.change_pct.toFixed(2)}%</span>`;
+        }
+        if (data.breadth_up != null) {
+          document.getElementById("idx-breadth").innerHTML =
+            `<span class="up">${data.breadth_up}</span> / <span class="down">${data.breadth_down || 0}</span>`;
+        }
+        if (data.north_flow != null) {
+          const cls = data.north_flow >= 0 ? "up" : "down";
+          document.getElementById("idx-north").innerHTML =
+            `<span class="${cls}">${data.north_flow >= 0 ? "+" : ""}${data.north_flow.toFixed(1)}亿</span>`;
+        }
+      } catch (_) {
+        document.getElementById("idx-sh").innerHTML = `<span class="muted">—</span>`;
+      }
+    }
+
+    async function loadEastmoneyBars(symbol) {
+      const period = document.getElementById("cfg-period").value;
+      const strategy = document.getElementById("cfg-strategy").value;
+      document.getElementById("current-symbol").textContent = symbol;
+      try {
+        const resp = await fetch(
+          `${getApiBase()}/api/market/klines/${symbol}?period=${period}&limit=80&source=eastmoney`
+        );
+        if (!resp.ok) throw new Error("klines failed");
+        const data = await resp.json();
+        const bars = (data.bars || []).map((b, i) => ({
+          open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume, idx: i,
+        }));
+        if (!bars.length) throw new Error("empty bars");
+        const signals = runStrategy(bars, strategy);
+        const result = backtest(bars, signals);
+        renderChart(bars, signals);
+        renderSignals(signals, bars);
+        renderEquity(result.equity);
+        applyLocalMetrics(result);
+        document.getElementById("env-badge").textContent = "东方财富";
+      } catch (e) {
+        console.warn("Eastmoney load failed, fallback mock:", e);
+        runBacktestLocal();
+      }
+    }
+
+    function applyLocalMetrics(result) {
+      const retPct = (result.totalReturn * 100).toFixed(2);
+      document.getElementById("m-return").textContent = `${retPct}%`;
+      document.getElementById("m-return").className = "m-val " + (result.totalReturn >= 0 ? "up" : "down");
+      document.getElementById("m-winrate").textContent = `${(result.winRate * 100).toFixed(1)}%`;
+      document.getElementById("m-pl").textContent = result.profitLossRatio.toFixed(2);
+      document.getElementById("m-dd").textContent = `${(result.maxDrawdown * 100).toFixed(2)}%`;
     }
 
     function handleWsEvent(type, data) {
@@ -283,6 +436,9 @@
         document.getElementById("env-badge").textContent = "LIVE";
       } else if (type === "live_stopped") {
         document.getElementById("env-badge").textContent = "BACKTEST";
+      } else if (type === "data_source_changed") {
+        document.getElementById("data-port").value = data.source;
+        refreshOverview();
       }
     }
 
@@ -313,12 +469,13 @@
     async function runBackendBacktest() {
       const symbol = document.getElementById("cfg-symbol").value;
       const period = document.getElementById("cfg-period").value;
+      const data_source = getDataPort();
       document.getElementById("env-badge").textContent = "API";
       try {
-        const resp = await fetch(`${API_BASE}/api/backtest`, {
+        const resp = await fetch(`${getApiBase()}/api/backtest`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ symbol, period, limit: 200 }),
+          body: JSON.stringify({ symbol, period, limit: 200, data_source }),
         });
         if (!resp.ok) throw new Error("API unavailable");
         const data = await resp.json();
@@ -344,11 +501,12 @@
     async function startLive() {
       const symbol = document.getElementById("cfg-symbol").value;
       const period = document.getElementById("cfg-period").value;
+      const data_source = getDataPort();
       try {
-        const resp = await fetch(`${API_BASE}/api/live/start`, {
+        const resp = await fetch(`${getApiBase()}/api/live/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ symbols: [symbol], poll_interval: 5, period }),
+          body: JSON.stringify({ symbols: [symbol], poll_interval: 5, period, data_source }),
         });
         const data = await resp.json();
         if (!data.ok) alert(data.message || "启动失败");
@@ -360,7 +518,7 @@
 
     async function stopLive() {
       try {
-        await fetch(`${API_BASE}/api/live/stop`, { method: "POST" });
+        await fetch(`${getApiBase()}/api/live/stop`, { method: "POST" });
         document.getElementById("env-badge").textContent = "BACKTEST";
       } catch (e) {
         alert("停止失败: " + e.message);
@@ -558,13 +716,15 @@
     }
 
     function updateOverview() {
-      document.getElementById("idx-sh").innerHTML = `<span class="up">3245.32 +0.68%</span>`;
-      document.getElementById("idx-breadth").innerHTML = `<span class="up">2856</span> / <span class="down">1987</span>`;
-      document.getElementById("idx-north").innerHTML = `<span class="up">+42.6亿</span>`;
+      refreshOverview();
     }
 
-    function runBacktestLocal() {
+    async function runBacktestLocal() {
       const symbol = document.getElementById("cfg-symbol").value;
+      if (getDataPort() === "eastmoney") {
+        await loadEastmoneyBars(symbol);
+        return;
+      }
       const strategy = document.getElementById("cfg-strategy").value;
       document.getElementById("current-symbol").textContent = symbol;
 
@@ -575,18 +735,14 @@
       renderChart(bars, signals);
       renderSignals(signals, bars);
       renderEquity(result.equity);
-
-      const retPct = (result.totalReturn * 100).toFixed(2);
-      document.getElementById("m-return").textContent = `${retPct}%`;
-      document.getElementById("m-return").className = "m-val " + (result.totalReturn >= 0 ? "up" : "down");
-      document.getElementById("m-winrate").textContent = `${(result.winRate * 100).toFixed(1)}%`;
-      document.getElementById("m-pl").textContent = result.profitLossRatio.toFixed(2);
-      document.getElementById("m-dd").textContent = `${(result.maxDrawdown * 100).toFixed(2)}%`;
+      applyLocalMetrics(result);
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         symbol, strategy,
         maxPos: document.getElementById("cfg-max-pos").value,
         period: document.getElementById("cfg-period").value,
+        dataPort: getDataPort(),
+        apiPort: document.getElementById("api-port").value,
         lastResult: { totalReturn: result.totalReturn, winRate: result.winRate },
       }));
     }
@@ -615,12 +771,23 @@
         if (cfg.strategy) document.getElementById("cfg-strategy").value = cfg.strategy;
         if (cfg.maxPos) document.getElementById("cfg-max-pos").value = cfg.maxPos;
         if (cfg.period) document.getElementById("cfg-period").value = cfg.period;
+        if (cfg.dataPort) document.getElementById("data-port").value = cfg.dataPort;
+        if (cfg.apiPort) document.getElementById("api-port").value = cfg.apiPort;
       } catch (_) {}
     }
+
+    document.getElementById("data-port").addEventListener("change", (e) => switchDataSource(e.target.value));
+    document.getElementById("api-port").addEventListener("change", () => {
+      localStorage.setItem("api_port", document.getElementById("api-port").value);
+      if (ws) { ws.close(); ws = null; }
+      connectWebSocket();
+      refreshOverview();
+    });
 
     initStockList();
     updateOverview();
     connectWebSocket();
+    overviewTimer = setInterval(refreshOverview, 30000);
     if (location.port === "8000" || location.pathname === "/") {
       document.getElementById("env-badge").textContent = "API";
     }

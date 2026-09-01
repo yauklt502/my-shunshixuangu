@@ -22,7 +22,40 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 快速开始
+## Windows 一键部署（E 盘）
+
+> 适用于 Windows 10/11，需先安装 [Python 3.10+](https://www.python.org/downloads/)（勾选 Add to PATH）
+
+### 步骤
+
+1. 下载/克隆项目到任意目录  
+   ZIP：https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/trading-system-architecture-f820.zip
+
+2. **双击 `一键部署到E盘.bat`**  
+   - 自动复制到 `E:\shunshi-trading`  
+   - 创建虚拟环境、安装依赖  
+   - 生成桌面快捷方式「顺时选股」
+
+3. **双击 `一键启动.bat`**（或桌面快捷方式）  
+   - 启动 API 服务  
+   - 自动打开浏览器 http://localhost:8000  
+   - 右上角选择「东方财富实时」数据端口
+
+4. 停止服务：双击 `停止服务.bat` 或在启动窗口按 Ctrl+C
+
+### 部署目录结构
+
+```
+E:\shunshi-trading\
+├── 一键启动.bat      ← 日常启动入口
+├── 停止服务.bat
+├── .venv\             ← Python 虚拟环境
+├── src\               ← 后端代码
+├── frontend\          ← 看板页面
+└── data\              ← 运行数据（自动创建）
+```
+
+## 快速开始（开发者）
 
 ```bash
 pip install -r requirements.txt
@@ -51,6 +84,7 @@ python3 -m src.main --mode api --port 8000
 | `BROKER_ACCOUNT` | easytrader 账户配置路径 |
 | `THS_API_URL` | 同花顺开放平台 HTTP 地址 |
 | `THS_API_TOKEN` | 同花顺 API token |
+| `DATA_SOURCE` | 默认数据源，推荐 `eastmoney` |
 
 ## 内置策略
 
