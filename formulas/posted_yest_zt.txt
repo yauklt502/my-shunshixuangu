@@ -1,0 +1,26 @@
+{图2还原：昨日涨停晋级，贴近截图7只（回测当天9只，7只全中，多出国芳集团、欢瑞世纪）}
+{9:25后运行。按涨幅从大到小排。含竞价一字（海鸥住工等），买不进的只看不打。}
+
+创业板:=CODELIKE('30');
+涨停幅:=IF(创业板,0.20,0.10);
+昨收:=REF(C,1);
+前收:=REF(C,2);
+今涨停价:=ROUND(昨收*(1+涨停幅),2);
+竞价涨幅:=OPEN/昨收-1;
+
+ZT:=C/REF(C,1)>=涨停幅*0.95+1 AND C>=H*0.997;
+昨涨停:=REF(ZT,1);
+昨连板:=REF(ZT,1)+REF(ZT,1)*REF(ZT,2)+REF(ZT,1)*REF(ZT,2)*REF(ZT,3)
+      +REF(ZT,1)*REF(ZT,2)*REF(ZT,3)*REF(ZT,4)
+      +REF(ZT,1)*REF(ZT,2)*REF(ZT,3)*REF(ZT,4)*REF(ZT,5)
+      +REF(ZT,1)*REF(ZT,2)*REF(ZT,3)*REF(ZT,4)*REF(ZT,5)*REF(ZT,6);
+
+流通市值亿:=CAPITAL*昨收/1000000;
+非ST:=NOT(NAMELIKE('ST') OR NAMELIKE('*ST'));
+主板:=NOT(CODELIKE('30') OR CODELIKE('68') OR CODELIKE('8') OR CODELIKE('4') OR CODELIKE('92'));
+开盘涨停:=OPEN>=今涨停价;
+
+选股:非ST AND 主板 AND 昨涨停
+AND 竞价涨幅>=0.05
+AND 流通市值亿>=25 AND 流通市值亿<=80
+AND (昨连板>=2 OR 开盘涨停);
