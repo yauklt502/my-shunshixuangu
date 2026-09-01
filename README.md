@@ -43,4 +43,9 @@ python scripts/download_all_klines.py
 python scripts/backtest.py
 python scripts/search_tp.py
 python scripts/pick_today.py   # 9:25 后
+python scripts/replay_screenshots.py  # 别人截图两套公式
 ```
+
+## 别人截图里的两套公式
+
+图1 自选名「开盘竞价 2-9%高…」= 竞价高开 2%–9%；图2 七只全是昨日涨停冲板。公式、对照和回测见 [`formulas/posted_README.md`](formulas/posted_README.md)。仓库里的低开首板公式选不出这些票。
