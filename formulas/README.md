@@ -30,3 +30,5 @@
 - 通达信：`formulas/tongdaxin.txt` → 条件选股
 - 同花顺公式：`formulas/tonghuashun.txt`
 - 同花顺问财：`formulas/tonghuashun_wencai.txt`
+
+别人截图还原的另外两套公式见 `posted_README.md`。
