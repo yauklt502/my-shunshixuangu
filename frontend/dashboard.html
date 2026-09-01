@@ -759,6 +759,8 @@
         strategy: document.getElementById("cfg-strategy").value,
         maxPos: document.getElementById("cfg-max-pos").value,
         period: document.getElementById("cfg-period").value,
+        dataPort: getDataPort(),
+        apiPort: document.getElementById("api-port").value,
       }));
       alert("配置已保存到 localStorage");
     });
