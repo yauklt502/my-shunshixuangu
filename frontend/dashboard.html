@@ -35,7 +35,9 @@
       gap: 10px;
       padding: 10px 16px;
       flex-wrap: nowrap;
+      min-height: 49px;
     }
+    .header-spacer { flex: 1; min-width: 12px; }
     header h1 { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
     .badge {
       font-size: 11px;
@@ -209,7 +211,8 @@
       <h1>顺时选股 · 复盘看板</h1>
       <span class="badge">BACKTEST</span>
       <span class="badge" id="env-badge">本地模式</span>
-      <span class="badge" id="ws-badge">WS: 未连接</span>
+      <span class="badge" id="ws-badge">WS:未连接</span>
+      <span class="header-spacer"></span>
       <div class="header-tools">
         <span class="header-label">数据端口</span>
         <select id="data-port" class="header-select" title="行情数据源">
@@ -364,20 +367,13 @@
       const el = document.getElementById("ws-badge");
       el.className = "badge";
       if (state === "connected") {
-        el.textContent = "WS: 已连接";
+        el.textContent = "WS:已连接";
         el.classList.add("connected");
       } else if (state === "connecting") {
-        el.textContent = "WS: 连接中...";
+        el.textContent = "WS:连接中";
         el.classList.add("connecting");
       } else {
-        el.textContent = location.protocol === "file:" ? "WS: 未连接(请运行start.bat)" : "WS: 未连接";
-      }
-      const hint = document.getElementById("connect-hint");
-      if (hint) {
-        hint.textContent = state === "connected"
-          ? "已连接 · 数据端口: " + document.getElementById("data-port").selectedOptions[0].text
-          : "请先运行 start.bat，再点「连接」";
-        hint.style.color = state === "connected" ? "var(--down)" : "var(--muted)";
+        el.textContent = "WS:未连接";
       }
     }
 
@@ -996,11 +992,18 @@
     initStockList();
     setWsStatus("disconnected");
     if (location.protocol !== "file:" && location.host) {
+      apiBase = location.origin;
       document.getElementById("env-badge").textContent = "API";
       connectBackend();
       overviewTimer = setInterval(refreshOverview, 30000);
     } else {
-      document.getElementById("env-badge").textContent = "本地HTML";
+      document.getElementById("env-badge").textContent = "本地模式";
+      resolveApiBase().then(async (base) => {
+        try {
+          const resp = await fetch(`${base}/api/data/sources`, { signal: AbortSignal.timeout(1500) });
+          if (resp.ok) connectBackend();
+        } catch (_) {}
+      });
     }
     runBacktestLocal();
   </script>
