@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sequoia-X · 9801</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 24'><rect x='4' y='8' width='6' height='10' fill='%23f5465b'/><rect x='18' y='4' width='6' height='14' fill='%2322c55e'/></svg>">
+<style>
+  html,body{background:#000;color:#ff4d4f;color-scheme:dark}
+  :root{
+    --bg:#000; --bg2:#000; --panel:#111; --panel2:#1a1a1a;
+    --border:#333; --line:#222;
+    --txt:#ff4d4f; --muted:#ddd; --dim:#bbb;
+    --up:#ff4d4f; --down:#3ddc84; --watch:#ffc14d; --accent:#ff4d4f;
+    --name:#fff;
+    --mono:ui-monospace,'SF Mono',Consolas,'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#000;color:#ff4d4f;
+    font-family:system-ui,'Segoe UI',Roboto,'PingFang SC',sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid #333;
+    background:#000;position:sticky;top:0;z-index:30;flex-wrap:wrap}
+  .logo{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+    background:#ff4d4f;color:#fff;font-weight:800;font-size:18px;flex:0 0 auto}
+  .title{font-size:17px;font-weight:700;color:#ff4d4f}
+  .title small{display:block;font-size:11px;color:#ddd;font-weight:400}
+  .spacer{flex:1}
+  .clock{font-family:var(--mono);font-size:13px;color:#ddd}
+  .portpill{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;
+    background:#333;border:1px solid #555;border-radius:9px;padding:7px 10px;white-space:nowrap}
+  .srcpick{display:flex;align-items:center;gap:8px;font-size:12px;color:#ff4d4f;font-weight:600}
+  .srcpick select,.srcpick option{background:#111;color:#fff;border:1px solid #333;
+    border-radius:9px;padding:7px 10px;font-size:13px;font-weight:600}
+  .btn{background:#1a1a1a;border:1px solid #444;color:#ff4d4f;padding:8px 14px;
+    border-radius:9px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn.primary{background:#ff4d4f;border:none;color:#fff}
+  .btn:hover{background:#222}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:18px;padding:18px 22px 48px;align-items:start}
+  .side{display:flex;flex-direction:column;gap:14px;position:sticky;top:78px}
+  .card{background:#111;border:1px solid #333;border-radius:14px;padding:16px}
+  .card h3{margin:0 0 12px;font-size:12px;color:#ddd;font-weight:600;letter-spacing:.4px;
+    display:flex;align-items:center;gap:8px}
+  .card h3::before{content:"";width:3px;height:13px;background:#ff4d4f;border-radius:2px}
+  .note{font-size:12px;color:#ccc;line-height:1.7}
+  .hint{display:none;background:#1a1400;border:1px solid #665200;color:#ffc14d;
+    padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:14px}
+  .hint.show{display:block}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+  .stat{background:#111;border:1px solid #333;border-radius:12px;padding:14px;text-align:center}
+  .stat .n{font-size:24px;font-weight:800;font-family:var(--mono);color:#ff4d4f}
+  .stat .l{font-size:11px;color:#ddd;margin-top:2px}
+  .stat.mid .n{color:#ffc14d}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{background:#1a1a1a;border:1px solid #333;color:#ddd;padding:8px 14px;
+    border-radius:9px;cursor:pointer;font-weight:600}
+  .tab.on{color:#ff4d4f;border-color:#ff4d4f;background:#1a1a1a}
+  .strat{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+  .strat .note{flex:1;color:#ccc}
+  .strat .btn{flex:0 0 auto;padding:6px 10px;font-size:12px;color:#ff4d4f}
+  .tab .c{font-family:var(--mono);margin-left:6px;color:#ff4d4f}
+  table{width:100%;border-collapse:collapse;color:#fff;background:#111}
+  th,td{padding:8px 10px;border-bottom:1px solid #333;text-align:left;white-space:nowrap;color:#fff}
+  th{color:#ddd;font-weight:500;font-size:12px}
+  td{color:#fff;font-weight:600}
+  td.cell-name,td.cell-code{color:#fff;font-weight:700}
+  td.mono,th.mono{font-family:var(--mono);color:#fff}
+  .up{color:#ff4d4f} .down{color:#3ddc84} .warn{color:#ffc14d}
+  .banner{font-size:12px;color:#ffc14d;margin:0 0 10px}
+  .empty{color:#bbb;padding:40px;text-align:center}
+  .scroll{overflow:auto}
+  .foot{padding:16px 22px 36px;color:#bbb;font-size:11px;line-height:1.8;border-top:1px solid #222}
+  .lamp{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%}
+  @media (max-width:860px){
+    .layout{display:flex;flex-direction:column;padding:12px}
+    .side{position:static}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">SX</div>
+  <div class="title">Sequoia-X<small>本机 http://127.0.0.1:9801/ · 顺势选股请用 8787</small></div>
+  <div class="spacer"></div>
+  <div class="portpill">端口 9801</div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="conn" id="conn">● 未测连接</div>
+  <label class="srcpick">数据源
+    <select id="srcSel">
+      <option value="ths_tx">同花顺+腾讯</option>
+      <option value="tx">腾讯</option>
+      <option value="ths">同花顺</option>
+    </select>
+  </label>
+  <button class="btn" id="connBtn">测连接</button>
+  <button class="btn" id="shotBtn">截屏</button>
+  <button class="btn primary" id="scanMainTop">扫描主板</button>
+  <button class="btn" id="scanCybTop">扫描创业板</button>
+</header>
+
+<div class="layout">
+  <aside class="side">
+    <div class="card">
+      <h3>怎么用</h3>
+      <div class="note">只扫<strong>主板</strong>（约 3000）或<strong>创业板 300</strong>（约 900）。非 ST、非次新。名单不拉沪深全 A，不会出现 4970。</div>
+      <button class="btn primary" id="scanMain" style="width:100%;margin-top:12px">扫描主板</button>
+      <button class="btn" id="scanCyb" style="width:100%;margin-top:8px">扫描创业板</button>
+      <div class="note" id="prog" style="margin-top:10px">尚未扫描</div>
+    </div>
+    <div class="card">
+      <h3>四套规则</h3>
+      <div class="strat">
+        <div class="note"><b>海龟突破</b> 收盘创 20 日新高 + 成交额过亿 + 阳线且收涨。持有 3 日。</div>
+        <button class="btn" id="scanStratTurtle">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>均线放量</b> 5 日均线上穿 20 日均线，成交量 &gt; 20 日均量 1.5 倍。</div>
+        <button class="btn" id="scanStratMa">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>高窄旗形</b> 近 40 日大涨后 10 日收窄缩量，高位横盘。</div>
+        <button class="btn" id="scanStratFlag">只扫这套</button>
+      </div>
+      <div class="strat">
+        <div class="note"><b>涨停洗盘</b> 昨日涨停，今日阴线放量且最低价不破昨收。</div>
+        <button class="btn" id="scanStratShake">只扫这套</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>数据源</h3>
+      <div class="note" id="srcNote">右上角可选 同花顺+腾讯 / 腾讯 / 同花顺。同花顺提供前复权日 K 与上市日期；腾讯提供批量行情、量比、换手、流通市值。名单仍用新浪板块节点，不拉 hs_a。</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="hint" id="hint"></div>
+    <div class="stats">
+      <div class="stat hi"><div class="n" id="nTurtle">—</div><div class="l">海龟突破</div></div>
+      <div class="stat mid"><div class="n" id="nMa">—</div><div class="l">均线放量</div></div>
+      <div class="stat lo"><div class="n" id="nFlag">—</div><div class="l">高窄旗形</div></div>
+      <div class="stat"><div class="n" id="nShake">—</div><div class="l">涨停洗盘</div></div>
+      <div class="stat"><div class="n" id="nLamp">—</div><div class="l">市场情绪</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab on" data-tab="turtle">海龟 <span class="c" id="cTurtle">0</span></button>
+      <button class="tab" data-tab="ma">均线 <span class="c" id="cMa">0</span></button>
+      <button class="tab" data-tab="flag">旗形 <span class="c" id="cFlag">0</span></button>
+      <button class="tab" data-tab="shake">洗盘 <span class="c" id="cShake">0</span></button>
+    </div>
+    <div class="card">
+      <div id="snapInfo" class="note" style="margin-bottom:10px">打开后先点「扫描主板」「扫描创业板」，或四套规则下的「只扫这套」。规则来自 Sequoia-X。非 ST、非次新，不含科创 / 北交 / 301。休市用最近交易日。</div>
+      <div class="scroll" id="panel"></div>
+    </div>
+  </main>
+</div>
+<div class="foot">
+  选股条件与 Sequoia-X：海龟突破、均线放量、高窄旗形、涨停洗盘一致。本页地址 http://127.0.0.1:9801/ ；顺势选股是 8787。次日开盘涨停视为买不进。持有默认 3 个交易日。本页不构成投资建议。
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SERVERS = [
+  { quote: "web.sqt.gtimg.cn", kline: "ifzq.gtimg.cn" },
+  { quote: "qt.gtimg.cn", kline: "web.ifzq.gtimg.cn" },
+];
+let si = 0;
+const cur = () => SERVERS[si % SERVERS.length];
+const USE_PROXY = location.protocol === "http:" || location.protocol === "https:";
+
+function quoteUrl(codes) {
+  if (USE_PROXY) return `/api/quote?q=${encodeURIComponent(codes)}`;
+  return `https://${cur().quote}/q=${codes}`;
+}
+function klineUrl(code, count) {
+  if (USE_PROXY) return `/api/kline?code=${encodeURIComponent(code)}&count=${count}`;
+  return `https://${cur().kline}/appstock/app/fqkline/get?param=${code},day,,,${count},qfq`;
+}
+function thsKlineUrl(code) {
+  const num = numOf(code);
+  if (USE_PROXY) return `/api/ths/kline?code=${encodeURIComponent(num)}`;
+  return `https://d.10jqka.com.cn/v8/line/hs_${num}/01/last180.js`;
+}
+function currentSrc() {
+  const el = $("srcSel");
+  return (el && el.value) || localStorage.getItem("sequoia_data_src") || "ths_tx";
+}
+function srcLabel() {
+  const s = currentSrc();
+  return s === "tx" ? "腾讯" : s === "ths" ? "同花顺" : "同花顺+腾讯";
+}
+const SINA_NODE_OK = { sh_a: 1, sz_a: 1, cyb: 1 };
+function sinaNode(node) {
+  return SINA_NODE_OK[node] ? node : "cyb";
+}
+function sinaCountUrl(node) {
+  node = sinaNode(node);
+  if (USE_PROXY) return `/api/sina/count?node=${encodeURIComponent(node)}`;
+  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=" + node;
+}
+function sinaListUrl(node, page, pageSize) {
+  node = sinaNode(node);
+  if (USE_PROXY) return `/api/sina/list?node=${encodeURIComponent(node)}&page=${page}&num=${pageSize}`;
+  return "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
+    + `?page=${page}&num=${pageSize}&sort=symbol&asc=1&node=${node}&symbol=&_s_r_a=page`;
+}
+function numOf(code) {
+  return String(code).replace(/^(sh|sz|bj)/i, "");
+}
+function isSTName(name) {
+  return /ST|退|摘牌/.test(name || "");
+}
+function isSubNewName(name) {
+  const n = name || "";
+  return /^[NC]/.test(n) || /次新/.test(n);
+}
+function isSubNewKline(kl) {
+  if (!kl || kl.length < 60) return true;
+  const start = kl.start;
+  if (start && /^\d{8}$/.test(String(start))) {
+    const s = String(start);
+    const t = Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
+    if (Number.isFinite(t) && Date.now() - t < 365 * 864e5) return true;
+  }
+  return false;
+}
+function isMainCode(code) {
+  return /^(600|601|603|605|000|001|002)/.test(numOf(code));
+}
+function isCybCode(code) {
+  return /^300/.test(numOf(code));
+}
+function inBoard(code, board) {
+  return board === "cyb" ? isCybCode(code) : isMainCode(code);
+}
+
+const SCAN_BTNS = [
+  { id: "scanMain", idle: "扫描主板" },
+  { id: "scanCyb", idle: "扫描创业板" },
+  { id: "scanMainTop", idle: "扫描主板" },
+  { id: "scanCybTop", idle: "扫描创业板" },
+  { id: "scanStratTurtle", idle: "只扫这套" },
+  { id: "scanStratMa", idle: "只扫这套" },
+  { id: "scanStratFlag", idle: "只扫这套" },
+  { id: "scanStratShake", idle: "只扫这套" },
+];
+
+const state = {
+  tab: "turtle",
+  board: "main",
+  running: false,
+  turtleMain: [], turtleCyb: [],
+  maMain: [], maCyb: [],
+  flagMain: [], flagCyb: [],
+  shakeMain: [], shakeCyb: [],
+  lamp: { code: 1, label: "未测", score: null },
+  src: "",
+};
+
+function tick() {
+  $("clock").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+}
+setInterval(tick, 1000); tick();
+
+function showHint(t) { const h = $("hint"); h.textContent = t; h.classList.add("show"); }
+function hideHint() { $("hint").classList.remove("show"); }
+function setProg(t) { $("prog").textContent = t; }
+
+async function safeFetch(url, { json = true, timeout = 15000 } = {}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return json ? await r.json() : r;
+  } finally { clearTimeout(t); }
+}
+
+async function decodeGBK(resp) {
+  const buf = await resp.arrayBuffer();
+  try { return new TextDecoder("gbk").decode(buf); }
+  catch (e) { return new TextDecoder("utf-8").decode(buf); }
+}
+
+async function fetchTXQuotes(codes) {
+  const out = {};
+  const B = 350;
+  for (let i = 0; i < codes.length; i += B) {
+    const sub = codes.slice(i, i + B);
+    const url = quoteUrl(sub.join(","));
+    try {
+      const r = await safeFetch(url, { json: false });
+      const txt = await decodeGBK(r);
+      txt.split(";").forEach(line => {
+        const m = line.match(/v_(\w+)="(.+)"/);
+        if (!m) return;
+        const code = m[1], f = m[2].split("~");
+        if (f.length < 45) return;
+        const name = f[1] || "";
+        if (isSTName(name) || isSubNewName(name)) return;
+        if (!isMainCode(code) && !isCybCode(code)) return;
+        const price = +f[3], prev = +f[4], open = +f[5];
+        const high = +f[33], low = +f[34];
+        const volHand = +f[6];
+        const amountWan = +f[37];
+        if (!(price > 0) || !(prev > 0)) return;
+        out[code] = {
+          code, name, price, prev, open, high, low,
+          pct: +((price / prev - 1) * 100).toFixed(2),
+          amp: low > 0 ? +(((high - low) / low) * 100).toFixed(2) : 0,
+          amount: isFinite(amountWan) ? amountWan * 10000 : 0,
+          vol: volHand,
+          volRatio: +f[43] || null,
+          turn: +f[38] || null,
+          cap: +f[44] || null,
+        };
+      });
+    } catch (e) { si++; }
+    setProg(`行情 ${Math.min(i + B, codes.length)}/${codes.length}`);
+  }
+  return out;
+}
+
+async function fetchTXKline(code, count = 130) {
+  const url = klineUrl(code, count);
+  const j = await safeFetch(url, { json: true });
+  const node = j.data && (j.data[code] || j.data[code.toUpperCase()]);
+  const k = node && (node.qfqday || node.day);
+  if (!k || !k.length) throw new Error("no kline");
+  return k.map(x => ({
+    d: x[0], o: +x[1], c: +x[2], h: +x[3], l: +x[4], v: x[5] != null && x[5] !== "" ? +x[5] : 0,
+  }));
+}
+
+function parseTHSKline(j) {
+  if (!j || !j.data) throw new Error("no ths kline");
+  const rows = String(j.data).split(";").filter(Boolean).map(line => {
+    const p = line.split(",");
+    const d = p[0].length === 8 ? p[0].slice(0, 4) + "-" + p[0].slice(4, 6) + "-" + p[0].slice(6, 8) : p[0];
+    return { d, o: +p[1], h: +p[2], l: +p[3], c: +p[4], v: p[5] != null && p[5] !== "" ? +p[5] : 0 };
+  });
+  rows.start = j.start || "";
+  rows.total = +(j.total || rows.length);
+  return rows;
+}
+
+async function fetchTHSKline(code) {
+  const url = thsKlineUrl(code);
+  const raw = await safeFetch(url, { json: false });
+  const txt = await raw.text();
+  const jsonTxt = txt.replace(/^[^{]+/, "").replace(/\)\s*;?\s*$/, "");
+  const j = JSON.parse(jsonTxt);
+  return parseTHSKline(j);
+}
+
+async function fetchKline(code, count = 130) {
+  const src = currentSrc();
+  if (src === "tx") return fetchTXKline(code, count);
+  try {
+    return await fetchTHSKline(code);
+  } catch (e) {
+    if (src === "ths_tx") return fetchTXKline(code, count);
+    throw e;
+  }
+}
+
+async function mapLimit(items, limit, fn) {
+  const out = [];
+  let i = 0;
+  const workers = Array.from({ length: limit }, async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx], idx);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
+function universeRow(it) {
+  const code = String(it.code || "").padStart(6, "0");
+  const symbol = String(it.symbol || (code.startsWith("6") ? "sh" + code : "sz" + code));
+  const name = it.name || "";
+  if (isSTName(name) || isSubNewName(name)) return null;
+  if (!isMainCode(symbol) && !isCybCode(symbol)) return null;
+  return { code, symbol, name };
+}
+
+function filterUniverse(rows) {
+  const seen = new Set();
+  const out = [];
+  (rows || []).forEach(it => {
+    const row = universeRow(it);
+    if (!row || seen.has(row.symbol)) return;
+    seen.add(row.symbol);
+    out.push(row);
+  });
+  return out;
+}
+
+async function fetchSinaNode(node, label) {
+  const cr = await safeFetch(sinaCountUrl(node), { json: false });
+  const raw = (await decodeGBK(cr)).replace(/"/g, "").trim();
+  const total = parseInt(raw, 10) || 0;
+  if (total < 10) throw new Error(label + "为空");
+  const pageSize = 80;
+  const pages = Math.ceil(total / pageSize);
+  const rows = [];
+  const idxs = Array.from({ length: pages }, (_, i) => i + 1);
+  await mapLimit(idxs, 6, async page => {
+    const url = sinaListUrl(node, page, pageSize);
+    try {
+      const r = await safeFetch(url, { json: false, timeout: 20000 });
+      const txt = await decodeGBK(r);
+      const batch = JSON.parse(txt);
+      if (Array.isArray(batch)) rows.push(...batch);
+    } catch (e) {}
+    setProg(`${label} ${Math.min(rows.length, total)}/${total}`);
+  });
+  return rows;
+}
+
+async function getList(board) {
+  board = board === "cyb" ? "cyb" : "main";
+    const cacheKey = board === "cyb" ? "sequoia_board_list_cyb_v1" : "sequoia_board_list_main_v1";
+  const tsKey = cacheKey + "_ts";
+  const cache = localStorage.getItem(cacheKey);
+  const ts = +localStorage.getItem(tsKey) || 0;
+  if (cache && Date.now() - ts < 12 * 3600 * 1000) {
+    try {
+      const filtered = filterUniverse(JSON.parse(cache)).filter(m => inBoard(m.symbol, board));
+      if (filtered.length > 50) return filtered;
+    } catch (e) {}
+  }
+  const rows = board === "cyb"
+    ? await fetchSinaNode("cyb", "创业板名单")
+    : (await Promise.all([
+        fetchSinaNode("sh_a", "沪市名单"),
+        fetchSinaNode("sz_a", "深市名单"),
+      ])).flat();
+  const out = filterUniverse(rows).filter(m => inBoard(m.symbol, board));
+  if (out.length > 50) {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(out));
+      localStorage.setItem(tsKey, String(Date.now()));
+    } catch (e) {}
+  }
+  return out;
+}
+
+function mean(arr) {
+  if (!arr.length) return null;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+function maAt(closes, n, shift = 0) {
+  const end = closes.length - shift;
+  if (end < n) return null;
+  return mean(closes.slice(end - n, end));
+}
+function volRatioFromK(todayVol, kl) {
+  if (!kl || kl.length < 6 || !(todayVol > 0)) return null;
+  const hist = kl.slice(-6, -1).map(x => x.v || 0).filter(v => v > 0);
+  if (hist.length < 3) return null;
+  const avg5 = mean(hist);
+  return avg5 > 0 ? +(todayVol / avg5).toFixed(2) : null;
+}
+function consecLimit(kl, thr) {
+  let n = 0;
+  for (let i = kl.length - 1; i >= 1; i--) {
+    if (kl[i - 1].c <= 0) break;
+    if (kl[i].c / kl[i - 1].c >= thr) n++;
+    else break;
+  }
+  return n;
+}
+function ymdToday() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function withQuote(kl, q) {
+  const bars = (kl || []).map(x => ({ ...x }));
+  const today = ymdToday();
+  const t = { d: today, o: q.open, h: q.high, l: q.low, c: q.price, v: q.vol || 0 };
+  if (!bars.length) return [t];
+  const last = bars[bars.length - 1];
+  const lastD = String(last.d || "").replace(/-/g, "");
+  const todayD = today.replace(/-/g, "");
+  if (lastD === todayD) bars[bars.length - 1] = { ...last, o: t.o, h: t.h, l: t.l, c: t.c, v: t.v || last.v };
+  else bars.push(t);
+  return bars;
+}
+function sliceMean(arr, start, end) {
+  const xs = arr.slice(start, end).filter(v => v != null && isFinite(v));
+  return xs.length ? mean(xs) : null;
+}
+function maxRange(kl, start, end, key) {
+  let m = -Infinity;
+  for (let i = start; i < end; i++) m = Math.max(m, kl[i][key]);
+  return m;
+}
+function minRange(kl, start, end, key) {
+  let m = Infinity;
+  for (let i = start; i < end; i++) m = Math.min(m, kl[i][key]);
+  return m;
+}
+
+function feat(kl, quote) {
+  const closes = kl.map(x => x.c);
+  const n = closes.length;
+  const ma5 = maAt(closes, 5);
+  const ma20 = maAt(closes, 20);
+  const vr = volRatioFromK(quote.vol, kl) ?? quote.volRatio;
+  return { nobs: n, close: quote.price, ma5, ma20, vr };
+}
+
+function screenTurtle(q, kl) {
+  if (!kl || kl.length < 21) return null;
+  const n = kl.length;
+  const t = kl[n - 1], y = kl[n - 2];
+  const high20 = maxRange(kl, n - 21, n - 1, "h");
+  if (!(t.c > high20 && q.amount > 1e8 && t.c > t.o && t.c > y.c)) return null;
+  return { ...q, nobs: n, vr: q.volRatio, score: q.amount / 1e8, why: "20日新高" };
+}
+
+function screenMaVolume(q, kl) {
+  if (!kl || kl.length < 21) return null;
+  const closes = kl.map(x => x.c);
+  const vols = kl.map(x => x.v || 0);
+  const n = closes.length;
+  const ma5 = sliceMean(closes, n - 5, n);
+  const ma20 = sliceMean(closes, n - 20, n);
+  const ma5p = sliceMean(closes, n - 6, n - 1);
+  const ma20p = sliceMean(closes, n - 21, n - 1);
+  const volMa20 = sliceMean(vols, n - 20, n);
+  if (ma5 == null || ma20 == null || ma5p == null || ma20p == null || volMa20 == null) return null;
+  if (!(ma5p < ma20p && ma5 > ma20)) return null;
+  if (!(vols[n - 1] > volMa20 * 1.5)) return null;
+  const surge = volMa20 > 0 ? vols[n - 1] / volMa20 : 0;
+  return { ...q, nobs: n, vr: q.volRatio, ma5, ma20, score: +surge.toFixed(2), why: "MA5金叉MA20" };
+}
+
+function screenFlag(q, kl) {
+  if (!kl || kl.length < 40) return null;
+  const n = kl.length;
+  const high40 = maxRange(kl, n - 40, n, "h");
+  const low40 = minRange(kl, n - 40, n, "l");
+  const high10 = maxRange(kl, n - 10, n, "h");
+  const low10 = minRange(kl, n - 10, n, "l");
+  if (!(low40 > 0 && low10 > 0)) return null;
+  const volMa20 = sliceMean(kl.map(x => x.v || 0), n - 21, n - 1);
+  const todayV = kl[n - 1].v || 0;
+  if (!(high40 / low40 > 1.6 && high10 / low10 < 1.15 && low10 >= high40 * 0.8 && volMa20 > 0 && todayV < volMa20 * 0.6)) return null;
+  return { ...q, nobs: n, vr: q.volRatio, score: +(high40 / low40).toFixed(2), why: "高窄旗形" };
+}
+
+function screenShake(q, kl) {
+  if (!kl || kl.length < 3) return null;
+  const n = kl.length;
+  const t = kl[n - 1], y = kl[n - 2], p2 = kl[n - 3];
+  if (!(y.c >= p2.c * 1.095)) return null;
+  if (!(t.c < t.o)) return null;
+  if (!(t.v > y.v * 2.0)) return null;
+  if (!(t.l >= y.c)) return null;
+  const surge = y.v > 0 ? t.v / y.v : 0;
+  return { ...q, nobs: n, vr: q.volRatio, score: +surge.toFixed(2), why: "涨停洗盘" };
+}
+
+function wantKline(q, strategy) {
+  const yang = q.price > q.open && q.price > q.prev;
+  const yin = q.price < q.open;
+  const wantT = strategy === "all" || strategy === "turtle";
+  const wantM = strategy === "all" || strategy === "ma";
+  const wantF = strategy === "all" || strategy === "flag";
+  const wantS = strategy === "all" || strategy === "shake";
+  if (wantT && q.amount > 1e8 && yang) return true;
+  if (wantM && (q.volRatio == null || q.volRatio >= 1.4)) return true;
+  if (wantF && q.amp <= 8 && (q.volRatio == null || q.volRatio <= 0.8)) return true;
+  if (wantS && yin && q.low >= q.prev && (q.volRatio == null || q.volRatio >= 1.5)) return true;
+  return false;
+}
+
+async function sentiment() {
+  try {
+    const [sh, sz] = await Promise.all([fetchTXKline("sh000001", 30), fetchTXKline("sz399001", 30)]);
+    const c = sh.map(x => x.c);
+    const ma5 = maAt(c, 5), ma10 = maAt(c, 10);
+    const last = c[c.length - 1], prev = c[c.length - 2];
+    const pct = prev > 0 ? (last / prev - 1) * 100 : 0;
+    const rise5 = c.length > 5 && c[c.length - 6] > 0 ? (last / c[c.length - 6] - 1) * 100 : 0;
+    let score = 0;
+    score += pct > 0.3 ? 35 : (pct > -0.3 ? 18 : 0);
+    score += last > ma5 ? 25 : 0;
+    score += ma5 > ma10 ? 25 : 0;
+    score += rise5 > 0 ? 15 : 0;
+    if (sz.length >= 2) {
+      const p2 = sz[sz.length - 1].c / sz[sz.length - 2].c * 100 - 100;
+      if (p2 <= -1) score = Math.max(0, score - 10);
+    }
+    const code = score >= 70 ? 2 : score >= 40 ? 1 : 0;
+    const label = code === 2 ? "绿灯" : code === 1 ? "黄灯" : "红灯空仓";
+    return { code, score, label, pct: +pct.toFixed(2) };
+  } catch (e) {
+    return { code: 1, score: null, label: "黄灯(指数失败)", pct: null };
+  }
+}
+
+function fmtAmt(v) {
+  if (!(v > 0)) return "—";
+  if (v >= 1e8) return (v / 1e8).toFixed(2) + "亿";
+  if (v >= 1e4) return (v / 1e4).toFixed(0) + "万";
+  return String(Math.round(v));
+}
+function pctCell(p) {
+  const cls = p > 0 ? "up" : p < 0 ? "down" : "";
+  const col = p > 0 ? "#ff4d4f" : p < 0 ? "#3ddc84" : "#fff";
+  return `<td class="mono ${cls}" style="color:${col}">${p > 0 ? "+" : ""}${p.toFixed(2)}%</td>`;
+}
+function table(rows, cols) {
+  if (!rows.length) return `<div class="empty">今日无符合条件标的 → 空仓</div>`;
+  return `<table><thead><tr>${cols.map(c => `<th>${c.h}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r => `<tr>${cols.map(c => {
+      if (c.html) return c.html(r);
+      const cls = [c.mono ? "mono" : "", c.cls || ""].filter(Boolean).join(" ");
+      return `<td class="${cls}" style="color:#fff">${c.v(r)}</td>`;
+    }).join("")}</tr>`).join("")
+  }</tbody></table>`;
+}
+
+function merged(mainRows, cybRows) {
+  return [...(mainRows || []), ...(cybRows || [])].sort((a, b) => b.score - a.score);
+}
+
+function render() {
+  const turtle = merged(state.turtleMain, state.turtleCyb);
+  const ma = merged(state.maMain, state.maCyb);
+  const flag = merged(state.flagMain, state.flagCyb);
+  const shake = merged(state.shakeMain, state.shakeCyb);
+  $("nTurtle").textContent = turtle.length;
+  $("nMa").textContent = ma.length;
+  $("nFlag").textContent = flag.length;
+  $("nShake").textContent = shake.length;
+  $("nLamp").textContent = state.lamp.label;
+  $("cTurtle").textContent = turtle.length;
+  $("cMa").textContent = ma.length;
+  $("cFlag").textContent = flag.length;
+  $("cShake").textContent = shake.length;
+  const colsScore = [
+    { h: "名称", cls: "cell-name", v: r => r.name },
+    { h: "代码", cls: "cell-code", mono: true, v: r => r.code.replace(/^(sh|sz)/, "") },
+    { h: "现价", mono: true, v: r => r.price.toFixed(2) },
+    { h: "涨幅", html: r => pctCell(r.pct) },
+    { h: "量比", mono: true, v: r => r.vr != null ? r.vr.toFixed(2) : "—" },
+    { h: "成交额", mono: true, v: r => fmtAmt(r.amount) },
+    { h: "评分", mono: true, v: r => r.score.toFixed(2) },
+    { h: "形态", v: r => r.why || "" },
+  ];
+  const banners = {
+    turtle: "海龟突破：20 日新高 + 成交额过亿 + 阳线真涨。持有 3 个交易日。",
+    ma: "均线放量：5 日均线上穿 20 日均线，且量能大于 20 日均量 1.5 倍。",
+    flag: "高窄旗形：近 40 日涨幅超 60% 后，近 10 日振幅低于 15% 并缩量。",
+    shake: "涨停洗盘：昨日涨停，今日阴线、量能至少昨日 2 倍、最低价不破昨收。",
+  };
+  const rows = { turtle, ma, flag, shake }[state.tab] || [];
+  $("panel").innerHTML = `<div class="banner">${banners[state.tab] || ""}</div>` + table(rows, colsScore);
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.onclick = () => {
+    state.tab = btn.dataset.tab;
+    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b === btn));
+    render();
+  };
+});
+
+async function checkConn() {
+  $("conn").textContent = "连接测试…";
+  $("conn").style.color = "var(--muted)";
+  const src = currentSrc();
+  try {
+    if (src === "tx") {
+      const j = await safeFetch(klineUrl("sh600519", 5), { json: true });
+      if (!(j && j.data)) throw new Error("no data");
+    } else {
+      const kl = await fetchTHSKline("sh600519");
+      if (!kl.length) throw new Error("no ths");
+    }
+    $("conn").textContent = "● 已连 · " + srcLabel();
+    $("conn").style.color = "var(--txt)";
+    hideHint();
+    return true;
+  } catch (e) {
+    $("conn").textContent = "● 未连上" + srcLabel();
+    $("conn").style.color = "var(--up)";
+    showHint("行情无法直连。请用 Chrome/Edge 打开本页，或换一个数据源再测连接。");
+    return false;
+  }
+}
+
+function setScanBusy(busy) {
+  SCAN_BTNS.forEach(({ id, idle }) => {
+    const el = $(id);
+    if (!el) return;
+    el.disabled = busy;
+    el.textContent = busy ? "扫描中…" : idle;
+  });
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+}
+
+async function scanAll(board, strategy) {
+  strategy = strategy || "all";
+  board = board === "cyb" ? "cyb" : "main";
+  if (state.running) return;
+  state.running = true;
+  state.board = board;
+  setScanBusy(true);
+  const boardName = board === "cyb" ? "创业板" : "主板";
+  const stratName = { all: "四套", turtle: "海龟", ma: "均线", flag: "旗形", shake: "洗盘" }[strategy] || "";
+  try {
+    setProg(`${boardName}${stratName}名单（非 ST / 非次新）…`);
+    const meta = await getList(board);
+    if (meta.length < 50) throw new Error(boardName + "列表过短");
+    setProg(`${boardName}非 ST ${meta.length} 只，拉行情…`);
+    const quotes = await fetchTXQuotes(meta.map(m => m.symbol));
+    const nameBySym = new Map(meta.map(m => [m.symbol, m.name]));
+    Object.values(quotes).forEach(q => {
+      if (!q.name) q.name = nameBySym.get(q.code) || "";
+    });
+    const all = Object.values(quotes).filter(q => inBoard(q.code, board) && !isSTName(q.name) && !isSubNewName(q.name));
+    if (!all.length) throw new Error("无行情");
+    state.src = currentSrc();
+    $("conn").textContent = "● 已连 · " + srcLabel();
+    $("conn").style.color = "var(--txt)";
+
+    setProg("指数情绪…");
+    state.lamp = await sentiment();
+
+    const needK = new Map();
+    all.forEach(q => { if (wantKline(q, strategy)) needK.set(q.code, q); });
+    let jobs = [...needK.values()].sort((a, b) => b.amount - a.amount);
+    if (jobs.length > 400) jobs = jobs.slice(0, 400);
+
+    const wantT = strategy === "all" || strategy === "turtle";
+    const wantM = strategy === "all" || strategy === "ma";
+    const wantF = strategy === "all" || strategy === "flag";
+    const wantS = strategy === "all" || strategy === "shake";
+
+    let done = 0;
+    const klines = {};
+    await mapLimit(jobs, 8, async q => {
+      try {
+        const kl = await fetchKline(q.code, 80);
+        if (isSubNewKline(kl)) return;
+        klines[q.code] = withQuote(kl, q);
+      } catch (e) {}
+      done++;
+      if (done % 8 === 0 || done === jobs.length) setProg(`${boardName}核验 K 线 ${done}/${jobs.length} · ${srcLabel()}`);
+    });
+
+    const turtle = [], ma = [], flag = [], shake = [];
+    jobs.forEach(q => {
+      const kl = klines[q.code];
+      if (!kl) return;
+      if (wantT) { const r = screenTurtle(q, kl); if (r) turtle.push(r); }
+      if (wantM) { const r = screenMaVolume(q, kl); if (r) ma.push(r); }
+      if (wantF) { const r = screenFlag(q, kl); if (r) flag.push(r); }
+      if (wantS) { const r = screenShake(q, kl); if (r) shake.push(r); }
+    });
+    turtle.sort((a, b) => b.score - a.score);
+    ma.sort((a, b) => b.score - a.score);
+    flag.sort((a, b) => b.score - a.score);
+    shake.sort((a, b) => b.score - a.score);
+    const key = board === "cyb" ? "Cyb" : "Main";
+    if (wantT) state["turtle" + key] = turtle.slice(0, 20);
+    if (wantM) state["ma" + key] = ma.slice(0, 20);
+    if (wantF) state["flag" + key] = flag.slice(0, 20);
+    if (wantS) state["shake" + key] = shake.slice(0, 20);
+
+    const tab = strategy === "all" ? "turtle" : strategy;
+    switchTab(tab);
+    $("snapInfo").textContent =
+      `${boardName}${stratName}完成 ${new Date().toLocaleString("zh-CN", { hour12: false })} · ${srcLabel()} · 非ST/非次新 ${all.length} 只 · K线 ${jobs.length}（未扫全市场）`;
+    setProg(`${boardName}${stratName}完成 · ${all.length} 只`);
+    hideHint();
+    render();
+  } catch (e) {
+    showHint("扫描失败：" + (e.message || e) + "。请确认能访问腾讯/同花顺/新浪，或换数据源。");
+    setProg("失败");
+  } finally {
+    state.running = false;
+    setScanBusy(false);
+  }
+}
+
+async function screenshot() {
+  const btn = $("shotBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "截屏中…"; }
+  try {
+    if (!window.html2canvas) {
+      await new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = "vendor/html2canvas.min.js";
+        s.onload = res;
+        s.onerror = () => rej(new Error("截屏库加载失败"));
+        document.head.appendChild(s);
+      });
+    }
+    const canvas = await window.html2canvas(document.body, {
+      backgroundColor: "#000000",
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      onclone(doc) {
+        doc.documentElement.style.background = "#000";
+        doc.body.style.background = "#000";
+        doc.body.style.color = "#ff4d4f";
+        doc.querySelectorAll("td,th").forEach(el => {
+          if (!el.classList.contains("up") && !el.classList.contains("down")) {
+            el.style.color = "#ffffff";
+          }
+        });
+        doc.querySelectorAll(".up").forEach(el => { el.style.color = "#ff4d4f"; });
+        doc.querySelectorAll(".down").forEach(el => { el.style.color = "#3ddc84"; });
+      },
+    });
+    const a = document.createElement("a");
+    a.download = "Sequoia-X-" + new Date().toISOString().slice(0, 19).replace(/[:T]/g, "") + ".png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+    setProg("截屏已保存");
+  } catch (e) {
+    showHint("截屏失败：" + (e.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "截屏"; }
+  }
+}
+
+$("connBtn").onclick = checkConn;
+$("shotBtn").onclick = screenshot;
+$("scanMain").onclick = () => scanAll("main", "all");
+$("scanCyb").onclick = () => scanAll("cyb", "all");
+$("scanMainTop").onclick = () => scanAll("main", "all");
+$("scanCybTop").onclick = () => scanAll("cyb", "all");
+$("scanStratTurtle").onclick = () => scanAll(state.board || "main", "turtle");
+$("scanStratMa").onclick = () => scanAll(state.board || "main", "ma");
+$("scanStratFlag").onclick = () => scanAll(state.board || "main", "flag");
+$("scanStratShake").onclick = () => scanAll(state.board || "main", "shake");
+$("srcSel").value = localStorage.getItem("sequoia_data_src") || "ths_tx";
+$("srcSel").onchange = () => {
+  localStorage.setItem("sequoia_data_src", $("srcSel").value);
+  checkConn();
+};
+render();
+checkConn();
+</script>
+</body>
+</html>
