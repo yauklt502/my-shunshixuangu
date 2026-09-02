@@ -265,7 +265,8 @@
 
 <script>
 /* ===================== 配置与状态 ===================== */
-const API_BASE = '';
+const FUYAO_ORIGIN = 'https://fuyao.aicubes.cn';
+const FUYAO_KEY = 'sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia';
 const LS_WATCH='dragon_watch';
 
 let state = {
@@ -297,19 +298,46 @@ function isMarketOpen(){
 }
 
 /* ===================== API 层 ===================== */
-async function apiGet(path, params){
-  const url = new URL(API_BASE+path, location.origin);
+function hasSameOriginProxy(){
+  const h = location.hostname;
+  return h==='localhost' || h==='127.0.0.1' || h==='[::1]' || h==='::1'
+    || /\.workers\.dev$/.test(h) || /\.pages\.dev$/.test(h);
+}
+function buildApiUrl(base, path, params){
+  const url = new URL((base||'')+path, location.origin);
   if(params) for(const k in params){ if(params[k]!=null && params[k]!=='') url.searchParams.set(k, params[k]); }
-  const res = await fetch(url);
+  return url;
+}
+async function apiFetch(base, path, params, extraHeaders){
+  const headers = extraHeaders || {};
+  const init = Object.keys(headers).length ? { headers } : {};
+  const res = await fetch(buildApiUrl(base, path, params), init);
   if(res.headers.has('X-RateLimit-Remaining')) state.rateRemaining=+res.headers.get('X-RateLimit-Remaining');
   if(res.headers.has('X-RateLimit-Limit')) state.rateLimit=+res.headers.get('X-RateLimit-Limit');
   updateStatus();
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const json = await res.json();
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); }
+  catch(e){ throw new Error(res.ok ? '响应不是 JSON' : ('HTTP '+res.status)); }
+  if(!res.ok) throw new Error(json.message || ('HTTP '+res.status));
   if(json.code!==0) throw new Error(json.message||('code '+json.code));
   state.lastFetch = nowStr();
   if(json.data && json.data.timestamp) state.dataTime = fmtDate(json.data.timestamp);
   return json.data;
+}
+async function apiGet(path, params){
+  const useProxy = hasSameOriginProxy();
+  const fuyaoHeaders = { 'X-api-key': FUYAO_KEY };
+  try {
+    if(useProxy) return await apiFetch('', path, params, {});
+    return await apiFetch(FUYAO_ORIGIN, path, params, fuyaoHeaders);
+  } catch(e) {
+    const msg = String(e && e.message || e);
+    if(useProxy && /HTTP 404|HTTP 405|响应不是 JSON/.test(msg)){
+      return await apiFetch(FUYAO_ORIGIN, path, params, fuyaoHeaders);
+    }
+    throw e;
+  }
 }
 function fmtDate(ts){ if(!ts) return '--'; const d=new Date(ts); return d.toLocaleString('zh-CN',{hour12:false}); }
 async function getLimitUpPool(){
@@ -1318,7 +1346,7 @@ function init(){
   $('#btnServ').onclick=()=>{
     const local = location.hostname==='127.0.0.1'||location.hostname==='localhost';
     if(local) alert('本地版：密钥已由后台代理自动带上。保持本窗口开着，用 http://127.0.0.1:8010/ 访问（短线寻龙专用端口，不占用顺势选股的 8000）。\n右上角「一键截屏」可保存当前画面。');
-    else alert('密钥已由后台配置，打开本页即可用，不必再输入。\n右上角「一键截屏」可保存当前画面。');
+    else alert('网页端会直连数据接口，打开即可用，不必再输入密钥。若刚更新过页面，请强制刷新（Ctrl+F5）后再点「连接测试」。\n右上角「一键截屏」可保存当前画面。');
   };
   setInterval(()=>{ $('#clock').textContent=nowStr(); },1000);
   (async()=>{ try{ await apiGet('/api/a-share/special-data/limit-up-pool',{limit:1}); $('#connDot').className='dot live'; $('#connTxt').textContent='已连接'; }
