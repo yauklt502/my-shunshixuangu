@@ -35,10 +35,10 @@
 
   /* ===== Header ===== */
   header{
-    position:relative; padding:0 18px; height:54px; flex-shrink:0;
+    position:relative; padding:6px 18px; min-height:54px; height:auto; flex-shrink:0;
     background:linear-gradient(180deg,#0d121b,#0a0e15);
     border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:14px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
   }
   header::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
     background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.35}
@@ -291,7 +291,7 @@ function isMarketOpen(){
 /* ===================== API 层 ===================== */
 async function apiGet(path, params){
   if(!state.apiKey) throw new Error('未配置 API Key');
-  const url = new URL(API_BASE+path);
+  const url = new URL(API_BASE+path, location.origin);
   if(params) for(const k in params){ if(params[k]!=null && params[k]!=='') url.searchParams.set(k, params[k]); }
   const res = await fetch(url, { headers:{'X-api-key':state.apiKey} });
   if(res.headers.has('X-RateLimit-Remaining')) state.rateRemaining=+res.headers.get('X-RateLimit-Remaining');
