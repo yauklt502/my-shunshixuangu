@@ -268,6 +268,7 @@
 const FUYAO_ORIGIN = 'https://fuyao.aicubes.cn';
 const FUYAO_KEY = 'sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia';
 const LS_WATCH='dragon_watch';
+let skipSameOriginProxy = false;
 
 let state = {
   module:'overview', apiKey:'',
@@ -299,6 +300,7 @@ function isMarketOpen(){
 
 /* ===================== API 层 ===================== */
 function hasSameOriginProxy(){
+  if(skipSameOriginProxy) return false;
   const h = location.hostname;
   return h==='localhost' || h==='127.0.0.1' || h==='[::1]' || h==='::1'
     || /\.workers\.dev$/.test(h) || /\.pages\.dev$/.test(h);
@@ -334,6 +336,7 @@ async function apiGet(path, params){
   } catch(e) {
     const msg = String(e && e.message || e);
     if(useProxy && /HTTP 404|HTTP 405|响应不是 JSON/.test(msg)){
+      skipSameOriginProxy = true;
       return await apiFetch(FUYAO_ORIGIN, path, params, fuyaoHeaders);
     }
     throw e;
