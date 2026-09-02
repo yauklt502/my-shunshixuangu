@@ -1,31 +1,38 @@
 # 短线寻龙 · 同花顺金融数据终端
 
-自己的短线监控站，打开网址就能用，不必再依赖 [xl.mininas.cc](https://xl.mininas.cc/)，也不必每次本地开服务。
+自己的短线监控站。别人的 [xl.mininas.cc](https://xl.mininas.cc/) 关掉也不影响你。打开网址就能用，不必每次本地开服务。
 
 数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。API Key 只存在你自己的浏览器里。
 
-## 在线打开（推荐）
+## 现在就能打开
 
-推送到 GitHub 后，Cloudflare Workers 会自动发布静态站：
+浏览器打开（已核对页面能渲染、侧栏能点）：
 
-- **Cloudflare：** [https://my-shunshixuangu.yuanchanglin7341.workers.dev/](https://my-shunshixuangu.yuanchanglin7341.workers.dev/)
-- **GitHub Pages（合并到 main 后）：** [https://yauklt502.github.io/my-shunshixuangu/](https://yauklt502.github.io/my-shunshixuangu/)
+**https://raw.githack.com/yauklt502/my-shunshixuangu/cursor/duanxian-xunlong-e-drive-bac5/web/index.html**
 
-用法：
-
-1. 浏览器打开上面的网址并收藏。
+1. 收藏这个地址。
 2. 到 [fuyao.aicubes.cn](https://fuyao.aicubes.cn/) 申请 API Key。
-3. 把 Key 填进右上角后回车，点「连接测试」。
+3. 填进右上角回车，点「连接测试」。
 
-换电脑或清缓存后需要再输一次 Key。不要把 Key 发给别人。
+合并到 `main` 之后，也可以用：
 
-### 绑定自己的域名（可选）
+https://raw.githack.com/yauklt502/my-shunshixuangu/main/web/index.html
 
-和 `xl.mininas.cc` 一样，可以在 Cloudflare 控制台给 Worker `my-shunshixuangu` 加自定义域，例如 `xunlong.你的域名.com`，加完后打开那个域名即可。
+## 做成自己的短域名（和 xl.mininas.cc 一样）
+
+仓库已经接到 Cloudflare Worker `my-shunshixuangu`，每次推送都会自动发布。要得到 `https://xxx.workers.dev` 或 `https://xunlong.你的域名.com`：
+
+1. 打开 [Cloudflare 控制台里的 my-shunshixuangu](https://dash.cloudflare.com/47cba3914c0ddb2d594f4793862c837d/workers/services/view/my-shunshixuangu)。
+2. Settings 里打开 **workers.dev** 子域（当前未对外解析，所以 `*.workers.dev` 会 1042）。
+3. 可选：Custom Domains 绑定你自己的域名。
+
+GitHub Pages：仓库 Settings → Pages → Source 选 GitHub Actions，再合并本 PR。之后地址是：
+
+https://yauklt502.github.io/my-shunshixuangu/
 
 ## 本地备用
 
-没有网或要改代码时，仍可双击 `启动.bat`（或 `一键部署到E盘.bat` 拷到 `E:\短线寻龙`）。需要 Python 3 或 Node.js。不要直接双击 `web/index.html`。
+双击 `启动.bat`，或 `一键部署到E盘.bat` 拷到 `E:\短线寻龙`。需要 Python 3 或 Node.js。不要直接双击 `web/index.html`。
 
 ```bash
 python serve.py

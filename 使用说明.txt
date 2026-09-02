@@ -1,19 +1,23 @@
 短线寻龙 · 同花顺金融数据终端
 ================================
 
-一、在线使用（推荐，不用每次开软件）
-  打开并收藏：
-    https://my-shunshixuangu.yuanchanglin7341.workers.dev/
+一、现在就能打开（不用每次开软件）
+  https://raw.githack.com/yauklt502/my-shunshixuangu/cursor/duanxian-xunlong-e-drive-bac5/web/index.html
+
   第一次：到 https://fuyao.aicubes.cn/ 申请 API Key，填进右上角回车。
 
-  也可以等合并到 main 后用：
-    https://yauklt502.github.io/my-shunshixuangu/
+二、想要自己的短域名（像 xl.mininas.cc）
+  打开 Cloudflare 控制台 Worker：my-shunshixuangu
+  打开 workers.dev 子域，或绑定 xunlong.你的域名.com
 
-二、本地备用
+  GitHub Pages：仓库 Settings → Pages → Source 选 GitHub Actions，合并后：
+  https://yauklt502.github.io/my-shunshixuangu/
+
+三、本地备用
   双击「启动.bat」，或「一键部署到E盘.bat」复制到 E:\短线寻龙。
   需要已安装 Python 3 或 Node.js。不要双击 web\index.html。
 
-三、注意
+四、注意
   - Key 只存在你自己的浏览器，换电脑要重输
   - 接口限频约 20 次/分钟
   - 数据仅供研究参考，不构成投资建议
