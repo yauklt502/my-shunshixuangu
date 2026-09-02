@@ -42,3 +42,27 @@ def test_sequoia_uses_port_9801_not_pr19():
     assert "扫描主板" in text
     assert "/api/quote" in text
     assert "html2canvas" in text
+
+
+def test_hosted_page_hides_local_port_and_can_run_without_proxy():
+    text = HTML.read_text(encoding="utf-8")
+    assert 'id="local-port-hint"' in text
+    assert "function applyHostedChrome" in text
+    assert "function detectProxy" in text
+    assert "IS_GITHUB_PAGES" in text
+    assert "jsonp_v2.php" in text
+    assert "function jsonpNamed" in text
+    assert "打开网址即可用" in text
+
+
+def test_online_deploy_workflows_exist():
+    pages = ROOT / ".github" / "workflows" / "deploy-sequoia-x-pages.yml"
+    cf = ROOT / ".github" / "workflows" / "deploy-sequoia-x-cloudflare.yml"
+    assert pages.is_file()
+    assert cf.is_file()
+    pages_txt = pages.read_text(encoding="utf-8")
+    cf_txt = cf.read_text(encoding="utf-8")
+    assert "actions/deploy-pages" in pages_txt
+    assert "path: web" in pages_txt
+    assert "cloudflare/wrangler-action" in cf_txt
+    assert "CLOUDFLARE_API_TOKEN" in cf_txt

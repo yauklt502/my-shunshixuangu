@@ -29,6 +29,10 @@
   .clock{font-family:var(--mono);font-size:13px;color:#ddd}
   .portpill{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;
     background:#333;border:1px solid #555;border-radius:9px;padding:7px 10px;white-space:nowrap}
+  #local-port-hint[hidden]{display:none}
+  #hosted-hint{display:none;margin:12px 22px 0;padding:10px 14px;border:1px solid #444;
+    border-radius:10px;background:#1a1a1a;color:#ddd;font-size:12px;line-height:1.5}
+  #hosted-hint.show{display:block}
   .srcpick{display:flex;align-items:center;gap:8px;font-size:12px;color:#ff4d4f;font-weight:600}
   .srcpick select,.srcpick option{background:#111;color:#fff;border:1px solid #333;
     border-radius:9px;padding:7px 10px;font-size:13px;font-weight:600}
@@ -83,9 +87,9 @@
 <body>
 <header class="topbar">
   <div class="logo">SX</div>
-  <div class="title">Sequoia-X<small>本机 http://127.0.0.1:9801/ · 顺势选股请用 8787</small></div>
+  <div class="title">Sequoia-X<small id="title-sub">本机 http://127.0.0.1:9801/ · 顺势选股请用 8787</small></div>
   <div class="spacer"></div>
-  <div class="portpill">端口 9801</div>
+  <div class="portpill" id="local-port-hint">端口 9801</div>
   <div class="clock" id="clock">--:--:--</div>
   <div class="conn" id="conn">● 未测连接</div>
   <label class="srcpick">数据源
@@ -100,6 +104,7 @@
   <button class="btn primary" id="scanMainTop">扫描主板</button>
   <button class="btn" id="scanCybTop">扫描创业板</button>
 </header>
+<div id="hosted-hint"></div>
 
 <div class="layout">
   <aside class="side">
@@ -168,7 +173,9 @@ const SERVERS = [
 ];
 let si = 0;
 const cur = () => SERVERS[si % SERVERS.length];
-const USE_PROXY = location.protocol === "http:" || location.protocol === "https:";
+const IS_LOOPBACK = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+const IS_GITHUB_PAGES = /\.github\.io$/i.test(location.hostname);
+let USE_PROXY = (location.protocol === "http:" || location.protocol === "https:") && !IS_GITHUB_PAGES;
 
 function quoteUrl(codes) {
   if (USE_PROXY) return `/api/quote?q=${encodeURIComponent(codes)}`;
@@ -176,12 +183,76 @@ function quoteUrl(codes) {
 }
 function klineUrl(code, count) {
   if (USE_PROXY) return `/api/kline?code=${encodeURIComponent(code)}&count=${count}`;
-  return `https://${cur().kline}/appstock/app/fqkline/get?param=${code},day,,,${count},qfq`;
+  return `https://${cur().kline}/appstock/app/fqkline/get?_var=kline_dayqfq&param=${code},day,,,${count},qfq`;
 }
 function thsKlineUrl(code) {
   const num = numOf(code);
   if (USE_PROXY) return `/api/ths/kline?code=${encodeURIComponent(num)}`;
   return `https://d.10jqka.com.cn/v8/line/hs_${num}/01/last180.js`;
+}
+function loadScript(src, charset) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.async = true;
+    if (charset) s.charset = charset;
+    s.src = src;
+    s.onload = () => { s.remove(); resolve(); };
+    s.onerror = () => { s.remove(); reject(new Error("script fail")); };
+    document.head.appendChild(s);
+  });
+}
+function jsonpNamed(src, name, timeout) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => done(new Error("jsonp timeout")), timeout || 15000);
+    const s = document.createElement("script");
+    function cleanup() {
+      clearTimeout(t);
+      try { delete window[name]; } catch (e) { window[name] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+    function done(err, data) {
+      cleanup();
+      if (err) reject(err); else resolve(data);
+    }
+    window[name] = function (data) { done(null, data); };
+    s.async = true;
+    s.src = src;
+    s.onerror = () => done(new Error("jsonp fail"));
+    document.head.appendChild(s);
+  });
+}
+async function detectProxy() {
+  if (!USE_PROXY || IS_GITHUB_PAGES) {
+    USE_PROXY = false;
+    return;
+  }
+  if (IS_LOOPBACK) return;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 4000);
+    const r = await fetch("/api/quote?q=sh000001", { cache: "no-store", signal: ctrl.signal });
+    clearTimeout(t);
+    USE_PROXY = r.ok;
+  } catch (e) {
+    USE_PROXY = false;
+  }
+}
+function applyHostedChrome() {
+  if (IS_LOOPBACK) return;
+  document.title = "Sequoia-X";
+  const sub = document.getElementById("title-sub");
+  if (sub) sub.textContent = "打开网址即可用，不用在电脑上开服务";
+  const port = document.getElementById("local-port-hint");
+  if (port) port.hidden = true;
+  const foot = document.querySelector(".foot");
+  if (foot) {
+    foot.textContent = "选股条件与 Sequoia-X：海龟突破、均线放量、高窄旗形、涨停洗盘一致。次日开盘涨停视为买不进。持有默认 3 个交易日。本页不构成投资建议。";
+  }
+  const hint = document.getElementById("hosted-hint");
+  if (hint) {
+    hint.classList.add("show");
+    hint.textContent = "这是你自己仓库里的 Sequoia-X 在线页，不是别人的 xl.mininas.cc。静态托管时默认走腾讯行情；同花顺若扫不出，右上角改成「腾讯」。";
+  }
 }
 function currentSrc() {
   const el = $("srcSel");
@@ -284,54 +355,77 @@ async function decodeGBK(resp) {
   catch (e) { return new TextDecoder("utf-8").decode(buf); }
 }
 
+function ingestQuoteLine(line, out) {
+  const m = String(line || "").match(/v_(\w+)="(.+)"/);
+  if (!m) return;
+  const code = m[1], f = m[2].split("~");
+  if (f.length < 45) return;
+  const name = f[1] || "";
+  if (isSTName(name) || isSubNewName(name)) return;
+  if (!isMainCode(code) && !isCybCode(code)) return;
+  const price = +f[3], prev = +f[4], open = +f[5];
+  const high = +f[33], low = +f[34];
+  const volHand = +f[6];
+  const amountWan = +f[37];
+  if (!(price > 0) || !(prev > 0)) return;
+  out[code] = {
+    code, name, price, prev, open, high, low,
+    pct: +((price / prev - 1) * 100).toFixed(2),
+    amp: low > 0 ? +(((high - low) / low) * 100).toFixed(2) : 0,
+    amount: isFinite(amountWan) ? amountWan * 10000 : 0,
+    vol: volHand,
+    volRatio: +f[43] || null,
+    turn: +f[38] || null,
+    cap: +f[44] || null,
+  };
+}
+async function fetchQuoteText(codes) {
+  const joined = codes.join(",");
+  if (USE_PROXY) {
+    const r = await safeFetch(quoteUrl(joined), { json: false });
+    return decodeGBK(r);
+  }
+  const keys = codes.map(c => "v_" + c);
+  keys.forEach(k => { try { delete window[k]; } catch (e) { window[k] = undefined; } });
+  await loadScript(`https://${cur().quote}/q=${joined}`, "gbk");
+  return keys.map(k => {
+    const val = window[k];
+    try { delete window[k]; } catch (e) { window[k] = undefined; }
+    return val != null ? (k + '="' + val + '"') : "";
+  }).filter(Boolean).join(";");
+}
 async function fetchTXQuotes(codes) {
   const out = {};
   const B = 350;
   for (let i = 0; i < codes.length; i += B) {
     const sub = codes.slice(i, i + B);
-    const url = quoteUrl(sub.join(","));
     try {
-      const r = await safeFetch(url, { json: false });
-      const txt = await decodeGBK(r);
-      txt.split(";").forEach(line => {
-        const m = line.match(/v_(\w+)="(.+)"/);
-        if (!m) return;
-        const code = m[1], f = m[2].split("~");
-        if (f.length < 45) return;
-        const name = f[1] || "";
-        if (isSTName(name) || isSubNewName(name)) return;
-        if (!isMainCode(code) && !isCybCode(code)) return;
-        const price = +f[3], prev = +f[4], open = +f[5];
-        const high = +f[33], low = +f[34];
-        const volHand = +f[6];
-        const amountWan = +f[37];
-        if (!(price > 0) || !(prev > 0)) return;
-        out[code] = {
-          code, name, price, prev, open, high, low,
-          pct: +((price / prev - 1) * 100).toFixed(2),
-          amp: low > 0 ? +(((high - low) / low) * 100).toFixed(2) : 0,
-          amount: isFinite(amountWan) ? amountWan * 10000 : 0,
-          vol: volHand,
-          volRatio: +f[43] || null,
-          turn: +f[38] || null,
-          cap: +f[44] || null,
-        };
-      });
+      const txt = await fetchQuoteText(sub);
+      String(txt || "").split(";").forEach(line => ingestQuoteLine(line, out));
     } catch (e) { si++; }
     setProg(`行情 ${Math.min(i + B, codes.length)}/${codes.length}`);
   }
   return out;
 }
 
-async function fetchTXKline(code, count = 130) {
-  const url = klineUrl(code, count);
-  const j = await safeFetch(url, { json: true });
-  const node = j.data && (j.data[code] || j.data[code.toUpperCase()]);
+function barsFromTxKline(j, code) {
+  const node = j && j.data && (j.data[code] || j.data[code.toUpperCase()]);
   const k = node && (node.qfqday || node.day);
   if (!k || !k.length) throw new Error("no kline");
   return k.map(x => ({
     d: x[0], o: +x[1], c: +x[2], h: +x[3], l: +x[4], v: x[5] != null && x[5] !== "" ? +x[5] : 0,
   }));
+}
+async function fetchTXKline(code, count = 130) {
+  if (USE_PROXY) {
+    const j = await safeFetch(klineUrl(code, count), { json: true });
+    return barsFromTxKline(j, code);
+  }
+  const varName = "_k" + Math.random().toString(36).slice(2);
+  await loadScript(`https://${cur().kline}/appstock/app/fqkline/get?_var=${varName}&param=${code},day,,,${count},qfq`);
+  const j = window[varName];
+  try { delete window[varName]; } catch (e) { window[varName] = undefined; }
+  return barsFromTxKline(j, code);
 }
 
 function parseTHSKline(j) {
@@ -347,11 +441,15 @@ function parseTHSKline(j) {
 }
 
 async function fetchTHSKline(code) {
-  const url = thsKlineUrl(code);
-  const raw = await safeFetch(url, { json: false });
-  const txt = await raw.text();
-  const jsonTxt = txt.replace(/^[^{]+/, "").replace(/\)\s*;?\s*$/, "");
-  const j = JSON.parse(jsonTxt);
+  if (USE_PROXY) {
+    const raw = await safeFetch(thsKlineUrl(code), { json: false });
+    const txt = await raw.text();
+    const jsonTxt = txt.replace(/^[^{]+/, "").replace(/\)\s*;?\s*$/, "");
+    return parseTHSKline(JSON.parse(jsonTxt));
+  }
+  const num = numOf(code);
+  const cb = "quotebridge_v8_line_hs_" + num + "_01_last180";
+  const j = await jsonpNamed(`https://d.10jqka.com.cn/v8/line/hs_${num}/01/last180.js`, cb);
   return parseTHSKline(j);
 }
 
@@ -400,21 +498,40 @@ function filterUniverse(rows) {
   return out;
 }
 
+async function sinaJsonp(method, query) {
+  const name = "_s" + Math.random().toString(36).slice(2);
+  const src = "https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp_v2.php/"
+    + name + "/" + method + "?" + query;
+  return jsonpNamed(src, name, 20000);
+}
 async function fetchSinaNode(node, label) {
-  const cr = await safeFetch(sinaCountUrl(node), { json: false });
-  const raw = (await decodeGBK(cr)).replace(/"/g, "").trim();
-  const total = parseInt(raw, 10) || 0;
+  node = sinaNode(node);
+  let total = 0;
+  if (USE_PROXY) {
+    const cr = await safeFetch(sinaCountUrl(node), { json: false });
+    const raw = (await decodeGBK(cr)).replace(/"/g, "").trim();
+    total = parseInt(raw, 10) || 0;
+  } else {
+    const data = await sinaJsonp("Market_Center.getHQNodeStockCount", "node=" + encodeURIComponent(node));
+    total = parseInt(String(data).replace(/"/g, ""), 10) || 0;
+  }
   if (total < 10) throw new Error(label + "为空");
   const pageSize = 80;
   const pages = Math.ceil(total / pageSize);
   const rows = [];
   const idxs = Array.from({ length: pages }, (_, i) => i + 1);
   await mapLimit(idxs, 6, async page => {
-    const url = sinaListUrl(node, page, pageSize);
     try {
-      const r = await safeFetch(url, { json: false, timeout: 20000 });
-      const txt = await decodeGBK(r);
-      const batch = JSON.parse(txt);
+      let batch;
+      if (USE_PROXY) {
+        const r = await safeFetch(sinaListUrl(node, page, pageSize), { json: false, timeout: 20000 });
+        batch = JSON.parse(await decodeGBK(r));
+      } else {
+        batch = await sinaJsonp(
+          "Market_Center.getHQNodeData",
+          `page=${page}&num=${pageSize}&sort=symbol&asc=1&node=${encodeURIComponent(node)}&symbol=&_s_r_a=page`
+        );
+      }
       if (Array.isArray(batch)) rows.push(...batch);
     } catch (e) {}
     setProg(`${label} ${Math.min(rows.length, total)}/${total}`);
@@ -681,8 +798,8 @@ async function checkConn() {
   const src = currentSrc();
   try {
     if (src === "tx") {
-      const j = await safeFetch(klineUrl("sh600519", 5), { json: true });
-      if (!(j && j.data)) throw new Error("no data");
+      const kl = await fetchTXKline("sh600519", 5);
+      if (!kl.length) throw new Error("no data");
     } else {
       const kl = await fetchTHSKline("sh600519");
       if (!kl.length) throw new Error("no ths");
@@ -851,13 +968,20 @@ $("scanStratTurtle").onclick = () => scanAll(state.board || "main", "turtle");
 $("scanStratMa").onclick = () => scanAll(state.board || "main", "ma");
 $("scanStratFlag").onclick = () => scanAll(state.board || "main", "flag");
 $("scanStratShake").onclick = () => scanAll(state.board || "main", "shake");
-$("srcSel").value = localStorage.getItem("sequoia_data_src") || "ths_tx";
+applyHostedChrome();
+const defaultSrc = (IS_GITHUB_PAGES || !USE_PROXY) ? "tx" : "ths_tx";
+$("srcSel").value = localStorage.getItem("sequoia_data_src") || defaultSrc;
 $("srcSel").onchange = () => {
   localStorage.setItem("sequoia_data_src", $("srcSel").value);
   checkConn();
 };
 render();
-checkConn();
+detectProxy().then(() => {
+  if (!USE_PROXY && !localStorage.getItem("sequoia_data_src") && $("srcSel").value === "ths_tx") {
+    $("srcSel").value = "tx";
+  }
+  checkConn();
+});
 </script>
 </body>
 </html>
