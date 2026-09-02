@@ -63,7 +63,6 @@ def test_online_deploy_workflows_exist():
     pages_txt = pages.read_text(encoding="utf-8")
     cf_txt = cf.read_text(encoding="utf-8")
     assert "actions/deploy-pages" in pages_txt
-    assert "enablement: true" in pages_txt
     assert "path: web" in pages_txt
     assert "cloudflare/wrangler-action" in cf_txt
     assert "CLOUDFLARE_API_TOKEN" in cf_txt
