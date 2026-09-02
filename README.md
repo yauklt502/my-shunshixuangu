@@ -13,16 +13,22 @@
 
 ## 本地下载
 
-解压到**独立文件夹**（不要解压进原来的「顺势选股」目录），双击 `打开Sequoia-X.bat`：
+先还原顺势选股（你现在打开它会看到 Sequoia-X，是因为网页文件被盖掉了）：
 
-**https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
+**顺势选股还原：https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/shunshi-xuangu-restore.zip**
 
-| 项目 | 地址 | 怎么开 |
+解压后进入 `顺势选股` 文件夹，双击 `打开选股.bat`，地址是 http://127.0.0.1:8787/ ，页顶应是「顺势选股」。
+
+Sequoia-X 另解压到别的目录（不要再解压进顺势选股）：
+
+**Sequoia-X：https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
+
+双击 `打开Sequoia-X.bat`，地址是 http://127.0.0.1:9801/ ，页顶应是「Sequoia-X · 端口 9801」。
+
+| 项目 | 还原包 | 地址 |
 |---|---|---|
-| 顺势选股 | http://127.0.0.1:8787/ | 原来的文件夹里双击 `打开选股.bat` |
-| Sequoia-X | **http://127.0.0.1:9801/** | 新文件夹里双击 `打开Sequoia-X.bat` |
-
-页顶会显示「端口 9801」。若顺势选股也被盖成 Sequoia-X，把原来的顺势选股 zip 再解压回去。
+| 顺势选股 | `shunshi-xuangu-restore.zip` | http://127.0.0.1:8787/ |
+| Sequoia-X | `sequoia-x.zip` | http://127.0.0.1:9801/ |
 
 ## 网页
 

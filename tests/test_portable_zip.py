@@ -18,9 +18,24 @@ def test_portable_zip_has_runtime_files():
     assert "Sequoia-X/serve_web.py" in names
     assert "Sequoia-X/web/index.html" in names
     assert "Sequoia-X/打开Sequoia-X.bat" in names
+    assert "打开选股.bat" not in names
     assert "海龟突破" in html
     assert "主板稳健少" not in html
     assert "9801" in bat
     assert "PORT = 9801" in serve
     assert "不要解压进" in note
     assert "端口 9801" in html
+    assert not any(n.endswith("打开选股.bat") for n in names)
+
+
+def test_restore_zip_is_original_shunshi():
+    path = ROOT / "portable" / "shunshi-xuangu-restore.zip"
+    assert path.is_file()
+    with zipfile.ZipFile(path) as z:
+        html = z.read("顺势选股/web/index.html").decode("utf-8")
+        bat = z.read("顺势选股/打开选股.bat").decode("utf-8")
+    assert "顺势选股" in html
+    assert "Sequoia-X" not in html
+    assert "主板稳健少" in html
+    assert "8787" in bat
+    assert "9801" not in bat
