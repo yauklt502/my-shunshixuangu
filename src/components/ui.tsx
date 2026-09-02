@@ -124,11 +124,17 @@ export function Table<T>({
   rows,
   onRowClick,
   rowKey,
+  loading,
+  error,
+  emptyText = "暂无数据",
 }: {
   columns: Array<Col<T>>;
   rows: T[];
   onRowClick?: (row: T) => void;
   rowKey?: (row: T, index: number) => string;
+  loading?: boolean;
+  error?: string | null;
+  emptyText?: string;
 }) {
   const [sort, setSort] = useState<SortState | null>(null);
 
@@ -149,6 +155,8 @@ export function Table<T>({
       return null;
     });
   };
+
+  const status = loading ? "正在拉取行情..." : error || (sortedRows.length ? null : emptyText);
 
   return (
     <div className="tbl-wrap">
@@ -182,19 +190,27 @@ export function Table<T>({
           </tr>
         </thead>
         <tbody>
-          {sortedRows.map((row, index) => (
-            <tr
-              key={rowKey ? `${rowKey(row, index)}-${index}` : index}
-              className={onRowClick ? "click" : ""}
-              onClick={() => onRowClick?.(row)}
-            >
-              {columns.map((col) => (
-                <td key={col.key} className={`${col.align === "right" ? "right" : ""} ${col.className?.(row) || ""}`}>
-                  {col.render ? col.render(row, index) : String((row as Record<string, unknown>)[col.key] ?? "")}
-                </td>
-              ))}
+          {status ? (
+            <tr>
+              <td className={`empty-cell ${error ? "error-box" : ""}`} colSpan={columns.length}>
+                {status}
+              </td>
             </tr>
-          ))}
+          ) : (
+            sortedRows.map((row, index) => (
+              <tr
+                key={rowKey ? `${rowKey(row, index)}-${index}` : index}
+                className={onRowClick ? "click" : ""}
+                onClick={() => onRowClick?.(row)}
+              >
+                {columns.map((col) => (
+                  <td key={col.key} className={`${col.align === "right" ? "right" : ""} ${col.className?.(row) || ""}`}>
+                    {col.render ? col.render(row, index) : String((row as Record<string, unknown>)[col.key] ?? "")}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
