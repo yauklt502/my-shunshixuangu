@@ -189,7 +189,7 @@ export function SentimentGauge({ value }: { value: number }) {
   const tone = clamped >= 75 ? "up" : clamped <= 25 ? "dn" : "flat";
   return (
     <svg viewBox="0 0 180 130" width="180" height="130">
-      <path d="M20 110 A70 70 0 1 1 160 110" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" strokeLinecap="round" />
+      <path d="M20 110 A70 70 0 1 1 160 110" fill="none" stroke="rgba(15,23,42,0.08)" strokeWidth="12" strokeLinecap="round" />
       <path
         d="M20 110 A70 70 0 1 1 160 110"
         fill="none"
@@ -206,16 +206,16 @@ export function SentimentGauge({ value }: { value: number }) {
         </linearGradient>
       </defs>
       <g transform={`rotate(${angle} 90 110)`}>
-        <line x1="90" y1="110" x2="90" y2="48" stroke="#e8f1f8" strokeWidth="2" />
+        <line x1="90" y1="110" x2="90" y2="48" stroke="#1a2332" strokeWidth="2" />
         <circle cx="90" cy="110" r="4" fill="#e8c36a" />
       </g>
       <text x="90" y="96" textAnchor="middle" fill="currentColor" className={tone} fontSize="22" fontFamily="IBM Plex Mono">
         {clamped}
       </text>
-      <text x="22" y="126" fill="#5d7388" fontSize="10">
+      <text x="22" y="126" fill="#8a97a6" fontSize="10">
         冰点
       </text>
-      <text x="150" y="126" fill="#5d7388" fontSize="10">
+      <text x="150" y="126" fill="#8a97a6" fontSize="10">
         过热
       </text>
     </svg>
@@ -241,7 +241,7 @@ export function VolumeChart({ trends }: { trends?: Array<Array<string>> }) {
   return (
     <svg className="chart" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
       <path d={toPath(compare)} fill="none" stroke="rgba(110,168,255,0.45)" strokeWidth="1.5" />
-      <path d={toPath(values)} fill="none" stroke="#e8c36a" strokeWidth="2" />
+      <path d={toPath(values)} fill="none" stroke="#c48a12" strokeWidth="2" />
     </svg>
   );
 }

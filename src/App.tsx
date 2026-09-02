@@ -104,7 +104,7 @@ function Shell() {
   return (
     <div className="app">
       <aside className="rail">
-        <div className="brand" title="开盘啦">开</div>
+        <div className="brand" title="开盘啦">涨</div>
         {NAV.map((item) => (
           <button key={item.id} className={`nav-btn ${page === item.id ? "active" : ""}`} onClick={() => go(item.id)}>
             {item.icon}
