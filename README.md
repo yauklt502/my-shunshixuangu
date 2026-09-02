@@ -2,7 +2,15 @@
 
 自己的短线监控站。别人的 [xl.mininas.cc](https://xl.mininas.cc/) 关掉也不影响你。打开网址就能用，不必每次本地开服务。
 
-数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。接口密钥保存在服务器后台，打开页面即可用，不必再输入。右上角有「截图」。
+数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。接口密钥保存在服务器后台，打开页面即可用，不必再输入。右上角有「截图」和「E盘包」。
+
+## 一键部署到 E 盘（下载）
+
+**安装包：** https://github.com/yauklt502/my-shunshixuangu/raw/cursor/duanxian-xunlong-e-drive-bac5/web/download/duanxian-xunlong-E.zip
+
+解压后双击 `一键部署到E盘.bat`，会复制到 `E:\短线寻龙` 并自动打开浏览器。需要已安装 Python 3 或 Node.js（勾选 Add to PATH）。没有 E 盘时解压后直接双击 `启动.bat`。
+
+页面右上角「⬇ E盘包」是同一个文件。
 
 ## 现在就能打开
 
