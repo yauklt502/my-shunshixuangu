@@ -7,6 +7,7 @@ import { LimitUpPage } from "@/pages/LimitUpPage";
 import { SectorsPage } from "@/pages/SectorsPage";
 import { LhbPage } from "@/pages/LhbPage";
 import { AuctionPage } from "@/pages/AuctionPage";
+import { GrabPage } from "@/pages/GrabPage";
 import { StocksPage } from "@/pages/StocksPage";
 import { FengkouPage } from "@/pages/FengkouPage";
 import { ThemePage } from "@/pages/ThemePage";
@@ -19,6 +20,7 @@ const NAV: Array<{ id: string; label: string; icon: ReactNode }> = [
   { id: "sector", label: "板块", icon: <Icon d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 3h7v4h-7v-4z" /> },
   { id: "lhb", label: "龙虎", icon: <Icon d="M5 18 8 8h2l1.2 4L13 8h2l3 10h-2.2l-.6-2H8.8l-.6 2H5zm4.4-4h5.2L13 10h-2l-1.6 4z" /> },
   { id: "auction", label: "竞价", icon: <Icon d="M5 20V8h3v12H5zm5.5 0V4h3v16h-3zM16 20v-8h3v8h-3z" /> },
+  { id: "grab", label: "抢筹", icon: <Icon d="M12 3 5 10h4v11h6V10h4L12 3z" /> },
   { id: "stock", label: "个股", icon: <Icon d="M7 20V10h3v10H7zm7-16h3v16h-3V4zM4 14h3v6H4v-6z" /> },
   { id: "feng", label: "风口", icon: <Icon d="M4 13c4-8 12-8 16 0-4 8-12 8-16 0zm8-3a3 3 0 100 6 3 3 0 000-6z" /> },
   { id: "theme", label: "题材", icon: <Icon d="M6 4h12v3H6V4zm0 5h12v11H6V9zm3 3v5h6v-5H9z" /> },
@@ -31,7 +33,8 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   limit: { title: "涨停分析", sub: "天梯、分板、破板、原因与回撤" },
   sector: { title: "板块数据", sub: "强度排名、行业地区与竞价异动" },
   lhb: { title: "龙虎榜", sub: "上榜个股、游资动向与席位" },
-  auction: { title: "竞价数据", sub: "分类 · 当前涨幅 · 竞价涨幅 · 涨停委买 · 竞价额 · 竞价换手" },
+  auction: { title: "早盘竞价", sub: "涨停委买 · 当前涨幅 · 竞价涨幅 · 竞价额 · 竞价换手" },
+  grab: { title: "尾盘抢筹", sub: "抢筹金额 · 抢筹幅度 · 游资机构" },
   stock: { title: "股票数据", sub: "所属板块、新高与区间统计" },
   feng: { title: "风口概念", sub: "最强风口与概念强度" },
   theme: { title: "题材库", sub: "题材项 · 搜索题材并查看成分股逻辑" },
@@ -86,6 +89,8 @@ function Shell() {
         return <LhbPage />;
       case "auction":
         return <AuctionPage />;
+      case "grab":
+        return <GrabPage />;
       case "stock":
         return <StocksPage />;
       case "feng":

@@ -334,7 +334,7 @@ export const api = {
     call<{ List: unknown[][] }>(
       liveHost(date, today),
       "GET",
-      { a: "GetWPQC", c: "StockBidYiDong", Day: compactDate(date), Type: 1, Index: 0, Order: 1, st: 40 },
+      { a: "GetWPQC", c: "StockBidYiDong", Day: compactDate(date), Type: 1, Index: 0, Order: 1, st: 80 },
       common,
     ),
 

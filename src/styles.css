@@ -544,6 +544,7 @@ table.data th.sorted .sort-mark {
     justify-content: space-around;
     padding: 6px 8px;
     z-index: 30;
+    overflow-x: auto;
     border-right: 0;
     border-top: 1px solid var(--line);
   }

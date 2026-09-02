@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "@/api/services";
-import { Card, Pct, StateGate, StockCell, Table } from "@/components/ui";
-import { fmtMoney, num, pctClass, str } from "@/lib/format";
+import { Table } from "@/components/ui";
+import { num, pctClass, str } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
 
@@ -50,7 +50,6 @@ export function AuctionPage() {
     [date, today, common, current.id, current.type],
   );
   const tian = useAsync(() => api.getZhangTingTianTi(date, today, common), [date, today, common]);
-  const tail = useAsync(() => api.getWPQC(date, today, common), [date, today, common]);
 
   const info = overview.data?.info;
   const counts = nums.data?.info || [];
@@ -196,23 +195,6 @@ export function AuctionPage() {
           emptyText={needAuth ? "竞价个股列表需要在右上角设置中填写 Token 和 UserID" : "暂无数据"}
         />
       </section>
-
-      <Card title="尾盘抢筹">
-        <StateGate loading={tail.loading} error={tail.error} empty={!tail.data?.List?.length}>
-          <Table
-            rows={tail.data?.List || []}
-            columns={[
-              { key: "s", title: "股票", sortValue: (r) => str(r[1]), render: (r) => <StockCell code={r[0]} name={r[1]} /> },
-              { key: "tag", title: "标签", sortValue: (r) => str(r[2]), render: (r) => <span className="pill">{String(r[2] || "")}</span> },
-              { key: "bk", title: "板块", sortValue: (r) => str(r[4]), render: (r) => String(r[4] || "") },
-              { key: "p", title: "涨幅", align: "right", sortValue: (r) => num(r[5], NaN), render: (r) => <Pct value={r[5]} /> },
-              { key: "qc", title: "抢筹金额", align: "right", sortValue: (r) => num(r[11], NaN), render: (r) => fmtMoney(r[11]) },
-              { key: "r", title: "抢筹幅度", align: "right", sortValue: (r) => num(r[15], NaN), render: (r) => `${num(r[15]).toFixed(2)}%` },
-              { key: "z", title: "占比", align: "right", sortValue: (r) => num(r[16], NaN), render: (r) => String(r[16] ?? "") },
-            ]}
-          />
-        </StateGate>
-      </Card>
     </>
   );
 }
