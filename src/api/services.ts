@@ -421,6 +421,15 @@ export const api = {
       common,
     ),
 
+  newGetList: (common: Common) =>
+    call<{
+      Theme?: { List: ThemeItem[]; Num?: number };
+      Topic?: {
+        Day?: string;
+        LData?: { Day?: string; List?: Array<{ ID: string; Title: string; Time: string; HotVal?: number; HotTag?: number }> };
+      };
+    }>("lhb", "POST", { a: "NewGetList", c: "Index" }, common),
+
   themeSearch: (key: string, common: Common) =>
     call<{
       List: Array<{ ID: string; Name: string; Desc: string; CreateTime: string }>;
@@ -468,6 +477,17 @@ export const api = {
         StockName: string;
       }>;
     }>("lhb", "POST", { a: "AppNews", c: "UserInfo", Index: index, st }, common),
+};
+
+export type ThemeItem = {
+  ID: string;
+  Name: string;
+  Hot?: number;
+  Sort?: number;
+  ZTNum?: number;
+  UpNum?: number;
+  New?: number;
+  List?: Array<{ CID: string; Name: string; pinyin?: string }>;
 };
 
 export type Seat = {

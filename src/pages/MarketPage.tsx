@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { api } from "@/api/services";
 import { BoardLadder, Card, ErrorBox, Kpi, Pct, SentimentGauge, Spinner, StockCell, Table, VolumeChart } from "@/components/ui";
+import { ThemeItemList } from "@/components/ThemeItems";
 import { fmtMoney, fmtPct, num, pctClass } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
@@ -13,6 +14,7 @@ type Bundle = {
   expr: Awaited<ReturnType<typeof api.zhangTingExpression>> | null;
   weight: Awaited<ReturnType<typeof api.weightPerformance>> | null;
   indices: Awaited<ReturnType<typeof api.refreshStockList>> | null;
+  home: Awaited<ReturnType<typeof api.newGetList>> | null;
 };
 
 async function settled<T>(promise: Promise<T>): Promise<T | null> {
@@ -24,7 +26,7 @@ async function settled<T>(promise: Promise<T>): Promise<T | null> {
 }
 
 async function loadMarket(date: string, today: string, common: ReturnType<typeof useApp>["common"]): Promise<Bundle> {
-  const [sentiment, capacity, zd, ladder, expr, weight, indices] = await Promise.all([
+  const [sentiment, capacity, zd, ladder, expr, weight, indices, home] = await Promise.all([
     settled(api.changeStatistics(date, common)),
     settled(api.marketCapacity(date, common)),
     settled(api.marketStockZDNum(date, common)),
@@ -32,11 +34,12 @@ async function loadMarket(date: string, today: string, common: ReturnType<typeof
     settled(api.zhangTingExpression(date, common)),
     settled(api.weightPerformance(date, common)),
     settled(api.refreshStockList(common)),
+    settled(api.newGetList(common)),
   ]);
-  if (!sentiment && !capacity && !zd && !ladder && !expr && !weight && !indices) {
+  if (!sentiment && !capacity && !zd && !ladder && !expr && !weight && !indices && !home) {
     throw new Error("市场数据暂时无法获取");
   }
-  return { sentiment, capacity, zd, ladder, expr, weight, indices };
+  return { sentiment, capacity, zd, ladder, expr, weight, indices, home };
 }
 
 export function MarketPage() {
@@ -86,6 +89,10 @@ export function MarketPage() {
         <Kpi label="预测成交" value={data.capacity?.info.ycln || fmtMoney(Number(data.capacity?.info.last) * 10000)} meta={data.capacity?.info.yclnstr} tone={volumeTone} />
         <Kpi label="大幅回撤" value={todayMood?.df_num ?? "--"} meta={`涨停家数 ${todayMood?.ztjs || expr[0] || "--"}`} />
       </div>
+
+      <Card title="题材项" extra={<span className="faint">点击查看成分与逻辑</span>}>
+        <ThemeItemList items={data.home?.Theme?.List || []} />
+      </Card>
 
       <div className="grid g-sidebar">
         <Card title="两市量能" extra={<span className="faint">金线今日 / 蓝线昨日</span>}>

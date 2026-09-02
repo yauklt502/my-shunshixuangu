@@ -286,6 +286,33 @@ table.data .click { cursor: pointer; }
 .stock b { font-weight: 600; }
 .stock span { color: var(--faint); font-family: var(--mono); font-size: 11px; }
 
+.theme-items { display: flex; flex-direction: column; }
+.theme-item {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+  padding: 12px 4px;
+  border-radius: 0;
+  color: var(--text);
+}
+.theme-item:last-child { border-bottom: 0; }
+.theme-item:hover, .theme-item.active { background: rgba(232, 195, 106, 0.06); }
+.theme-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.theme-item-tags, .theme-item-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.theme-item-subs { margin-top: 8px; }
+
 .chip, .pill {
   display: inline-flex;
   align-items: center;

@@ -34,14 +34,15 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   auction: { title: "竞价数据", sub: "早盘竞价与尾盘抢筹" },
   stock: { title: "股票数据", sub: "所属板块、新高与区间统计" },
   feng: { title: "风口概念", sub: "最强风口与概念强度" },
-  theme: { title: "题材库", sub: "搜索题材并查看成分股逻辑" },
+  theme: { title: "题材库", sub: "题材项 · 搜索题材并查看成分股逻辑" },
   live: { title: "大盘直播", sub: "盘中解读与涨跌统计" },
   news: { title: "最新消息", sub: "公告与盘面快讯" },
 };
 
 function parseHash() {
   const raw = window.location.hash.replace(/^#\/?/, "");
-  return NAV.some((n) => n.id === raw) ? raw : "market";
+  const page = raw.split(/[/?]/)[0];
+  return NAV.some((n) => n.id === page) ? page : "market";
 }
 
 export default function App() {
