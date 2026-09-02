@@ -2,14 +2,6 @@
 
 网页选股 + 历史回测。选股规则来自 [sngyai/Sequoia-X](https://github.com/sngyai/Sequoia-X)，界面沿用本仓库 PR #19 的板块扫描页（数据源、截屏、测连接不变），**没有改 PR #19 分支**。
 
-## 在线打开（不用每次开本地服务）
-
-别人的 `https://xl.mininas.cc/` 是「短线寻龙」，不是本页。要自己的网址：把仓库 **Settings → Pages → Source** 设成 **GitHub Actions**，然后打开：
-
-**https://yauklt502.github.io/my-shunshixuangu/**
-
-步骤和自定义域名见 [docs/sequoia-x-online.md](docs/sequoia-x-online.md)。本机 Sequoia-X 仍是 http://127.0.0.1:9801/ ，顺势选股仍是 8787。
-
 本页四套策略：
 
 | 策略 | 规则 |
