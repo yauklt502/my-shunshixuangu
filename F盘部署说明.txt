@@ -1,0 +1,30 @@
+# 部署到本机 F 盘
+
+云端环境写不到你电脑的 F:。在 **Windows** 上拿到本仓库后，双击根目录的 `install-to-F.bat`，会复制到 `F:\kaipanla` 并启动。
+
+## 准备
+
+1. 安装 [Node.js 18+](https://nodejs.org/)（勾选加入 PATH）
+2. 确认资源管理器里能看到 **F:** 盘
+3. 把本项目放到任意目录（克隆或从 GitHub 下载 ZIP 解压）
+
+```bat
+git clone -b cursor/kaipanla-web-ui-71ed https://github.com/yauklt502/my-shunshixuangu.git
+cd my-shunshixuangu
+install-to-F.bat
+```
+
+或已在项目目录时，直接双击 `install-to-F.bat`。
+
+## 之后日常使用
+
+| 文件 | 作用 |
+|------|------|
+| `F:\kaipanla\start.bat` | 启动，浏览器打开 http://127.0.0.1:3000 |
+| `F:\kaipanla\stop.bat` | 结束 3000 端口上的服务 |
+
+首次启动会 `npm install` 和 `npm run build`，需要联网；以后只需 `start.bat`。
+
+## 手动复制
+
+若 bat 不便使用，把项目文件夹复制为 `F:\kaipanla`（不要复制 `node_modules`），再双击其中的 `start.bat`。

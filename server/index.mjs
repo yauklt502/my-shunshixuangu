@@ -1,11 +1,16 @@
 import express from "express";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
-const isProd = process.env.NODE_ENV === "production";
+const dist = path.join(root, "dist");
+const isProd =
+  process.env.NODE_ENV === "production" ||
+  (process.env.NODE_ENV !== "development" && fs.existsSync(path.join(dist, "index.html")));
 const port = Number(process.env.PORT || (isProd ? 3000 : 8787));
+const host = process.env.HOST || (isProd ? "127.0.0.1" : "0.0.0.0");
 
 const HOSTS = {
   his: "https://apphis.longhuvip.com/w1/api/index.php",
@@ -27,8 +32,8 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/kpl", async (req, res) => {
   try {
-    const { host, method = "GET", params = {}, common = {} } = req.body || {};
-    const url = HOSTS[host];
+    const { host: dataHost, method = "GET", params = {}, common = {} } = req.body || {};
+    const url = HOSTS[dataHost];
     if (!url) {
       res.status(400).json({ errcode: "400", errmsg: "未知的数据源" });
       return;
@@ -89,13 +94,25 @@ app.post("/api/kpl", async (req, res) => {
 });
 
 if (isProd) {
-  const dist = path.join(root, "dist");
+  if (!fs.existsSync(path.join(dist, "index.html"))) {
+    console.error(`[kpl-proxy] missing ${path.join(dist, "index.html")}. Run npm run build first.`);
+    process.exit(1);
+  }
   app.use(express.static(dist));
-  app.get("*", (_req, res) => {
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      next();
+      return;
+    }
+    if (req.path.startsWith("/api")) {
+      next();
+      return;
+    }
     res.sendFile(path.join(dist, "index.html"));
   });
 }
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`[kpl-proxy] listening on http://0.0.0.0:${port} (${isProd ? "prod" : "dev"})`);
+app.listen(port, host, () => {
+  const origin = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`;
+  console.log(`[kpl-proxy] ${origin} (${isProd ? "prod" : "dev"})`);
 });
