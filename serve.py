@@ -13,6 +13,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(ROOT, "web")
 UPSTREAM = "https://fuyao.aicubes.cn"
+SERVER_KEY = os.environ.get(
+    "FUYAO_API_KEY", "sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia"
+)
 PORT = int(os.environ.get("PORT", "8000"))
 HOST = os.environ.get("HOST", "127.0.0.1")
 
@@ -45,10 +48,10 @@ class Handler(SimpleHTTPRequestHandler):
 
     def _proxy(self):
         url = UPSTREAM + self.path
-        headers = {"User-Agent": "duanxian-xunlong-local/1.2"}
-        key = self.headers.get("X-api-key") or self.headers.get("X-Api-Key")
-        if key:
-            headers["X-api-key"] = key
+        headers = {
+            "User-Agent": "duanxian-xunlong-local/1.2",
+            "X-api-key": SERVER_KEY,
+        }
         req = urllib.request.Request(url, headers=headers, method="GET")
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:

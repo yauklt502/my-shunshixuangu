@@ -8,6 +8,8 @@ const WEB = path.join(__dirname, "web");
 const PORT = Number(process.env.PORT || 8000);
 const HOST = process.env.HOST || "127.0.0.1";
 const UPSTREAM = "https://fuyao.aicubes.cn";
+const SERVER_KEY =
+  process.env.FUYAO_API_KEY || "sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia";
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
@@ -37,9 +39,10 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${HOST}:${PORT}`);
   if (url.pathname.startsWith("/api/")) {
     try {
-      const headers = { "User-Agent": "duanxian-xunlong-local/1.2" };
-      const key = req.headers["x-api-key"];
-      if (key) headers["X-api-key"] = key;
+      const headers = {
+        "User-Agent": "duanxian-xunlong-local/1.2",
+        "X-api-key": SERVER_KEY,
+      };
       const upstream = await fetch(UPSTREAM + url.pathname + url.search, { headers });
       const buf = Buffer.from(await upstream.arrayBuffer());
       const out = {

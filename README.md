@@ -2,7 +2,7 @@
 
 自己的短线监控站。别人的 [xl.mininas.cc](https://xl.mininas.cc/) 关掉也不影响你。打开网址就能用，不必每次本地开服务。
 
-数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。API Key 只存在你自己的浏览器里。
+数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。接口密钥保存在服务器后台，打开页面即可用，不必再输入。右上角有「截图」。
 
 ## 现在就能打开
 
@@ -10,9 +10,9 @@
 
 **https://raw.githack.com/yauklt502/my-shunshixuangu/cursor/duanxian-xunlong-e-drive-bac5/web/index.html**
 
-1. 收藏这个地址。
-2. 到 [fuyao.aicubes.cn](https://fuyao.aicubes.cn/) 申请 API Key。
-3. 填进右上角回车，点「连接测试」。
+1. 收藏这个地址（静态页没有后台代理；连数据请用下面的本地或 Cloudflare 部署）。
+2. 本地：双击 `启动.bat`，打开 http://127.0.0.1:8000/ 即可自动连上。
+3. 右上角「截图」可保存当前画面。
 
 合并到 `main` 之后，也可以用：
 
