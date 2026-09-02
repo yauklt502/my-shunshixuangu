@@ -4,7 +4,7 @@
 
 ## 在线打开（不用每次开本地服务）
 
-别人的 `https://xl.mininas.cc/` 是「短线寻龙」，不是本页。要自己的网址，先打开仓库 [Settings → Pages](https://github.com/yauklt502/my-shunshixuangu/settings/pages)，Source 选 **GitHub Actions**，再跑一次 Actions 里的 `Deploy Sequoia-X Pages`。之后打开：
+别人的 `https://xl.mininas.cc/` 是「短线寻龙」，不是本页。要自己的网址：把仓库 **Settings → Pages → Source** 设成 **GitHub Actions**，然后打开：
 
 **https://yauklt502.github.io/my-shunshixuangu/**
 
