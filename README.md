@@ -6,15 +6,14 @@
 
 ## 部署到本机 F 盘（Windows）
 
-云端写不到你的 F:。在 Windows 上打开本仓库后双击 `install-to-F.bat`，会复制到 `F:\kaipanla` 并启动。
+下载现成压缩包，解压到 F 盘，不要用仓库里的 `install-to-F.bat`。
 
-需要已安装 [Node.js 18+](https://nodejs.org/)，且资源管理器能看到 F 盘。细节见 `F盘部署说明.txt`。
+1. 安装 [Node.js 18+](https://nodejs.org/)（勾选加入 PATH）
+2. 下载 [`deploy/kaipanla-windows.zip`](https://github.com/yauklt502/my-shunshixuangu/raw/cursor/kaipanla-web-ui-71ed/deploy/kaipanla-windows.zip)
+3. 解压到 `F:\kaipanla`（里面要有 `start.bat`、`dist`、`server`）
+4. 双击 `F:\kaipanla\start.bat`，浏览器打开 http://127.0.0.1:3000
 
-| 文件 | 作用 |
-|------|------|
-| `install-to-F.bat` | 复制到 `F:\kaipanla` 并启动 |
-| `F:\kaipanla\start.bat` | 以后日常启动（http://127.0.0.1:3000） |
-| `F:\kaipanla\stop.bat` | 停止服务 |
+日常启动仍用 `start.bat`，停止用 `stop.bat`。详见 `F盘部署说明.txt`。
 
 ## 开发启动
 
