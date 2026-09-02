@@ -249,7 +249,7 @@
 <footer>数据来源：同花顺金融数据 API（fuyao.aicubes.cn） · 仅供研究参考，不构成投资建议 · 接口限频 20 次/分钟</footer>
 
 <div class="banner" id="banner">
-  <div><b>⚠️ 安全提示</b><br>API Key <b>不写在文件源码里</b>，只保存在你本机浏览器的 <code>localStorage</code>，输入框以密码掩码显示。首次使用请在右上角输入一次（回车即保存），之后自动沿用；换浏览器或清缓存需重输。请勿外传 Key。该接口限频 <b>20 次/分钟</b>，刷新过快会触发限流。请通过 <code>localhost</code> 访问（双击 <code>file://</code> 打开会被跨域拦截）。</div>
+  <div><b>⚠️ 安全提示</b><br>API Key <b>不写在文件源码里</b>，只保存在你本机浏览器的 <code>localStorage</code>，输入框以密码掩码显示。打开本网址后在右上角输入一次（回车即保存），之后自动沿用；换浏览器、换设备或清缓存需重输。请勿外传 Key。该接口限频 <b>20 次/分钟</b>。不要用 <code>file://</code> 直接打开本地文件。</div>
   <button id="bannerClose">知道了</button>
 </div>
 
@@ -1279,7 +1279,11 @@ function init(){
   $('#interval').value=String(state.interval);
   $('#interval').onchange=e=>{ state.interval=+e.target.value; startTimer(); };
   $('#btnRefresh').onclick=()=>refreshAll();
-  $('#btnServ').onclick=()=> alert('请双击「启动.bat」通过 http://127.0.0.1:8000/ 访问（localhost 才能跨域）。\n命令行：python serve.py');
+  $('#btnServ').onclick=()=>{
+    const local = location.hostname==='127.0.0.1'||location.hostname==='localhost';
+    if(local) alert('本地版：保持本窗口开着，用 http://127.0.0.1:8000/ 访问。\n命令行：python serve.py');
+    else alert('这是在线版，收藏本网址即可，不必再开本地服务。\n首次在右上角输入 API Key（只存在你这台电脑的浏览器里）。\n申请：https://fuyao.aicubes.cn/');
+  };
   // 时钟
   setInterval(()=>{ $('#clock').textContent=nowStr(); },1000);
   // 初始连接 + 渲染

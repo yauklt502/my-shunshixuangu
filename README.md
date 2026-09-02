@@ -1,23 +1,37 @@
 # 短线寻龙 · 同花顺金融数据终端
 
-本地复刻 [xl.mininas.cc](https://xl.mininas.cc/) 的短线监控终端：涨停池、连板梯队、炸板、龙虎榜、实时选真龙、买卖点、盘口测谎、自选与个股 K 线。数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)），Key 只存在本机浏览器。
+自己的短线监控站，打开网址就能用，不必再依赖 [xl.mininas.cc](https://xl.mininas.cc/)，也不必每次本地开服务。
 
-## 部署到 E 盘
+数据走同花顺开放接口（[fuyao.aicubes.cn](https://fuyao.aicubes.cn/)）。API Key 只存在你自己的浏览器里。
 
-1. 把本仓库拷到任意位置（或 `git clone`）。
-2. 双击 **`一键部署到E盘.bat`**。
-3. 文件会复制到 `E:\短线寻龙`，并自动打开 `http://127.0.0.1:8000/`。
-4. 以后日常使用：打开 `E:\短线寻龙`，双击 **`启动.bat`**。
+## 在线打开（推荐）
 
-未检测到 E 盘时，可直接在当前目录双击 `启动.bat`。需要已安装 **Python 3** 或 **Node.js**（二选一，安装时勾选 Add to PATH）。
+推送到 GitHub 后，Cloudflare Workers 会自动发布静态站：
 
-## 首次使用
+- **Cloudflare：** [https://my-shunshixuangu.yuanchanglin7341.workers.dev/](https://my-shunshixuangu.yuanchanglin7341.workers.dev/)
+- **GitHub Pages（合并到 main 后）：** [https://yauklt502.github.io/my-shunshixuangu/](https://yauklt502.github.io/my-shunshixuangu/)
 
-1. 到 [fuyao.aicubes.cn](https://fuyao.aicubes.cn/) 申请 API Key。
-2. 浏览器打开 `http://127.0.0.1:8000/`，把 Key 填进右上角后回车。
-3. 点「连接测试」。Key 只写入 `localStorage`，不会写进源码。
+用法：
 
-不要直接双击 `web/index.html`：`file://` 会被跨域拦截。本地服务会把 `/api/*` 代理到扶摇接口，避免 CORS 问题。
+1. 浏览器打开上面的网址并收藏。
+2. 到 [fuyao.aicubes.cn](https://fuyao.aicubes.cn/) 申请 API Key。
+3. 把 Key 填进右上角后回车，点「连接测试」。
+
+换电脑或清缓存后需要再输一次 Key。不要把 Key 发给别人。
+
+### 绑定自己的域名（可选）
+
+和 `xl.mininas.cc` 一样，可以在 Cloudflare 控制台给 Worker `my-shunshixuangu` 加自定义域，例如 `xunlong.你的域名.com`，加完后打开那个域名即可。
+
+## 本地备用
+
+没有网或要改代码时，仍可双击 `启动.bat`（或 `一键部署到E盘.bat` 拷到 `E:\短线寻龙`）。需要 Python 3 或 Node.js。不要直接双击 `web/index.html`。
+
+```bash
+python serve.py
+# 或
+node serve.js
+```
 
 ## 模块
 
@@ -31,13 +45,3 @@
 | 自选监控 / 个股详情 | 快照与前复权 K 线 |
 
 接口限频约 20 次/分钟。数据仅供研究参考，不构成投资建议。
-
-## 命令行
-
-```bash
-python serve.py
-# 或
-node serve.js
-```
-
-默认监听 `127.0.0.1:8000`，可用环境变量 `PORT`、`HOST` 覆盖。
