@@ -13,15 +13,17 @@
 
 ## 本地下载
 
-先还原顺势选股（你现在打开它会看到 Sequoia-X，是因为网页文件被盖掉了）：
+先把还原包**直接覆盖**到你现在双击「打开选股」的那个文件夹（不要再套一层「顺势选股」目录）：
 
-**顺势选股还原：https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/shunshi-xuangu-restore.zip**
+**https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/shunshi-xuangu-restore.zip**
 
-解压后进入 `顺势选股` 文件夹，双击 `打开选股.bat`，地址是 http://127.0.0.1:8787/ ，页顶应是「顺势选股」。
+覆盖后文件夹里应直接看到 `打开选股.bat`、`serve_web.py`、`web\\index.html`。再双击 `打开选股.bat`（会先清掉 8787 上的旧进程）。
 
-Sequoia-X 另解压到别的目录（不要再解压进顺势选股）：
+页顶应是 **顺势选股**，地址 http://127.0.0.1:8787/ 。
 
-**Sequoia-X：https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
+Sequoia-X 另放别的文件夹：
+
+**https://github.com/yauklt502/my-shunshixuangu/raw/cursor/sequoia-x-backtest-b1c7/portable/sequoia-x.zip**
 
 双击 `打开Sequoia-X.bat`，地址是 http://127.0.0.1:9801/ ，页顶应是「Sequoia-X · 端口 9801」。
 
