@@ -1,0 +1,20 @@
+短线寻龙 · 同花顺金融数据终端
+================================
+
+一、下载安装包（一键部署到 E 盘）
+  https://github.com/yauklt502/my-shunshixuangu/raw/cursor/duanxian-xunlong-e-drive-bac5/web/download/duanxian-xunlong-E.zip
+
+  解压后双击「一键部署到E盘.bat」，会复制到 E:\短线寻龙 并打开 http://127.0.0.1:8010/
+  （短线寻龙专用端口，不占用顺势选股的 8000）。
+  需要已安装 Python 3 或 Node.js（安装时勾选 Add to PATH）。
+  密钥已写在后台，打开即可用，不必再输入。
+
+  没有 E 盘时：解压后直接双击「启动.bat」。
+
+二、页面里也可以下
+  打开终端后，右上角点「⬇ E盘包」。
+
+三、注意
+  - 不要双击 web\index.html
+  - 接口限频约 20 次/分钟
+  - 数据仅供研究参考，不构成投资建议

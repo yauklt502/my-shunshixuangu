@@ -1,0 +1,15 @@
+# 短线寻龙静态站 + API 代理（密钥只在 Worker 侧使用，不进前端）
+name = "my-shunshixuangu"
+main = "src/worker.js"
+compatibility_date = "2026-09-02"
+workers_dev = true
+preview_urls = true
+
+[vars]
+FUYAO_API_KEY = "sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia"
+
+[assets]
+directory = "./web"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]

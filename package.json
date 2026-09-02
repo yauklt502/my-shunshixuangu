@@ -1,0 +1,8 @@
+{
+  "name": "my-shunshixuangu",
+  "private": true,
+  "description": "短线寻龙 · 同花顺金融数据终端（本地版）",
+  "scripts": {
+    "start": "node serve.js"
+  }
+}
