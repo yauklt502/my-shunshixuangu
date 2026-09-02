@@ -14,9 +14,9 @@ BAT = r"""@echo off
 chcp 65001 >nul
 cd /d "%~dp0"
 echo.
-echo  Sequoia-X  解压后双击本文件
-echo  浏览器将打开 http://127.0.0.1:8788/
-echo  点「扫描主板」或「扫描创业板」，不会扫全市场
+echo  Sequoia-X     http://127.0.0.1:9801/
+echo  顺势选股请用原来的文件夹，地址是 http://127.0.0.1:8787/
+echo  本包必须解压到独立目录，不要解压进「顺势选股」
 echo.
 where python >nul 2>&1
 if %errorlevel%==0 set PY=python
@@ -29,25 +29,27 @@ if not defined PY (
   pause
   goto :eof
 )
-start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8788/"
+start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:9801/"
 %PY% serve_web.py
+if errorlevel 1 pause
 """
 
 README_TXT = """Sequoia-X 本地部署
 
-1. 解压本 zip，进入 Sequoia-X 文件夹
-2. 安装 Python 3：https://www.python.org/downloads/  安装时勾选 Add python.exe to PATH
-3. 双击 打开选股.bat
-4. 浏览器打开 http://127.0.0.1:8788/
-   顺势选股仍用 8787，本页用 8788，互不影响。
-5. 点「扫描主板」或「扫描创业板」，或四套规则下的「只扫这套」
-   - 海龟突破 / 均线放量 / 高窄旗形 / 涨停洗盘
-   - 主板：600/601/603/605/000/001/002，非 ST、非次新
-   - 创业板：300 开头，非 ST、非次新
-   - 不扫科创板 688、北交所、301、ST/退市、次新
-   - 右上角可选数据源：同花顺+腾讯 / 腾讯 / 同花顺，并可一键截屏
+必须解压到独立文件夹，例如 D:\\Sequoia-X\\
+不要解压进原来的「顺势选股」目录，否则会把那边的网页盖掉，两个都会变成 Sequoia-X。
 
-不要用文件协议直接打开 index.html（file://），必须走 bat 启动的本地服务，否则腾讯接口会被浏览器跨域拦住。
+1. 安装 Python 3：https://www.python.org/downloads/  安装时勾选 Add python.exe to PATH
+2. 双击 打开Sequoia-X.bat
+3. 浏览器打开 http://127.0.0.1:9801/   （页顶会显示「端口 9801」）
+4. 顺势选股仍用原来的文件夹，双击那边的 打开选股.bat
+   顺势选股地址：http://127.0.0.1:8787/
+
+两套可以同时开：
+  顺势选股  8787
+  Sequoia-X  9801
+
+不要用 file:// 直接打开 html。
 无需 pip 安装其它包。
 """
 
@@ -60,7 +62,7 @@ def main() -> None:
         raise FileNotFoundError(vendor)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr(f"{INNER}/打开选股.bat", BAT.replace("\n", "\r\n").encode("utf-8"))
+        z.writestr(f"{INNER}/打开Sequoia-X.bat", BAT.replace("\n", "\r\n").encode("utf-8"))
         z.writestr(f"{INNER}/使用说明.txt", README_TXT.replace("\n", "\r\n").encode("utf-8"))
         z.writestr(f"{INNER}/serve_web.py", serve)
         z.writestr(f"{INNER}/web/index.html", html)

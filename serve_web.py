@@ -3,6 +3,7 @@
 """Local server: static web/ + Tencent/Sina proxy (same origin)."""
 from __future__ import annotations
 
+import sys
 import re
 import urllib.parse
 import urllib.request
@@ -10,14 +11,18 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
+PORT = 9801
+
+
 def _web_root() -> Path:
     here = Path(__file__).resolve().parent
-    if (here / "index.html").is_file():
-        return here
     web = here / "web"
     if (web / "index.html").is_file():
         return web
-    return here.parent / "web"
+    raise SystemExit(
+        "找不到 Sequoia-X/web/index.html。\n"
+        "请解压到独立文件夹 Sequoia-X，不要解压进「顺势选股」目录。"
+    )
 
 
 ROOT = _web_root()
@@ -138,9 +143,18 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
 
 
+class Server(ThreadingHTTPServer):
+    allow_reuse_address = False
+
+
 if __name__ == "__main__":
-    port = 8788
-    print(f"Sequoia-X  http://127.0.0.1:{port}/")
+    print(f"Sequoia-X  http://127.0.0.1:{PORT}/")
+    print("顺势选股请用另一文件夹打开 http://127.0.0.1:8787/")
     print(f"页面目录 {ROOT}")
-    print("点「扫描主板」或「扫描创业板」，只扫该板块非 ST，不会扫全市场。")
-    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    try:
+        httpd = Server(("127.0.0.1", PORT), Handler)
+    except OSError:
+        print(f"端口 {PORT} 已被占用。请先关掉已打开的 Sequoia-X 窗口。")
+        print("顺势选股是 8787，不要用这个 bat 去开它。")
+        sys.exit(1)
+    httpd.serve_forever()

@@ -2,10 +2,8 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 echo.
-echo  这是 Sequoia-X，不是顺势选股。
-echo  Sequoia-X  http://127.0.0.1:9801/
-echo  顺势选股请到原来的「顺势选股」文件夹，双击那里的 打开选股.bat
-echo  顺势选股地址 http://127.0.0.1:8787/
+echo  Sequoia-X     http://127.0.0.1:9801/
+echo  顺势选股请用原来的文件夹，地址是 http://127.0.0.1:8787/
 echo.
 where python >nul 2>&1
 if %errorlevel%==0 set PY=python
