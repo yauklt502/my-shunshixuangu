@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode, useCallback, useEffect, useState } from "react";
 import { api } from "@/api/services";
 import type { CommonParams } from "@/api/client";
-import { chinaDate, deviceId, lastTradingDay } from "@/lib/format";
+import { chinaDate, deviceId, marketSessionDate } from "@/lib/format";
 
 type Settings = {
   token: string;
@@ -37,7 +37,7 @@ function loadSettings(): Settings {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const today = chinaDate();
-  const [date, setDateState] = useState(today);
+  const [date, setDateState] = useState(() => marketSessionDate(new Set()));
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [holidays, setHolidays] = useState<Set<string>>(new Set());
   const [tick, setTick] = useState(0);
@@ -65,7 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .then((res) => {
         const set = new Set(res.List || []);
         setHolidays(set);
-        setDateState((current) => lastTradingDay(current, set));
+        setDateState((current) => (current === chinaDate() ? marketSessionDate(set) : current));
       })
       .catch(() => {
         /* ignore holiday fetch failure */

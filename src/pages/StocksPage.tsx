@@ -55,7 +55,7 @@ export function StocksPage() {
 
       {tab === "plate" && (
         <Card
-          title="所属板块"
+          title={`所属板块 · ${code}`}
           extra={
             <form
               className="search"

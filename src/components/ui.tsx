@@ -128,7 +128,7 @@ export function Table<T>({
         <tbody>
           {rows.map((row, index) => (
             <tr
-              key={rowKey ? rowKey(row, index) : index}
+              key={rowKey ? `${rowKey(row, index)}-${index}` : index}
               className={onRowClick ? "click" : ""}
               onClick={() => onRowClick?.(row)}
             >

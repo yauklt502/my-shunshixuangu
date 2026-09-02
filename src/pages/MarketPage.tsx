@@ -5,18 +5,37 @@ import { fmtMoney, fmtPct, num, pctClass } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
 
-type Bundle = Awaited<ReturnType<typeof loadMarket>>;
+type Bundle = {
+  sentiment: Awaited<ReturnType<typeof api.changeStatistics>> | null;
+  capacity: Awaited<ReturnType<typeof api.marketCapacity>> | null;
+  zd: Awaited<ReturnType<typeof api.marketStockZDNum>> | null;
+  ladder: Awaited<ReturnType<typeof api.dailyLimitIndex>> | null;
+  expr: Awaited<ReturnType<typeof api.zhangTingExpression>> | null;
+  weight: Awaited<ReturnType<typeof api.weightPerformance>> | null;
+  indices: Awaited<ReturnType<typeof api.refreshStockList>> | null;
+};
 
-async function loadMarket(date: string, today: string, common: ReturnType<typeof useApp>["common"]) {
+async function settled<T>(promise: Promise<T>): Promise<T | null> {
+  try {
+    return await promise;
+  } catch {
+    return null;
+  }
+}
+
+async function loadMarket(date: string, today: string, common: ReturnType<typeof useApp>["common"]): Promise<Bundle> {
   const [sentiment, capacity, zd, ladder, expr, weight, indices] = await Promise.all([
-    api.changeStatistics(date, common),
-    api.marketCapacity(date, common),
-    api.marketStockZDNum(date, common),
-    api.dailyLimitIndex(date, today, common),
-    api.zhangTingExpression(date, common),
-    api.weightPerformance(date, common),
-    date === today ? api.refreshStockList(common) : Promise.resolve(null),
+    settled(api.changeStatistics(date, common)),
+    settled(api.marketCapacity(date, common)),
+    settled(api.marketStockZDNum(date, common)),
+    settled(api.dailyLimitIndex(date, today, common)),
+    settled(api.zhangTingExpression(date, common)),
+    settled(api.weightPerformance(date, common)),
+    settled(api.refreshStockList(common)),
   ]);
+  if (!sentiment && !capacity && !zd && !ladder && !expr && !weight && !indices) {
+    throw new Error("市场数据暂时无法获取");
+  }
   return { sentiment, capacity, zd, ladder, expr, weight, indices };
 }
 
@@ -24,15 +43,15 @@ export function MarketPage() {
   const { date, today, common } = useApp();
   const { data, loading, error } = useAsync<Bundle>(() => loadMarket(date, today, common), [date, today, common]);
 
-  const todayMood = data?.sentiment.info?.[0];
-  const expr = data?.expr.info || [];
+  const todayMood = data?.sentiment?.info?.[0];
+  const expr = data?.expr?.info || [];
   const indices = data?.indices?.StockList || [];
 
-  const volumeTone = num(data?.capacity.info.csbl) < 0 ? "dn" : "up";
+  const volumeTone = num(data?.capacity?.info.csbl) < 0 ? "dn" : "up";
 
   const weightRows = useMemo(() => {
-    const sz = (data?.weight.info.SZ || []).map((row) => ({ side: "up" as const, row }));
-    const xd = (data?.weight.info.XD || []).map((row) => ({ side: "dn" as const, row }));
+    const sz = (data?.weight?.info.SZ || []).map((row) => ({ side: "up" as const, row }));
+    const xd = (data?.weight?.info.XD || []).map((row) => ({ side: "dn" as const, row }));
     return [...sz, ...xd];
   }, [data]);
 
@@ -63,26 +82,26 @@ export function MarketPage() {
 
       <div className="grid g-4">
         <Kpi label="情绪强度" value={todayMood?.strong ?? "--"} meta={todayMood?.Day} tone={num(todayMood?.strong) >= 75 ? "up" : num(todayMood?.strong) <= 25 ? "dn" : "flat"} />
-        <Kpi label="涨停 / 跌停" value={`${data.zd.info.SJZT} / ${data.zd.info.SJDT}`} meta={`连板高度 ${todayMood?.lbgd || "--"}`} />
-        <Kpi label="预测成交" value={data.capacity.info.ycln || fmtMoney(Number(data.capacity.info.last) * 10000)} meta={data.capacity.info.yclnstr} tone={volumeTone} />
+        <Kpi label="涨停 / 跌停" value={`${data.zd?.info.SJZT ?? "--"} / ${data.zd?.info.SJDT ?? "--"}`} meta={`连板高度 ${todayMood?.lbgd || "--"}`} />
+        <Kpi label="预测成交" value={data.capacity?.info.ycln || fmtMoney(Number(data.capacity?.info.last) * 10000)} meta={data.capacity?.info.yclnstr} tone={volumeTone} />
         <Kpi label="大幅回撤" value={todayMood?.df_num ?? "--"} meta={`涨停家数 ${todayMood?.ztjs || expr[0] || "--"}`} />
       </div>
 
       <div className="grid g-sidebar">
         <Card title="两市量能" extra={<span className="faint">金线今日 / 蓝线昨日</span>}>
-          <VolumeChart trends={data.capacity.info.trends} />
+          <VolumeChart trends={data.capacity?.info.trends} />
         </Card>
         <Card title="情绪温度">
           <div className="gauge-wrap">
             <SentimentGauge value={num(todayMood?.strong)} />
-            <div className="tip">{data.sentiment.tip}</div>
+            <div className="tip">{data.sentiment?.tip}</div>
           </div>
         </Card>
       </div>
 
       <div className="grid g-2">
         <Card title="涨停梯队">
-          <BoardLadder counts={data.ladder.info || []} />
+          <BoardLadder counts={data.ladder?.info || []} />
         </Card>
         <Card title="涨停表现">
           <div className="grid g-2">
@@ -100,7 +119,7 @@ export function MarketPage() {
       <div className="grid g-sidebar">
         <Card title="近期情绪">
           <Table
-            rows={data.sentiment.info || []}
+            rows={data.sentiment?.info || []}
             columns={[
               { key: "Day", title: "日期" },
               { key: "strong", title: "情绪", align: "right", className: (r) => pctClass(num(r.strong) - 50), render: (r) => r.strong },

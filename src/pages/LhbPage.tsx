@@ -79,8 +79,8 @@ export function LhbPage() {
       {tab === "flow" && (
         <Card title="游资 / 机构当日买卖">
           <StateGate loading={flow.loading} error={flow.error} empty={!flow.data?.List?.length}>
-            {(flow.data?.List || []).map((item) => (
-              <div className="list-block" key={item.BID}>
+            {(flow.data?.List || []).map((item, index) => (
+              <div className="list-block" key={`${item.BID}-${index}`}>
                 <div className="reason-hd">
                   <b>{item.BName}</b>
                   <span className="faint">#{item.BID}</span>

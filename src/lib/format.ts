@@ -43,6 +43,15 @@ export function lastTradingDay(iso: string, holidays: Set<string>): string {
   return shiftTradingDay(iso, -1, holidays);
 }
 
+/** 当前应展示的行情日：开盘前（09:15 前）仍用上一交易日。 */
+export function marketSessionDate(holidays: Set<string>, now = new Date()): string {
+  const cal = chinaDate(now);
+  if (chinaMinutes(now) < 9 * 60 + 15) {
+    return shiftTradingDay(cal, -1, holidays);
+  }
+  return lastTradingDay(cal, holidays);
+}
+
 export function formatClock(d = new Date()): string {
   return new Intl.DateTimeFormat("zh-CN", {
     timeZone: TZ,

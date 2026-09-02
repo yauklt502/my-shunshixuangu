@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AppProvider, useApp } from "@/state";
-import { chinaDate, formatClock, lastTradingDay, shiftTradingDay } from "@/lib/format";
+import { formatClock, marketSessionDate, shiftTradingDay } from "@/lib/format";
 import { Modal } from "@/components/ui";
 import { MarketPage } from "@/pages/MarketPage";
 import { LimitUpPage } from "@/pages/LimitUpPage";
@@ -53,7 +53,7 @@ export default function App() {
 }
 
 function Shell() {
-  const { date, holidays, setDate, settings, saveSettings, refresh, isToday } = useApp();
+  const { date, today, holidays, setDate, settings, saveSettings, refresh } = useApp();
   const [page, setPage] = useState(parseHash);
   const [clock, setClock] = useState(formatClock);
   const [openSettings, setOpenSettings] = useState(false);
@@ -120,13 +120,19 @@ function Shell() {
           </div>
           <div className="grow" />
           <span className="mono faint">{clock} 北京</span>
-          {isToday ? <span className="pill gold">今日</span> : <span className="pill">历史 {date}</span>}
+          {date === today ? (
+            <span className="pill gold">今日</span>
+          ) : date === marketSessionDate(holidays) ? (
+            <span className="pill gold">最新交易日</span>
+          ) : (
+            <span className="pill">历史 {date}</span>
+          )}
           <div className="date-ctrl">
             <button onClick={() => setDate(shiftTradingDay(date, -1, holidays))} aria-label="上一交易日">‹</button>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             <button onClick={() => setDate(shiftTradingDay(date, 1, holidays))} aria-label="下一交易日">›</button>
           </div>
-          <button className="ghost-btn" onClick={() => setDate(lastTradingDay(chinaDate(), holidays))}>
+          <button className="ghost-btn" onClick={() => setDate(marketSessionDate(holidays))}>
             回到今日
           </button>
           <button className="ghost-btn" onClick={refresh}>刷新</button>

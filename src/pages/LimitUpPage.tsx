@@ -139,7 +139,7 @@ export function LimitUpPage() {
       {tab === "reason" && (
         <Card title="涨停原因">
           <StateGate loading={reasons.loading} error={reasons.error} empty={!reasons.data?.list?.length}>
-            {reasons.data?.nums && (
+            {reasons.data?.nums && !Array.isArray(reasons.data.nums) && (
               <div className="grid g-4" style={{ marginBottom: 12 }}>
                 <span className="pill">上涨 {reasons.data.nums.SZJS}</span>
                 <span className="pill">下跌 {reasons.data.nums.XDJS}</span>

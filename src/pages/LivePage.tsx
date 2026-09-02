@@ -11,8 +11,8 @@ export function LivePage() {
   return (
     <Card title="大盘直播" extra={<span className="faint">{live.data?.Notice || live.data?.date || ""}</span>}>
       <StateGate loading={live.loading} error={live.error} empty={!live.data?.List?.length}>
-        {(live.data?.List || []).map((item) => (
-          <article className="live-item" key={item.ID}>
+        {(live.data?.List || []).map((item, index) => (
+          <article className="live-item" key={`${item.ID}-${index}`}>
             <div className="live-meta">
               <b>{item.UserName || "直播"}</b>
               <span>{formatDateTime(item.Time)}</span>
