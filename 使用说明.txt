@@ -4,7 +4,8 @@
 一、下载安装包（一键部署到 E 盘）
   https://github.com/yauklt502/my-shunshixuangu/raw/cursor/duanxian-xunlong-e-drive-bac5/web/download/duanxian-xunlong-E.zip
 
-  解压后双击「一键部署到E盘.bat」，会复制到 E:\短线寻龙 并自动打开浏览器。
+  解压后双击「一键部署到E盘.bat」，会复制到 E:\短线寻龙 并打开 http://127.0.0.1:8010/
+  （短线寻龙专用端口，不占用顺势选股的 8000）。
   需要已安装 Python 3 或 Node.js（安装时勾选 Add to PATH）。
   密钥已写在后台，打开即可用，不必再输入。
 

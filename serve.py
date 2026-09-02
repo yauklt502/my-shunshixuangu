@@ -16,7 +16,7 @@ UPSTREAM = "https://fuyao.aicubes.cn"
 SERVER_KEY = os.environ.get(
     "FUYAO_API_KEY", "sk-fuyao-y8hq3i8OAmeBclqIG-PPdx978_F61Xia"
 )
-PORT = int(os.environ.get("PORT", "8000"))
+PORT = int(os.environ.get("PORT", "8010"))
 HOST = os.environ.get("HOST", "127.0.0.1")
 
 

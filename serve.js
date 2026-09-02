@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const WEB = path.join(__dirname, "web");
-const PORT = Number(process.env.PORT || 8000);
+const PORT = Number(process.env.PORT || 8010);
 const HOST = process.env.HOST || "127.0.0.1";
 const UPSTREAM = "https://fuyao.aicubes.cn";
 const SERVER_KEY =

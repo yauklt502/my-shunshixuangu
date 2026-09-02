@@ -1317,7 +1317,7 @@ function init(){
   $('#btnShot').onclick=captureShot;
   $('#btnServ').onclick=()=>{
     const local = location.hostname==='127.0.0.1'||location.hostname==='localhost';
-    if(local) alert('本地版：密钥已由后台代理自动带上。保持本窗口开着，用 http://127.0.0.1:8000/ 访问。\n右上角「一键截屏」可保存当前画面。');
+    if(local) alert('本地版：密钥已由后台代理自动带上。保持本窗口开着，用 http://127.0.0.1:8010/ 访问（短线寻龙专用端口，不占用顺势选股的 8000）。\n右上角「一键截屏」可保存当前画面。');
     else alert('密钥已由后台配置，打开本页即可用，不必再输入。\n右上角「一键截屏」可保存当前画面。');
   };
   setInterval(()=>{ $('#clock').textContent=nowStr(); },1000);
