@@ -1,8 +1,11 @@
 # 短线寻龙静态站（Cloudflare Workers Builds 已连接本仓库）
 name = "my-shunshixuangu"
+main = "src/worker.js"
 compatibility_date = "2026-09-02"
 workers_dev = true
+preview_urls = true
 
 [assets]
 directory = "./web"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
