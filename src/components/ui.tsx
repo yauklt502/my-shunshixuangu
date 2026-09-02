@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { fmtPct, num, pctClass, str } from "@/lib/format";
 
 export function Card({
@@ -100,7 +100,24 @@ export type Col<T> = {
   align?: "left" | "right";
   render?: (row: T, index: number) => ReactNode;
   className?: (row: T) => string;
+  sortValue?: (row: T) => number | string;
 };
+
+type SortState = { key: string; dir: 1 | -1 };
+
+function compareSortValues(a: number | string, b: number | string, dir: 1 | -1) {
+  const aNum = typeof a === "number";
+  const bNum = typeof b === "number";
+  if (aNum && bNum) {
+    const aOk = Number.isFinite(a);
+    const bOk = Number.isFinite(b);
+    if (!aOk && !bOk) return 0;
+    if (!aOk) return 1;
+    if (!bOk) return -1;
+    return (a - b) * dir;
+  }
+  return String(a).localeCompare(String(b), "zh-CN") * dir;
+}
 
 export function Table<T>({
   columns,
@@ -113,20 +130,59 @@ export function Table<T>({
   onRowClick?: (row: T) => void;
   rowKey?: (row: T, index: number) => string;
 }) {
+  const [sort, setSort] = useState<SortState | null>(null);
+
+  const sortedRows = useMemo(() => {
+    if (!sort) return rows;
+    const col = columns.find((item) => item.key === sort.key);
+    if (!col?.sortValue) return rows;
+    const copy = rows.slice();
+    copy.sort((left, right) => compareSortValues(col.sortValue!(left), col.sortValue!(right), sort.dir));
+    return copy;
+  }, [columns, rows, sort]);
+
+  const toggleSort = (col: Col<T>) => {
+    if (!col.sortValue) return;
+    setSort((prev) => {
+      if (prev?.key !== col.key) return { key: col.key, dir: -1 };
+      if (prev.dir === -1) return { key: col.key, dir: 1 };
+      return null;
+    });
+  };
+
   return (
     <div className="tbl-wrap">
       <table className="data">
         <thead>
           <tr>
-            {columns.map((col) => (
-              <th key={col.key} className={col.align === "right" ? "right" : ""}>
-                {col.title}
-              </th>
-            ))}
+            {columns.map((col) => {
+              const active = sort?.key === col.key;
+              const classes = [
+                col.align === "right" ? "right" : "",
+                col.sortValue ? "sortable" : "",
+                active ? "sorted" : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
+              return (
+                <th
+                  key={col.key}
+                  className={classes}
+                  onClick={() => toggleSort(col)}
+                  title={col.sortValue ? "点击排序" : undefined}
+                  aria-sort={active ? (sort?.dir === -1 ? "descending" : "ascending") : undefined}
+                >
+                  {col.title}
+                  {col.sortValue ? (
+                    <span className="sort-mark">{active ? (sort?.dir === -1 ? "▼" : "▲") : "↕"}</span>
+                  ) : null}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {sortedRows.map((row, index) => (
             <tr
               key={rowKey ? `${rowKey(row, index)}-${index}` : index}
               className={onRowClick ? "click" : ""}

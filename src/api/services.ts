@@ -323,7 +323,7 @@ export const api = {
         Type: type,
         Index: 0,
         Order: 1,
-        st: 50,
+        st: 300,
       },
       common,
     ),

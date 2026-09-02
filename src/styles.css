@@ -275,6 +275,24 @@ table.data td {
 table.data tr:hover td { background: rgba(15, 23, 42, 0.035); }
 table.data .right { text-align: right; }
 table.data .click { cursor: pointer; }
+table.data th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+table.data th.sortable:hover,
+table.data th.sorted {
+  color: var(--text);
+}
+table.data th .sort-mark {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--faint);
+  font-weight: 700;
+}
+table.data th.sorted .sort-mark {
+  color: var(--up);
+}
 .stock {
   display: flex;
   flex-direction: column;
