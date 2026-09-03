@@ -102,8 +102,7 @@ a { color: inherit; }
   align-items: center;
   gap: 16px;
   padding: 16px 22px 14px;
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  backdrop-filter: blur(16px);
+  background: #ffffff;
   border-bottom: 1px solid var(--line);
 }
 .topbar h1 {

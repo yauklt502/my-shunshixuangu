@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "@/api/services";
 import { Table } from "@/components/ui";
-import { bidVolume, fmtVol, num, pctClass, str } from "@/lib/format";
+import { bidVolume, fmtVol, marketSessionDate, num, pctClass, str } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
 
@@ -39,15 +39,16 @@ function BidPct({ value }: { value: unknown }) {
 }
 
 export function AuctionPage() {
-  const { date, today, common } = useApp();
+  const { date, today, holidays, common } = useApp();
   const [tab, setTab] = useState("0");
   const current = BID_TABS.find((item) => item.id === tab) || BID_TABS[0];
+  const live = date === today || date === marketSessionDate(holidays);
 
   const overview = useAsync(() => api.morningBidding(date, common), [date, common]);
   const nums = useAsync(() => api.morningBiddingNum(date, common), [date, common]);
   const list = useAsync(
-    () => api.morningBiddingList(date, today, Number(current.id), current.type, common),
-    [date, today, common, current.id, current.type],
+    () => api.morningBiddingList(date, live, Number(current.id), current.type, common),
+    [date, live, common, current.id, current.type],
   );
   const tian = useAsync(() => api.getZhangTingTianTi(date, today, common), [date, today, common]);
 

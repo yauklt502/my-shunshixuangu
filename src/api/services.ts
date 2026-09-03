@@ -311,9 +311,8 @@ export const api = {
   morningBiddingNum: (date: string, common: Common) =>
     call<{ info: number[] }>("his", "GET", { a: "MorningBiddingNum", c: "HisHomeDingPan", Date: date }, common),
 
-  morningBiddingList: (date: string, today: string, pidType: number, type: number, common: Common) => {
-    const live = date === today;
-    return call<{ info: unknown[][] }>(
+  morningBiddingList: (date: string, live: boolean, pidType: number, type: number, common: Common) =>
+    call<{ info: unknown[][] }>(
       live ? "hq" : "his",
       "GET",
       {
@@ -327,8 +326,7 @@ export const api = {
         st: 300,
       },
       common,
-    );
-  },
+    ),
 
   getWPQC: (date: string, today: string, common: Common) =>
     call<{ List: unknown[][] }>(

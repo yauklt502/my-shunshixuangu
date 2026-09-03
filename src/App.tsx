@@ -145,6 +145,7 @@ function Shell() {
           </button>
           <button className="ghost-btn" onClick={refresh}>刷新</button>
           <button
+            type="button"
             className="ghost-btn"
             disabled={shot === "busy"}
             onClick={async () => {
