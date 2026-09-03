@@ -38,12 +38,11 @@ GENERIC_CONCEPTS = {
     "一带一路",
     "粤港自贸",
     "雄安新区",
+    "西部大开发",
     "转债标的",
     "股权激励",
     "机构重仓",
     "证金持股",
-    "深股通",
-    "沪股通",
     "创业板综",
     "深成500",
     "中证500",
@@ -52,6 +51,8 @@ GENERIC_CONCEPTS = {
     "上证180",
     "中证1000",
     "微盘股",
+    "小盘股",
+    "小盘成长",
     "昨日连板",
     "昨日涨停",
     "昨日触板",
@@ -63,6 +64,23 @@ GENERIC_CONCEPTS = {
     "专精特新",
     "注册制次新股",
     "新股与次新股",
+    "题材股",
+    "趋势股",
+    "东方财富热股",
+    "最近多板",
+    "近期新高",
+    "百日新高",
+    "红利股",
+    "参股券商",
+    "统一大市场",
+    "贬值受益",
+    "新型城镇化",
+    "央国企改革",
+    "QFII重仓",
+    "社保重仓",
+    "基金重仓",
+    "券商重仓",
+    "一线龙头",
 }
 
 REGION_SUFFIX = ("板块", "特区", "自贸", "新区")
@@ -102,13 +120,18 @@ THEME_ALIASES = {
     "数据中心": "液冷",
     "服务器": "液冷",
     "有机硅": "液冷",
+    "有机硅概念": "液冷",
     "培育钻石": "培育钻石",
     "人造钻石": "培育钻石",
     "珠宝": "黄金珠宝",
     "黄金概念": "黄金珠宝",
     "航运概念": "航运",
+    "航运": "航运",
     "集运": "航运",
     "商贸零售": "消费",
+    "百货": "消费",
+    "新零售": "消费",
+    "内贸流通": "消费",
     "免税": "消费",
     "冷链物流": "消费",
 }
@@ -201,18 +224,23 @@ def secid(code: str, market: Any = None) -> str:
 def fetch_quotes(items: list[tuple[str, Any]]) -> dict[str, dict]:
     if not items:
         return {}
-    ids = ",".join(secid(code, m) for code, m in items)
-    fields = "f12,f13,f14,f2,f3,f4,f5,f6,f7,f8,f15,f16,f17,f18,f104,f105,f106"
-    url = (
-        "https://push2.eastmoney.com/api/qt/ulist.np/get"
-        f"?fltt=2&invt=2&fields={fields}&secids={ids}"
-    )
-    data = http_json(url)
     out: dict[str, dict] = {}
-    for row in ((data or {}).get("data") or {}).get("diff") or []:
-        code = str(row.get("f12") or "")
-        if code:
-            out[code] = row
+    fields = "f12,f13,f14,f2,f3,f4,f5,f6,f7,f8,f15,f16,f17,f18,f104,f105,f106"
+    chunk = 18
+    for i in range(0, len(items), chunk):
+        ids = ",".join(secid(code, m) for code, m in items[i : i + chunk])
+        url = (
+            "https://push2.eastmoney.com/api/qt/ulist.np/get"
+            f"?fltt=2&invt=2&fields={fields}&secids={ids}"
+        )
+        try:
+            data = http_json(url)
+        except Exception:
+            continue
+        for row in ((data or {}).get("data") or {}).get("diff") or []:
+            code = str(row.get("f12") or "")
+            if code:
+                out[code] = row
     return out
 
 
@@ -240,6 +268,8 @@ def is_generic_concept(name: str) -> bool:
     if name.endswith(REGION_SUFFIX) and "自贸" not in name:
         return True
     if name.endswith("板块") or name.endswith("成份"):
+        return True
+    if any(key in name for key in ("昨日", "连板", "涨停", "打板", "预增", "预盈", "热股", "新高", "重仓", "改革", "增发", "破净")):
         return True
     return False
 
@@ -459,11 +489,22 @@ def collect_market(date: str) -> MarketBundle:
             b.index[k] = quotes[k]
     b.quotes = quotes
 
-    focus = list(b.zt[:12])
+    focus = [r for r in b.zt if int(num(r.get("lbc"))) >= 2]
+    firsts = [r for r in b.zt if int(num(r.get("lbc"))) <= 1]
+    firsts.sort(key=lambda r: num(r.get("amount"), num(r.get("hs"))), reverse=True)
+    focus.extend(firsts[:10])
     for r in hist_best.values():
         if num(r.get("lbc")) >= 5:
             focus.append(r)
-    focus = focus[:16]
+    uniq_focus = []
+    seen_f = set()
+    for r in focus:
+        code = r.get("c")
+        if not code or code in seen_f:
+            continue
+        seen_f.add(code)
+        uniq_focus.append(r)
+    focus = uniq_focus[:24]
     with ThreadPoolExecutor(max_workers=8) as pool:
         fmap = {pool.submit(fetch_concepts, r.get("c"), r.get("m")): r.get("c") for r in focus if r.get("c")}
         for fut in as_completed(fmap):
@@ -477,24 +518,27 @@ def collect_market(date: str) -> MarketBundle:
     return b
 
 
+PREFERRED_THEMES = ("液冷", "航运", "培育钻石", "消费", "黄金珠宝", "农业", "传媒", "旅游")
+
+
 def theme_for(row: dict, bundle: MarketBundle, clusters: dict[str, list[str]]) -> str:
     code = row.get("c")
     hybk = str(row.get("hybk") or "").strip()
     concepts = bundle.concepts.get(code or "", [])
-    ranked: list[tuple[int, str]] = []
-    for raw in concepts:
-        if is_generic_concept(raw):
+    ranked: list[tuple[int, int, int, str]] = []
+    for raw in [hybk, *concepts]:
+        if not raw or is_generic_concept(raw):
             continue
         theme = normalize_theme(raw)
-        ranked.append((len(clusters.get(theme, [])), theme))
+        size = len(clusters.get(theme, []))
+        if size > 12:
+            continue
+        prefer = 2 if theme in PREFERRED_THEMES else 0
+        mid = 1 if 2 <= size <= 8 else 0
+        ranked.append((prefer, mid, size, theme))
     if ranked:
         ranked.sort(reverse=True)
-        if ranked[0][0] >= 2:
-            return ranked[0][1]
-        for _, theme in ranked:
-            if theme in ("液冷", "航运", "培育钻石", "消费", "黄金珠宝", "农业", "传媒"):
-                return theme
-        return ranked[0][1]
+        return ranked[0][3]
     if hybk:
         return normalize_theme(hybk)
     return "综合"
@@ -515,7 +559,7 @@ def build_clusters(bundle: MarketBundle) -> dict[str, list[str]]:
                 continue
             seen.add(theme)
             clusters.setdefault(theme, []).append(code)
-    return clusters
+    return {k: v for k, v in clusters.items() if 1 <= len(v) <= 12}
 
 
 def classify_env(bundle: MarketBundle) -> dict[str, Any]:
@@ -526,11 +570,22 @@ def classify_env(bundle: MarketBundle) -> dict[str, Any]:
     prev_height = 0
     high_fallen: list[dict] = []
     hist_best = getattr(bundle, "_hist_best", {})
+    dt_map = {r.get("c"): r for r in bundle.dt}
+    yz_map = {r.get("c"): r for r in bundle.yz}
     for code, r in hist_best.items():
         prev_lbc = int(num(r.get("lbc")))
         prev_height = max(prev_height, prev_lbc)
         q = bundle.quotes.get(code) or {}
-        zdp = num(q.get("f3"))
+        dt = dt_map.get(code) or {}
+        yz = yz_map.get(code) or {}
+        if q:
+            zdp = num(q.get("f3"))
+        elif dt:
+            zdp = num(dt.get("zdp"), -10)
+        elif yz:
+            zdp = num(yz.get("zdp"))
+        else:
+            continue
         if prev_lbc >= 3 and zdp <= -7:
             high_fallen.append(
                 {
@@ -810,7 +865,13 @@ def pick_candidates(scored: list[dict], fallen: list[dict]) -> list[dict]:
     alive = [s for s in scored if not s["fallen"]]
     alive.sort(key=lambda s: (-s["lbc"], -(s["drive"] + s["lead"] + s["survive"] + s["liq"]), -s["hs"]))
     firsts = [s for s in alive if s["lbc"] <= 1]
-    firsts.sort(key=lambda s: (-s["drive"], -s["hs"]))
+    firsts.sort(
+        key=lambda s: (
+            0 if s["theme"] in PREFERRED_THEMES else 1,
+            -s["drive"],
+            -s["hs"],
+        )
+    )
     top = []
     seen = set()
     for s in alive:
@@ -821,12 +882,17 @@ def pick_candidates(scored: list[dict], fallen: list[dict]) -> list[dict]:
             seen.add(s["code"])
         if len(top) >= 3:
             break
+    used_themes = {s["theme"] for s in top}
     for s in firsts:
         if s["code"] in seen:
             continue
-        if s["drive"] >= 0.5:
-            top.append(s)
-            seen.add(s["code"])
+        if s["drive"] < 0.5:
+            continue
+        if s["theme"] in used_themes:
+            continue
+        top.append(s)
+        seen.add(s["code"])
+        used_themes.add(s["theme"])
         if len([x for x in top if x["lbc"] <= 1]) >= 2:
             break
     out = top[:5]
