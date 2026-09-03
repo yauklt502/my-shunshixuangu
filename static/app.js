@@ -243,7 +243,7 @@
         return null;
       }
     })();
-    setTheme(params.get("theme") || storedTheme || defaultTheme);
+    setTheme(params.get("theme") || html.getAttribute("data-theme") || storedTheme || defaultTheme);
 
     const dateInput = $("date-input");
     const date = defaultDate;
