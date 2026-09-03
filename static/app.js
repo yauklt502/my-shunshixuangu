@@ -15,7 +15,7 @@
     html.dataset.defaultDate ||
     $("date-input")?.value ||
     "2026-09-03";
-  const defaultTheme = params.get("theme") || html.dataset.theme || html.getAttribute("data-theme") || "dark";
+  const defaultTheme = params.get("theme") || html.dataset.theme || html.getAttribute("data-theme") || "light";
 
   let current = null;
   let autoTimer = null;
@@ -236,14 +236,7 @@
   }
 
   function init() {
-    const storedTheme = (() => {
-      try {
-        return localStorage.getItem("zhenlong-theme");
-      } catch (_) {
-        return null;
-      }
-    })();
-    setTheme(params.get("theme") || html.getAttribute("data-theme") || storedTheme || defaultTheme);
+    setTheme(params.get("theme") || html.getAttribute("data-theme") || defaultTheme || "light");
 
     const dateInput = $("date-input");
     const date = defaultDate;

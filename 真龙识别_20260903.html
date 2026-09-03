@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>真龙识别 · 2026-09-03 收盘盯盘卡</title>
 <style>
-:root, html[data-theme="dark"]{
+:root, html[data-theme="light"]{
+  --bg:#ffffff; --panel:#ffffff; --panel2:#f3f5f8; --line:#d9dfea; --line2:#c3ccdc;
+  --txt:#1a2233; --dim:#5d6b85; --mute:#8a94a8;
+  --red:#dc2626; --red2:#c23636; --green:#0e9f6e; --amber:#b45309; --blue:#2563eb; --purple:#7c3aed;
+  --tldr-bg:linear-gradient(135deg,#fbe9e7,#fdf3ef); --tldr-bd:#f0c0b8;
+  --warn-bg:#fdf3e3; --warn-bd:#e2cd9a;
+  --tag-r:#e6b3ac; --tag-g:#b3dccb; --tag-y:#e2cd9a;
+  --danger-line:#e6b3ac;
+  --ctrl:#f3f5f8; --ctrl-hover:#e6eaf1;
+}
+html[data-theme="dark"]{
   --bg:#0b0e14; --panel:#131822; --panel2:#1a2130; --line:#242c3d; --line2:#2f3a4f;
   --txt:#e6edf7; --dim:#9aa6bd; --mute:#5f6b80;
   --red:#ff4d4f; --red2:#ff7875; --green:#00c48c; --amber:#ffb020; --blue:#4d8dff; --purple:#a86bff;
@@ -14,16 +24,6 @@
   --tag-r:#4a2530; --tag-g:#1f403a; --tag-y:#4a3a20;
   --danger-line:#4a2530;
   --ctrl:#1a2130; --ctrl-hover:#243044;
-}
-html[data-theme="light"]{
-  --bg:#f4f6fa; --panel:#ffffff; --panel2:#e9edf4; --line:#d9dfea; --line2:#c3ccdc;
-  --txt:#1a2233; --dim:#5d6b85; --mute:#8a94a8;
-  --red:#dc2626; --red2:#c23636; --green:#0e9f6e; --amber:#b45309; --blue:#2563eb; --purple:#7c3aed;
-  --tldr-bg:linear-gradient(135deg,#fbe9e7,#fdf3ef); --tldr-bd:#f0c0b8;
-  --warn-bg:#fdf3e3; --warn-bd:#e2cd9a;
-  --tag-r:#e6b3ac; --tag-g:#b3dccb; --tag-y:#e2cd9a;
-  --danger-line:#e6b3ac;
-  --ctrl:#e9edf4; --ctrl-hover:#dde3ee;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;line-height:1.65}
@@ -59,8 +59,8 @@ td.name{text-align:left;font-weight:700}
 .foot{color:var(--mute);font-size:11.5px;margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:9px}
 .toolbar label{color:var(--dim);font-size:12.5px;display:flex;align-items:center;gap:6px}
-.toolbar input[type=date]{background:var(--ctrl);color:var(--txt);border:1px solid var(--line2);border-radius:6px;padding:4px 8px;font:inherit;color-scheme:dark}
-html[data-theme="light"] .toolbar input[type=date]{color-scheme:light}
+.toolbar input[type=date]{background:var(--ctrl);color:var(--txt);border:1px solid var(--line2);border-radius:6px;padding:4px 8px;font:inherit;color-scheme:light}
+html[data-theme="dark"] .toolbar input[type=date]{color-scheme:dark}
 .toolbar button{background:var(--ctrl);color:var(--txt);border:1px solid var(--line2);border-radius:6px;padding:5px 10px;font-size:12.5px;cursor:pointer}
 .toolbar button:hover{background:var(--ctrl-hover)}
 .toolbar button.primary{border-color:var(--amber);color:var(--amber)}
