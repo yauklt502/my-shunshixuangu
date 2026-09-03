@@ -4,8 +4,14 @@
 
 ## 怎么用
 
+**Windows：双击 `start.bat` 或 `启动.bat`**（会自动打开浏览器）
+
+Mac：双击 `启动.command`
+
+或手动：
+
 ```bash
-python3 server.py
+python3 server.py --open
 ```
 
 浏览器打开 http://127.0.0.1:8765/
@@ -16,9 +22,11 @@ python3 server.py
 - **一键截屏**：导出当前盯盘卡 PNG（不含顶栏）。
 - **浅色 / 深色**：两套皮肤对应你原来的两份 HTML。
 
+Windows 若提示找不到 Python，请安装 Python 3.9+ 并勾选 **Add python.exe to PATH**。
+
 也可以 `?date=2026-09-03&theme=light` 打开指定日。
 
-直接双击 HTML 也能看 9/3 快照和截屏；要翻其他日期或盘中更新，需要先启动 `server.py`。
+直接双击 HTML 也能看 9/3 快照和截屏；要翻其他日期或盘中更新，需要先启动 `start.bat`。
 
 ## 评分口径（未改）
 

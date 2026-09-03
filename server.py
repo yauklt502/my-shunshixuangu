@@ -4,7 +4,11 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import threading
+import time
+import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -56,9 +60,24 @@ class Handler(SimpleHTTPRequestHandler):
         super().do_GET()
 
 
+def open_browser_later(url: str, delay: float = 1.2) -> None:
+    def _open() -> None:
+        time.sleep(delay)
+        webbrowser.open(url)
+
+    threading.Thread(target=_open, daemon=True).start()
+
+
 def main():
+    parser = argparse.ArgumentParser(description="Zhenlong live review server")
+    parser.add_argument("--open", action="store_true", help="Open browser after start")
+    args = parser.parse_args()
+
+    url = f"http://127.0.0.1:{PORT}/"
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
-    print(f"[zhenlong] http://127.0.0.1:{PORT}/  (bind {HOST})")
+    print(f"[zhenlong] {url}  (bind {HOST})")
+    if args.open:
+        open_browser_later(url)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
