@@ -127,6 +127,23 @@ export function fmtMoney(value: unknown, empty = "--"): string {
   return `${sign}${abs.toFixed(0)}`;
 }
 
+export function fmtVol(value: unknown, empty = "--"): string {
+  const n = num(value, NaN);
+  if (!Number.isFinite(n) || n === 0) return empty;
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 1e8) return `${sign}${(abs / 1e8).toFixed(2)}亿`;
+  if (abs >= 1e4) return `${sign}${(abs / 1e4).toFixed(abs >= 1e6 ? 0 : 1)}万`;
+  return `${sign}${abs.toFixed(0)}`;
+}
+
+export function bidVolume(row: unknown[]): number {
+  const px = num(row[2], NaN);
+  const amt = num(row[8], 0) || num(row[10], 0);
+  if (!(px > 0) || !(amt > 0)) return NaN;
+  return amt / px;
+}
+
 export function fmtYi(value: unknown, empty = "--"): string {
   const n = num(value, NaN);
   if (!Number.isFinite(n)) return empty;

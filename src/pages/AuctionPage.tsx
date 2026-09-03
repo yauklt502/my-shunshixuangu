@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "@/api/services";
 import { Table } from "@/components/ui";
-import { num, pctClass, str } from "@/lib/format";
+import { bidVolume, fmtVol, num, pctClass, str } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
 
@@ -110,8 +110,15 @@ export function AuctionPage() {
         key: "amt",
         title: "竞价额",
         align: "right" as const,
-        sortValue: (r: unknown[]) => num(r[8], NaN),
-        render: (r: unknown[]) => <span className="muted">{fmtBidMoney(r[8])}</span>,
+        sortValue: (r: unknown[]) => num(r[8], 0) || num(r[10], 0),
+        render: (r: unknown[]) => <span className="muted">{fmtBidMoney(num(r[8], 0) || num(r[10], 0))}</span>,
+      },
+      {
+        key: "vol",
+        title: "竞价量",
+        align: "right" as const,
+        sortValue: (r: unknown[]) => bidVolume(r),
+        render: (r: unknown[]) => <span className="muted">{fmtVol(bidVolume(r))}</span>,
       },
       {
         key: "hs",

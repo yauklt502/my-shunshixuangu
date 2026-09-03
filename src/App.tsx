@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AppProvider, useApp } from "@/state";
 import { formatClock, marketSessionDate, shiftTradingDay } from "@/lib/format";
+import { downloadPagePng } from "@/lib/capture";
 import { Modal } from "@/components/ui";
 import { MarketPage } from "@/pages/MarketPage";
 import { LimitUpPage } from "@/pages/LimitUpPage";
@@ -33,7 +34,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   limit: { title: "涨停分析", sub: "天梯、分板、破板、原因与回撤" },
   sector: { title: "板块数据", sub: "强度排名、行业地区与竞价异动" },
   lhb: { title: "龙虎榜", sub: "上榜个股、游资动向与席位" },
-  auction: { title: "早盘竞价", sub: "涨停委买 · 当前涨幅 · 竞价涨幅 · 竞价额 · 竞价换手" },
+  auction: { title: "早盘竞价", sub: "涨停委买 · 当前涨幅 · 竞价涨幅 · 竞价额 · 竞价量 · 竞价换手" },
   grab: { title: "尾盘抢筹", sub: "抢筹金额 · 抢筹幅度 · 游资机构" },
   stock: { title: "股票数据", sub: "所属板块、新高与区间统计" },
   feng: { title: "风口概念", sub: "最强风口与概念强度" },
@@ -61,6 +62,7 @@ function Shell() {
   const [page, setPage] = useState(parseHash);
   const [clock, setClock] = useState(formatClock);
   const [openSettings, setOpenSettings] = useState(false);
+  const [shot, setShot] = useState<"idle" | "busy" | "ok" | "err">("idle");
 
   useEffect(() => {
     const onHash = () => setPage(parseHash());
@@ -142,6 +144,25 @@ function Shell() {
             回到今日
           </button>
           <button className="ghost-btn" onClick={refresh}>刷新</button>
+          <button
+            className="ghost-btn"
+            disabled={shot === "busy"}
+            onClick={async () => {
+              if (shot === "busy") return;
+              setShot("busy");
+              try {
+                const root = document.querySelector(".app");
+                if (!(root instanceof HTMLElement)) throw new Error("no root");
+                await downloadPagePng(`开盘啦-${meta.title}-${date}.png`, root);
+                setShot("ok");
+              } catch {
+                setShot("err");
+              }
+              window.setTimeout(() => setShot("idle"), 1600);
+            }}
+          >
+            {shot === "busy" ? "截取中…" : shot === "ok" ? "已保存" : shot === "err" ? "截屏失败" : "截屏"}
+          </button>
           <button className="ghost-btn" onClick={() => setOpenSettings(true)}>设置</button>
         </header>
         <section className="page">{body}</section>
