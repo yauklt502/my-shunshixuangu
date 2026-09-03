@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode, useCallback, useEffect, useState } from "react";
 import { api } from "@/api/services";
-import type { CommonParams } from "@/api/client";
+import { DOC_PUBLIC_AUTH, type CommonParams } from "@/api/client";
 import { chinaDate, deviceId, marketSessionDate } from "@/lib/format";
 
 type Settings = {
@@ -49,8 +49,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       VerSion: "5.23.0.1",
       apiv: "w44",
     };
-    if (settings.token) next.Token = settings.token;
-    if (settings.userId) next.UserID = settings.userId;
+    next.Token = settings.token || DOC_PUBLIC_AUTH.Token;
+    next.UserID = settings.userId || DOC_PUBLIC_AUTH.UserID;
     return next;
   }, [settings, tick]);
 

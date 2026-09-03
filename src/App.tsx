@@ -160,7 +160,7 @@ function Shell() {
               setOpenSettings(false);
             }}
           >
-            <p className="tip">部分竞价 / 风口接口需要 Token 与 UserID。留空也可浏览公开复盘数据。</p>
+            <p className="tip">按文档说明，Token / UserID 为可选公共参数，竞价个股列表不必填写。板块竞价、最强风口等接口若报错再填自己的账号。</p>
             <div className="field">
               <label>Token</label>
               <input name="token" defaultValue={settings.token} placeholder="可选" />

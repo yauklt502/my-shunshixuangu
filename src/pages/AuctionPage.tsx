@@ -39,7 +39,7 @@ function BidPct({ value }: { value: unknown }) {
 }
 
 export function AuctionPage() {
-  const { date, today, common, settings } = useApp();
+  const { date, today, common } = useApp();
   const [tab, setTab] = useState("0");
   const current = BID_TABS.find((item) => item.id === tab) || BID_TABS[0];
 
@@ -53,7 +53,6 @@ export function AuctionPage() {
 
   const info = overview.data?.info;
   const counts = nums.data?.info || [];
-  const needAuth = !settings.token || !settings.userId;
   const rows = ((list.loading ? [] : list.data?.info) || []).filter((r) => Array.isArray(r)) as unknown[][];
 
   const lianban = useMemo(() => {
@@ -192,7 +191,7 @@ export function AuctionPage() {
           columns={columns}
           loading={list.loading}
           error={list.error}
-          emptyText={needAuth ? "竞价个股列表需要在右上角设置中填写 Token 和 UserID" : "暂无数据"}
+          emptyText="暂无数据"
         />
       </section>
     </>
