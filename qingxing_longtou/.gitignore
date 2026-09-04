@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+screenshots/*.png
+!screenshots/.gitkeep
+*.log
+.DS_Store

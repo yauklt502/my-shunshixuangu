@@ -1,0 +1,4 @@
+清醒龙头战法选股软件
+打包时间(UTC): 2026-09-04T13:05:43Z
+分支: cursor/qingxing-longtou-screener-4ae8
+适用: Windows 10/11 + Python 3.10~3.13 x64
