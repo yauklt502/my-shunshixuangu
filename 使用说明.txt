@@ -1,23 +1,19 @@
 顺势选股 · 龙头确认 — 本地部署
 
-【重要】
-启动成功后，黑色窗口必须一直开着，不要关。
-浏览器打开 http://127.0.0.1:8654
-只有按 Ctrl+C 停服务后，再按任意键才会关闭窗口。
-若一启动就出现“按任意键”，说明服务启动失败，请看上方英文报错。
-
 【Windows】
-1. 重新下载最新包（含时区修复）
-   https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/realtime-leader-stock-picker-89c3.zip
-2. 解压到新文件夹（不要混用旧文件）
-3. 双击 start.bat
-4. 看到 "Uvicorn running on http://127.0.0.1:8654" 后再打开浏览器
+1. 下载最新包并解压到新文件夹
+2. 双击 start.bat
+3. 看到 Uvicorn running on http://127.0.0.1:8654 后
+4. 浏览器打开 http://127.0.0.1:8654
+5. 黑窗口必须一直开着
 
-【若仍失败】
-右键 start.ps1 -> 使用 PowerShell 运行
-或在该目录手动执行：
-  .venv\Scripts\python.exe -m pip install -r requirements.txt tzdata
-  set PYTHONPATH=%CD%
-  .venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8654
+【若页面提示行情失败 / HTTP 500】
+- 页面顶部切换数据源：东方财富 / 同花顺 / 通达信
+- 再点「刷新确认」
+- 程序已忽略系统代理（常见掉线原因）
 
-需要 Python 3.10+，安装时勾选 Add to PATH。
+【截屏】
+点击「一键截屏」保存当前龙头确认页 PNG
+
+下载：
+https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/realtime-leader-stock-picker-89c3.zip
