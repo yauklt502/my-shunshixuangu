@@ -1,19 +1,14 @@
-import { useEffect, useId, useMemo, useState } from "react";
+/**
+ * Auction stock overlay: day K on the left + TickFlow EChartsIntraday float on the right.
+ * Intraday panel logic/style ported from shy3130/tick-stock-panel (MIT).
+ */
+import { useEffect, useMemo, useState } from "react";
 import { tdxKline, tdxMinute, toTdxCode } from "@/api/tdx";
+import { EChartsIntraday } from "@/components/tickflow/EChartsIntraday";
+import type { MinuteKlineRow, PriceLimitInfo } from "@/components/tickflow/types";
 
 type StockPick = { code: string; name: string };
-type MinutePoint = { time: string; price: number; avg: number; volume: number };
 type DayBar = { time: string; open: number; high: number; low: number; close: number; volume: number };
-type ScaleMode = "auto" | "limit";
-
-const SESSION_MARKS = [
-  { label: "9:30", slot: 0 },
-  { label: "10:30", slot: 60 },
-  { label: "11:30/13:00", slot: 120 },
-  { label: "14:00", slot: 180 },
-  { label: "15:00", slot: 240 },
-];
-const SESSION_SLOTS = 241;
 
 export function StockChartModal({
   stock,
@@ -26,13 +21,19 @@ export function StockChartModal({
 }) {
   const tdxCode = toTdxCode(stock.code);
   const marketTag = marketSuffix(stock.code);
-  const [scaleMode, setScaleMode] = useState<ScaleMode>("auto");
   const [minute, setMinute] = useState<{
     loading: boolean;
     error: string | null;
-    points: MinutePoint[];
+    rows: MinuteKlineRow[];
     prevClose: number | null;
-  }>({ loading: true, error: null, points: [], prevClose: null });
+    priceLimit: PriceLimitInfo;
+  }>({
+    loading: true,
+    error: null,
+    rows: [],
+    prevClose: null,
+    priceLimit: priceLimitForCode(stock.code),
+  });
   const [day, setDay] = useState<{
     loading: boolean;
     error: string | null;
@@ -49,7 +50,13 @@ export function StockChartModal({
 
   useEffect(() => {
     let alive = true;
-    setMinute({ loading: true, error: null, points: [], prevClose: null });
+    setMinute((s) => ({
+      ...s,
+      loading: true,
+      error: null,
+      rows: [],
+      priceLimit: priceLimitForCode(stock.code),
+    }));
     const ymd = date.replaceAll("-", "");
     tdxMinute(tdxCode)
       .catch(() => tdxMinute(tdxCode, ymd))
@@ -58,18 +65,25 @@ export function StockChartModal({
         setMinute({
           loading: false,
           error: null,
-          points: data.points || [],
+          rows: toMinuteRows(data.points || [], date),
           prevClose: data.prev_close ?? null,
+          priceLimit: priceLimitForCode(stock.code),
         });
       })
       .catch((err: Error) => {
         if (!alive) return;
-        setMinute({ loading: false, error: err.message || "分时加载失败", points: [], prevClose: null });
+        setMinute({
+          loading: false,
+          error: err.message || "分时加载失败",
+          rows: [],
+          prevClose: null,
+          priceLimit: priceLimitForCode(stock.code),
+        });
       });
     return () => {
       alive = false;
     };
-  }, [tdxCode, date]);
+  }, [tdxCode, date, stock.code]);
 
   useEffect(() => {
     let alive = true;
@@ -90,20 +104,26 @@ export function StockChartModal({
 
   const quote = useMemo(() => {
     const lastBar = day.bars[day.bars.length - 1];
-    const lastMin = minute.points[minute.points.length - 1];
+    const lastMin = minute.rows[minute.rows.length - 1];
     const prev =
       minute.prevClose && minute.prevClose > 0
         ? minute.prevClose
         : day.bars.length > 1
           ? day.bars[day.bars.length - 2]?.close
           : lastBar?.open;
-    const price = lastMin?.price ?? lastBar?.close ?? null;
+    const price = lastMin?.close ?? lastBar?.close ?? null;
     if (price == null || !prev || prev <= 0) {
       return { price: null as number | null, chg: null as number | null, pct: null as number | null };
     }
     const chg = price - prev;
     return { price, chg, pct: (chg / prev) * 100 };
-  }, [day.bars, minute.points, minute.prevClose]);
+  }, [day.bars, minute.rows, minute.prevClose]);
+
+  const panelPrevClose = useMemo(() => {
+    if (minute.prevClose && minute.prevClose > 0) return minute.prevClose;
+    if (day.bars.length >= 2) return day.bars[day.bars.length - 2].close;
+    return undefined;
+  }, [minute.prevClose, day.bars]);
 
   return (
     <div className="tick-stage" role="dialog" aria-modal="true" aria-label={`${stock.name} 行情`}>
@@ -127,13 +147,6 @@ export function StockChartModal({
               <span className="faint">行情加载中…</span>
             )}
           </div>
-          <div className="tick-stage-tabs" aria-hidden="true">
-            {["成交量", "MACD", "RSI", "KDJ", "BOLL", "WR", "BIAS"].map((label) => (
-              <span key={label} className={label === "成交量" ? "on" : undefined}>
-                {label}
-              </span>
-            ))}
-          </div>
         </header>
 
         <div className="tick-stage-body">
@@ -149,203 +162,30 @@ export function StockChartModal({
         </div>
       </div>
 
-      <aside className="tick-panel" aria-label="分时浮窗">
+      <aside className="tick-panel" aria-label="TICK STOCK PANEL">
         <button type="button" className="tick-close" onClick={onClose} aria-label="关闭浮窗">
           ×
         </button>
-        <div className="tick-panel-hd">
-          <div className="tick-panel-modes">
-            <button
-              type="button"
-              className={scaleMode === "auto" ? "tick-mode on" : "tick-mode"}
-              onClick={() => setScaleMode("auto")}
-            >
-              自适应
-            </button>
-            <button
-              type="button"
-              className={scaleMode === "limit" ? "tick-mode on" : "tick-mode"}
-              onClick={() => setScaleMode("limit")}
-            >
-              涨跌停
-            </button>
-          </div>
-          <div className="tick-panel-handle" />
-        </div>
-        <div className="tick-panel-bd">
+        <div className="tick-panel-bd tick-panel-bd-tickflow">
           {minute.loading ? (
             <div className="spinner">正在拉取分时…</div>
           ) : minute.error ? (
             <div className="error-box">{minute.error}</div>
-          ) : minute.points.length ? (
-            <TickMinuteChart points={minute.points} prevClose={minute.prevClose} scaleMode={scaleMode} code={stock.code} />
+          ) : minute.rows.length ? (
+            <EChartsIntraday
+              data={minute.rows}
+              height={640}
+              prevClose={panelPrevClose}
+              date={date}
+              priceLimit={minute.priceLimit}
+              currentPrice={quote.price ?? undefined}
+            />
           ) : (
             <div className="empty">暂无分时</div>
           )}
         </div>
       </aside>
     </div>
-  );
-}
-
-function TickMinuteChart({
-  points,
-  prevClose,
-  scaleMode,
-  code,
-}: {
-  points: MinutePoint[];
-  prevClose: number | null;
-  scaleMode: ScaleMode;
-  code: string;
-}) {
-  const fillId = `tickFill-${useId().replace(/:/g, "")}`;
-  const w = 360;
-  const priceH = 420;
-  const volH = 108;
-  const gap = 10;
-  const totalH = priceH + gap + volH;
-  const pad = { l: 44, r: 52, t: 12, b: 22 };
-
-  const series = useMemo(() => alignSession(points), [points]);
-  const prices = series.map((p) => p.price).filter((n): n is number => n != null && Number.isFinite(n));
-  const base = prevClose && prevClose > 0 ? prevClose : prices[0] || 1;
-  const limitPct = limitPercent(code);
-
-  let maxAbsPct: number;
-  if (scaleMode === "limit") {
-    maxAbsPct = limitPct;
-  } else {
-    const extremes = prices.length ? prices : [base];
-    const hi = Math.max(...extremes);
-    const lo = Math.min(...extremes);
-    maxAbsPct = Math.max(Math.abs((hi - base) / base), Math.abs((lo - base) / base), 0.01) * 100;
-    maxAbsPct = Math.ceil(maxAbsPct * 100) / 100;
-  }
-
-  const maxPrice = base * (1 + maxAbsPct / 100);
-  const minPrice = base * (1 - maxAbsPct / 100);
-  const span = Math.max(maxPrice - minPrice, 0.01);
-  const plotW = w - pad.l - pad.r;
-  const plotH = priceH - pad.t - pad.b;
-  const xAt = (slot: number) => pad.l + (slot / (SESSION_SLOTS - 1)) * plotW;
-  const yAt = (price: number) => pad.t + ((maxPrice - price) / span) * plotH;
-  const midY = yAt(base);
-
-  const drawn = series.filter((p) => p.price != null);
-  const pricePath = drawn
-    .map((p, i) => `${i ? "L" : "M"}${xAt(p.slot).toFixed(1)},${yAt(p.price!).toFixed(1)}`)
-    .join(" ");
-  const areaPath =
-    drawn.length > 1
-      ? `${pricePath} L${xAt(drawn[drawn.length - 1].slot).toFixed(1)},${(pad.t + plotH).toFixed(1)} L${xAt(drawn[0].slot).toFixed(1)},${(pad.t + plotH).toFixed(1)} Z`
-      : "";
-
-  const last = drawn[drawn.length - 1];
-  const lineUp = (last?.price ?? base) >= base;
-  const lineColor = lineUp ? "#e53935" : "#1aa37a";
-  const maxVol = Math.max(...series.map((p) => p.volume || 0), 1);
-  const volTop = priceH + gap;
-  const volPlotH = volH - 8;
-  const cursorX = last ? xAt(last.slot) : null;
-
-  return (
-    <svg className="tick-chart" viewBox={`0 0 ${w} ${totalH}`} role="img" aria-label="分时图">
-      <defs>
-        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={lineColor} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-
-      {SESSION_MARKS.map((mark) => (
-        <line
-          key={`g-${mark.slot}`}
-          x1={xAt(mark.slot)}
-          y1={pad.t}
-          x2={xAt(mark.slot)}
-          y2={pad.t + plotH}
-          stroke="rgba(15,23,42,0.08)"
-          strokeWidth="1"
-        />
-      ))}
-      <line
-        x1={pad.l}
-        y1={midY}
-        x2={w - pad.r}
-        y2={midY}
-        stroke="rgba(15,23,42,0.28)"
-        strokeDasharray="4 3"
-        strokeWidth="1"
-      />
-
-      {areaPath ? <path d={areaPath} fill={`url(#${fillId})`} /> : null}
-      {pricePath ? <path d={pricePath} fill="none" stroke={lineColor} strokeWidth="1.6" /> : null}
-
-      {cursorX != null ? (
-        <line
-          x1={cursorX}
-          y1={pad.t}
-          x2={cursorX}
-          y2={pad.t + plotH}
-          stroke="rgba(15,23,42,0.22)"
-          strokeDasharray="3 3"
-          strokeWidth="1"
-        />
-      ) : null}
-
-      <text x={pad.l - 6} y={pad.t + 10} textAnchor="end" className="tick-axis">
-        {maxPrice.toFixed(2)}
-      </text>
-      <text x={pad.l - 6} y={midY + 3} textAnchor="end" className="tick-axis">
-        {base.toFixed(2)}
-      </text>
-      <text x={pad.l - 6} y={pad.t + plotH} textAnchor="end" className="tick-axis">
-        {minPrice.toFixed(2)}
-      </text>
-
-      <text x={w - pad.r + 6} y={pad.t + 10} className="tick-axis up">
-        +{maxAbsPct.toFixed(2)}%
-      </text>
-      <text x={w - pad.r + 6} y={midY + 3} className="tick-axis">
-        0.00%
-      </text>
-      <text x={w - pad.r + 6} y={pad.t + plotH} className="tick-axis dn">
-        -{maxAbsPct.toFixed(2)}%
-      </text>
-
-      {SESSION_MARKS.map((mark) => (
-        <text
-          key={`t-${mark.slot}`}
-          x={xAt(mark.slot)}
-          y={priceH - 4}
-          textAnchor={mark.slot === 0 ? "start" : mark.slot === SESSION_SLOTS - 1 ? "end" : "middle"}
-          className="tick-axis"
-        >
-          {mark.label}
-        </text>
-      ))}
-
-      {series.map((p, i) => {
-        if (!p.volume || p.price == null) return null;
-        const prev = i > 0 ? series[i - 1].price : base;
-        const up = p.price >= (prev ?? base);
-        const barH = Math.max(1, (p.volume / maxVol) * volPlotH);
-        const bx = xAt(p.slot);
-        const bw = Math.max(1.2, plotW / SESSION_SLOTS - 0.4);
-        return (
-          <rect
-            key={`v-${p.slot}`}
-            x={bx - bw / 2}
-            y={volTop + (volPlotH - barH)}
-            width={bw}
-            height={barH}
-            fill={up ? "#e53935" : "#1aa37a"}
-            opacity="0.85"
-          />
-        );
-      })}
-    </svg>
   );
 }
 
@@ -374,9 +214,6 @@ function DayChart({ bars }: { bars: DayBar[] }) {
       const slice = closes.slice(i + 1 - n, i + 1);
       return slice.reduce((a, b) => a + b, 0) / n;
     });
-  const ma5 = ma(5);
-  const ma10 = ma(10);
-  const ma20 = ma(20);
   const pathOf = (vals: Array<number | null>) => {
     let started = false;
     return vals
@@ -434,9 +271,9 @@ function DayChart({ bars }: { bars: DayBar[] }) {
           </g>
         );
       })}
-      <path d={pathOf(ma5)} fill="none" stroke="#7c5cff" strokeWidth="1.2" />
-      <path d={pathOf(ma10)} fill="none" stroke="#2f6bff" strokeWidth="1.2" />
-      <path d={pathOf(ma20)} fill="none" stroke="#e08a2c" strokeWidth="1.2" />
+      <path d={pathOf(ma(5))} fill="none" stroke="#7c5cff" strokeWidth="1.2" />
+      <path d={pathOf(ma(10))} fill="none" stroke="#2f6bff" strokeWidth="1.2" />
+      <path d={pathOf(ma(20))} fill="none" stroke="#e08a2c" strokeWidth="1.2" />
       <text x={pad.l - 6} y={pad.t + 4} textAnchor="end" className="tick-axis">
         {max.toFixed(2)}
       </text>
@@ -453,55 +290,44 @@ function DayChart({ bars }: { bars: DayBar[] }) {
   );
 }
 
-function alignSession(points: MinutePoint[]) {
-  const bySlot = new Map<number, MinutePoint>();
-  for (const p of points) {
-    const slot = timeToSlot(p.time);
-    if (slot == null) continue;
-    bySlot.set(slot, p);
-  }
-  const out: Array<{ slot: number; price: number | null; volume: number; time: string }> = [];
-  for (let slot = 0; slot < SESSION_SLOTS; slot++) {
-    const hit = bySlot.get(slot);
-    out.push({
-      slot,
-      price: hit ? hit.price : null,
-      volume: hit?.volume || 0,
-      time: hit?.time || "",
-    });
-  }
-  // If slot mapping failed for all, fall back to sequential plot within morning+afternoon length
-  if (!out.some((p) => p.price != null) && points.length) {
-    return points.slice(0, SESSION_SLOTS).map((p, i) => ({
-      slot: i,
-      price: p.price,
-      volume: p.volume,
-      time: p.time,
-    }));
-  }
-  return out;
+/** Map TDX minute points → TickFlow MinuteKlineRow shape for EChartsIntraday. */
+function toMinuteRows(
+  points: Array<{ time: string; price: number; avg: number; volume: number }>,
+  date: string,
+): MinuteKlineRow[] {
+  const day = date.slice(0, 10);
+  return points.map((p, i) => {
+    const prev = i > 0 ? points[i - 1].price : p.price;
+    const close = p.price;
+    const high = Math.max(prev, close);
+    const low = Math.min(prev, close);
+    const time = normalizeTime(p.time);
+    const volume = Number(p.volume) || 0;
+    const amount = p.avg > 0 && volume > 0 ? p.avg * volume * 100 : close * volume * 100;
+    return {
+      datetime: `${day} ${time}:00`,
+      open: prev,
+      high,
+      low,
+      close,
+      volume,
+      amount,
+    };
+  });
 }
 
-function timeToSlot(time: string): number | null {
+function normalizeTime(time: string): string {
   const m = String(time).match(/(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  const hh = Number(m[1]);
-  const mm = Number(m[2]);
-  const mins = hh * 60 + mm;
-  const amStart = 9 * 60 + 30;
-  const amEnd = 11 * 60 + 30;
-  const pmStart = 13 * 60;
-  const pmEnd = 15 * 60;
-  if (mins >= amStart && mins <= amEnd) return mins - amStart;
-  if (mins >= pmStart && mins <= pmEnd) return 120 + (mins - pmStart);
-  return null;
+  if (!m) return "09:30";
+  return `${String(Number(m[1])).padStart(2, "0")}:${m[2]}`;
 }
 
-function limitPercent(code: string) {
+function priceLimitForCode(code: string): PriceLimitInfo {
   const c = code.replace(/\D/g, "").padStart(6, "0").slice(-6);
-  if (c.startsWith("30") || c.startsWith("68")) return 20;
-  if (c.startsWith("8") || c.startsWith("4")) return 30;
-  return 10;
+  let rate = 0.1;
+  if (c.startsWith("30") || c.startsWith("68")) rate = 0.2;
+  else if (c.startsWith("8") || c.startsWith("4")) rate = 0.3;
+  return { rate, limit_up: null, limit_down: null, source: "rule" };
 }
 
 function marketSuffix(code: string) {

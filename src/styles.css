@@ -526,13 +526,13 @@ table.data th.sorted .sort-mark {
 }
 .lianban { font-size: 11px; color: var(--up); font-weight: 600; }
 
-/* TICK STOCK PANEL — right float matching 开盘啦 style */
+/* TICK STOCK PANEL — right float; intraday chart from TickFlow EChartsIntraday */
 .tick-stage {
   position: fixed;
   inset: 0;
   z-index: 60;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 34vw);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 38vw);
   background: #f7f8fa;
 }
 .tick-stage-main {
@@ -570,15 +570,6 @@ table.data th.sorted .sort-mark {
   font-variant-numeric: tabular-nums;
 }
 .tick-stage-quote b { font-size: 22px; font-weight: 700; }
-.tick-stage-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 13px;
-}
-.tick-stage-tabs .on { color: var(--up); font-weight: 600; }
 .tick-stage-body {
   flex: 1;
   min-height: 0;
@@ -586,8 +577,7 @@ table.data th.sorted .sort-mark {
   border-radius: 4px;
   padding: 4px 0 0;
 }
-.tick-day-chart,
-.tick-chart {
+.tick-day-chart {
   width: 100%;
   height: 100%;
   display: block;
@@ -598,8 +588,6 @@ table.data th.sorted .sort-mark {
   fill: #8a97a6;
   font-family: var(--mono);
 }
-.tick-axis.up { fill: #e53935; }
-.tick-axis.dn { fill: #1aa37a; }
 
 .tick-panel {
   position: relative;
@@ -632,43 +620,15 @@ table.data th.sorted .sort-mark {
   z-index: 3;
 }
 .tick-close:hover { background: #6b7785; }
-.tick-panel-hd {
-  padding: 10px 14px 0;
-  flex: 0 0 auto;
-}
-.tick-panel-modes {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-}
-.tick-mode {
-  border: 0;
-  background: transparent;
-  color: #8a97a6;
-  font-size: 13px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.tick-mode.on {
-  color: #3d8bfd;
-  background: rgba(61, 139, 253, 0.12);
-  font-weight: 600;
-}
-.tick-panel-handle {
-  width: 36px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.12);
-  margin: 10px auto 6px;
-}
 .tick-panel-bd {
   flex: 1;
   min-height: 0;
-  padding: 0 6px 8px;
+  padding: 8px 8px 10px;
   display: flex;
   flex-direction: column;
+}
+.tick-panel-bd-tickflow {
+  overflow: auto;
 }
 .tick-panel-bd .spinner,
 .tick-panel-bd .error-box,
@@ -676,19 +636,79 @@ table.data th.sorted .sort-mark {
   margin: 24px 12px;
 }
 
+/* TickFlow EChartsIntraday chrome (Tailwind → plain CSS) */
+.eci-root { width: 100%; }
+.eci-modes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px 2px;
+}
+.eci-mode-group {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+}
+.eci-mode {
+  border: 0;
+  background: transparent;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: #8a97a6;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.eci-mode:hover { color: #52525b; }
+.eci-mode.on {
+  background: rgba(61, 139, 253, 0.2);
+  color: #3d8bfd;
+  font-weight: 600;
+}
+.eci-mode-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(15, 23, 42, 0.12);
+}
+.eci-info-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  padding: 0 8px;
+  height: 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  user-select: none;
+}
+.eci-info-row-2 { gap: 0 16px; }
+.eci-muted { color: #8a97a6; }
+.eci-secondary { color: #52525b; }
+.eci-strong { font-weight: 600; }
+.eci-swatch-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.eci-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+}
+.eci-canvas {
+  width: 100%;
+  cursor: crosshair;
+}
+
 @media (max-width: 900px) {
   .tick-stage {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(40vh, 1fr) minmax(48vh, 1.1fr);
+    grid-template-rows: minmax(36vh, 1fr) minmax(52vh, 1.2fr);
   }
-  .tick-panel {
-    margin: 8px 10px 12px;
-  }
-  .tick-close {
-    top: 8px;
-    left: 8px;
-  }
-  .tick-stage-tabs { display: none; }
+  .tick-panel { margin: 8px 10px 12px; }
+  .tick-close { top: 8px; left: 8px; }
 }
 
 @media (max-width: 1100px) {
