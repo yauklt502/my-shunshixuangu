@@ -1,35 +1,14 @@
-import iconv from 'iconv-lite';
-import { makeQuote, toSecMarket, parseBoardHeight, round, pct } from './normalize.mjs';
-
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
-
-async function fetchText(url, { headers = {}, encoding = 'utf8', timeout = 12000 } = {}) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeout);
-  try {
-    const res = await fetch(url, {
-      signal: ctrl.signal,
-      headers: { 'User-Agent': UA, ...headers },
-    });
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return encoding === 'utf8' ? buf.toString('utf8') : iconv.decode(buf, encoding);
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-async function fetchJson(url, headers = {}) {
-  const text = await fetchText(url, { headers });
-  return JSON.parse(text);
-}
-
-function todayYmd() {
-  const d = new Date();
-  const cn = new Date(d.getTime() + 8 * 3600 * 1000);
-  return cn.toISOString().slice(0, 10).replace(/-/g, '');
-}
+import {
+  makeQuote,
+  toSecMarket,
+  toTencentSymbol,
+  parseBoardHeight,
+  pct,
+  sma,
+  fetchText,
+  fetchJson,
+  todayYmd,
+} from './normalize.mjs';
 
 /* ========== 东方财富 ========== */
 export async function eastmoneyQuotes(codes) {
@@ -105,7 +84,6 @@ export async function eastmoneyLimitUp() {
 /* ========== 同花顺 ========== */
 function thsSymbol(code) {
   const { code: c, market } = toSecMarket(code);
-  // 指数特例
   if (c === '000001' && market === 'sh') return 'hs_1A0001';
   if (c === '399006') return 'hs_399006';
   if (c === '399001') return 'hs_399001';
@@ -118,24 +96,20 @@ export async function tonghuashunQuotes(codes) {
     const { code } = toSecMarket(raw);
     const sym = thsSymbol(raw);
     const url = `https://d.10jqka.com.cn/v2/realhead/${sym}/last.js?_=${Date.now()}`;
-    const text = await fetchText(url, {
-      headers: { Referer: 'https://q.10jqka.com.cn/' },
-    });
+    const text = await fetchText(url, { headers: { Referer: 'https://q.10jqka.com.cn/' } });
     const m = text.match(/last\((\{[\s\S]*\})\)\s*;?\s*$/);
     if (!m) throw new Error(`同花顺解析失败 ${code}`);
     const json = JSON.parse(m[1]);
     const items = json.items || {};
-    // field map from THS realhead
     const price = +items['10'];
     const high = +items['8'];
     const low = +items['9'];
     const open = +items['7'];
     const prev = +items['6'] || open;
-    const name = items['name'] || items['55'] || code;
     out.push(
       makeQuote({
         code,
-        name: typeof name === 'string' ? name : String(code),
+        name: String(code),
         price,
         high,
         low,
@@ -148,8 +122,7 @@ export async function tonghuashunQuotes(codes) {
       }),
     );
   }
-  // 补名称：涨停池或腾讯
-  return out;
+  return enrichNames(out);
 }
 
 export async function tonghuashunKline(code, lmt = 60) {
@@ -195,17 +168,7 @@ export async function tonghuashunLimitUp() {
   }));
 }
 
-/* ========== 通达信兼容：腾讯财经免费源（TDX 常用同源行情） ========== */
-function toTencentSymbol(raw) {
-  const s = String(raw).toLowerCase();
-  if (s === 'sh000001' || s === '000001.sh' || s === '1.000001') return 'sh000001';
-  if (s === 'sz399006' || s === '399006.sz' || s === '0.399006') return 'sz399006';
-  if (s === 'sz399001' || s === '399001.sz' || s === '0.399001') return 'sz399001';
-  if (s.startsWith('sh') || s.startsWith('sz')) return s.replace(/\W/g, '');
-  const { code, prefix } = toSecMarket(raw);
-  return `${prefix}${code}`;
-}
-
+/* ========== 通达信兼容：腾讯财经 ========== */
 export async function tongdaxinQuotes(codes) {
   const normalized = codes.map(toTencentSymbol);
   const url = `https://qt.gtimg.cn/q=${normalized.join(',')}&_=${Date.now()}`;
@@ -217,33 +180,21 @@ export async function tongdaxinQuotes(codes) {
   for (const line of text.split('\n')) {
     if (!line.includes('=')) continue;
     const body = line.split('=')[1]?.replace(/^"|"$/g, '').replace(/";?\s*$/, '');
-    if (!body || body === '') continue;
+    if (!body) continue;
     const p = body.split('~');
-    // Tencent format: 1=name 2=code 3=price 4=prev 5=open 33=high 34=low 31=change 32=pct
-    const name = p[1];
-    const code = p[2];
-    const price = +p[3];
-    const prevClose = +p[4];
-    const open = +p[5];
-    const high = +p[33];
-    const low = +p[34];
-    const changePct = +p[32];
-    const volume = +p[36] || +p[6];
-    const amount = +p[37] || 0;
-    const time = p[30];
     quotes.push(
       makeQuote({
-        code,
-        name,
-        price,
-        prevClose,
-        open,
-        high,
-        low,
-        changePct,
-        volume,
-        amount,
-        time,
+        code: p[2],
+        name: p[1],
+        price: +p[3],
+        prevClose: +p[4],
+        open: +p[5],
+        high: +p[33],
+        low: +p[34],
+        changePct: +p[32],
+        volume: +p[36] || +p[6],
+        amount: +p[37] || 0,
+        time: p[30],
       }),
     );
   }
@@ -268,12 +219,10 @@ export async function tongdaxinKline(code, lmt = 60) {
 }
 
 export async function tongdaxinLimitUp() {
-  // TDX free path: no native limit-up pool — fall through to THS pool tagged as fallback
   const pool = await tonghuashunLimitUp();
   return pool.map((x) => ({ ...x, source: 'tongdaxin+ths_pool' }));
 }
 
-/* ========== 新浪补充名称（同花顺 realhead 偶发无名） ========== */
 export async function enrichNames(quotes) {
   const need = quotes.filter((q) => !q.name || q.name === q.code);
   if (!need.length) return quotes;
@@ -292,14 +241,35 @@ export async function enrichNames(quotes) {
     for (const line of text.split('\n')) {
       const mm = line.match(/hq_str_(\w+)="([^"]*)"/);
       if (!mm || !mm[2]) continue;
-      const code = mm[1].slice(2);
-      const name = mm[2].split(',')[0];
-      map[code] = name;
+      map[mm[1].slice(2)] = mm[2].split(',')[0];
     }
     return quotes.map((q) => ({ ...q, name: map[q.code] || q.name }));
   } catch {
     return quotes;
   }
+}
+
+/** Attach MA5 from kline onto quotes (best-effort) */
+export async function attachMa5(quotes, klineFn) {
+  const out = [];
+  for (const q of quotes) {
+    try {
+      const kl = await klineFn(q.code, 30);
+      const ma5 = sma(
+        kl.map((k) => k.close),
+        5,
+      );
+      out.push(
+        makeQuote({
+          ...q,
+          ma5,
+        }),
+      );
+    } catch {
+      out.push(q);
+    }
+  }
+  return out;
 }
 
 export const SOURCES = {
@@ -313,7 +283,7 @@ export const SOURCES = {
   tonghuashun: {
     id: 'tonghuashun',
     label: '同花顺',
-    quotes: async (codes) => enrichNames(await tonghuashunQuotes(codes)),
+    quotes: tonghuashunQuotes,
     kline: tonghuashunKline,
     limitUp: tonghuashunLimitUp,
   },

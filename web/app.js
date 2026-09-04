@@ -2,6 +2,8 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   source: localStorage.getItem('discipline_source') || 'tongdaxin',
+  soft: localStorage.getItem('discipline_soft') || '-3',
+  hard: localStorage.getItem('discipline_hard') || '-5',
   timer: null,
 };
 
@@ -37,6 +39,22 @@ function renderRules(el, bullets = []) {
   el.innerHTML = bullets.map((b) => `<li>${b}</li>`).join('');
 }
 
+function addToWatch(code) {
+  const c = String(code).replace(/\D/g, '').padStart(6, '0');
+  const cur = $('codes')
+    .value.split(/[,，\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (cur.includes(c)) {
+    toast(`${c} 已在观察列表`);
+    return;
+  }
+  cur.push(c);
+  $('codes').value = cur.join(',');
+  toast(`已加入观察：${c}`);
+  refresh();
+}
+
 function renderLowBuy(data) {
   renderRules($('lowBuyRules'), data.rule?.bullets);
   const s = data.summary || {};
@@ -60,6 +78,8 @@ function renderLowBuy(data) {
         <td>${q.name || '—'}</td>
         <td>${q.price ?? '—'}</td>
         <td class="${clsPct(q.changePct)}">${fmtPct(q.changePct)}</td>
+        <td>${q.ma5 ?? '—'}</td>
+        <td class="${clsPct(q.ma5DistPct)}">${fmtPct(q.ma5DistPct)}</td>
         <td class="${clsPct(q.fromHighPct)}">${fmtPct(q.fromHighPct)}</td>
         <td class="${clsPct(q.fromLowPct)}">${fmtPct(q.fromLowPct)}</td>
         <td><span class="bar"><i style="width:${(pos * 100).toFixed(0)}%"></i></span>${(pos * 100).toFixed(0)}%</td>
@@ -75,8 +95,7 @@ function renderBoards(data) {
   const badge = $('rhythmBadge');
   badge.className = `status-chip ${r.code || 'watch'}`;
   badge.textContent = r.label || '—';
-  const reasonEl = document.getElementById('rhythmReason');
-  if (reasonEl) reasonEl.textContent = r.reason || '';
+  $('rhythmReason').textContent = r.reason || '';
 
   const st = data.stats || {};
   $('boardStats').innerHTML = `
@@ -86,11 +105,17 @@ function renderBoards(data) {
     <div class="stat focus"><div class="k">三板 ★</div><div class="v">${st.board3 ?? 0}</div></div>
   `;
 
-  const chip = (x) => `<div class="chip"><strong>${x.name} <span class="${clsPct(x.changePct)}">${fmtPct(x.changePct)}</span></strong>
-    <div class="meta">${x.code} · ${x.highDays || x.boards + '板'} · ${x.reason || ''}</div></div>`;
+  const chip = (x) => `<button type="button" class="chip clickable" data-code="${x.code}" title="加入低吸观察">
+    <strong>${x.name} <span class="${clsPct(x.changePct)}">${fmtPct(x.changePct)}</span></strong>
+    <div class="meta">${x.code} · ${x.highDays || x.boards + '板'} · ${x.reason || ''} · 点击加入观察</div>
+  </button>`;
 
   $('board2List').innerHTML = (data.focus?.board2 || []).map(chip).join('') || '<div class="meta">暂无二板</div>';
   $('board3List').innerHTML = (data.focus?.board3 || []).map(chip).join('') || '<div class="meta">暂无三板</div>';
+
+  document.querySelectorAll('.chip.clickable').forEach((el) => {
+    el.addEventListener('click', () => addToWatch(el.dataset.code));
+  });
 }
 
 function renderDrawdown(data) {
@@ -99,8 +124,7 @@ function renderDrawdown(data) {
   const badge = $('freezeBadge');
   badge.className = `status-chip ${o.level || 'unknown'}`;
   badge.textContent = o.label || '—';
-  const reasonEl = document.getElementById('freezeReason');
-  if (reasonEl) reasonEl.textContent = `${o.action || ''} — ${o.reason || ''}`;
+  $('freezeReason').textContent = `${o.action || ''} — ${o.reason || ''}`;
 
   $('ddCards').innerHTML = (data.indices || [])
     .map((idx) => {
@@ -124,27 +148,36 @@ async function loadSources() {
     .map((s) => `<option value="${s.id}">${s.label}</option>`)
     .join('');
   sel.value = state.source;
+  $('soft').value = state.soft;
+  $('hard').value = state.hard;
   $('sourceNote').textContent = data.note || '';
 }
 
 async function refresh() {
   const source = $('source').value;
+  const soft = $('soft').value;
+  const hard = $('hard').value;
   state.source = source;
+  state.soft = soft;
+  state.hard = hard;
   localStorage.setItem('discipline_source', source);
+  localStorage.setItem('discipline_soft', soft);
+  localStorage.setItem('discipline_hard', hard);
   const codes = $('codes').value.trim();
   const q = new URLSearchParams({ source, codes });
+  const dq = new URLSearchParams({ source, soft, hard });
 
   $('btnRefresh').disabled = true;
   try {
     const [lowBuy, boards, drawdown] = await Promise.all([
       api(`/api/discipline/low-buy?${q}`),
       api(`/api/discipline/boards?${q}`),
-      api(`/api/discipline/drawdown?source=${source}`),
+      api(`/api/discipline/drawdown?${dq}`),
     ]);
     renderLowBuy(lowBuy);
     renderBoards(boards);
     renderDrawdown(drawdown);
-    const used = [lowBuy.sourceLabel, boards.sourceLabel, drawdown.sourceLabel]
+    const used = [lowBuy.sourceLabel, boards.sourceLabel]
       .filter(Boolean)
       .filter((v, i, a) => a.indexOf(v) === i)
       .join(' / ');
@@ -188,6 +221,8 @@ function startAuto() {
 $('btnRefresh').addEventListener('click', refresh);
 $('btnShot').addEventListener('click', screenshot);
 $('source').addEventListener('change', refresh);
+$('soft').addEventListener('change', refresh);
+$('hard').addEventListener('change', refresh);
 $('codes').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') refresh();
 });

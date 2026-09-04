@@ -327,3 +327,14 @@ td.reason { white-space: normal; min-width: 180px; color: var(--muted); }
   .stat-bars, .split, .dd-cards { grid-template-columns: 1fr; }
   .brand h1 { font-size: 18px; }
 }
+
+.chip.clickable {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color .15s, background .15s;
+}
+.chip.clickable:hover {
+  border-color: #9bb0ff;
+  background: #f5f8ff;
+}
