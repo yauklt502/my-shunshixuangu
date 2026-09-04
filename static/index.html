@@ -10,15 +10,15 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root {
-      --bg0: #0c1014;
-      --ink: #e8e2d6;
-      --muted: #9aa3ad;
-      --line: rgba(232, 226, 214, 0.12);
-      --amber: #e8a54b;
-      --amber-soft: rgba(232, 165, 75, 0.16);
+      --bg0: #ffffff;
+      --bg1: #f7f8fa;
+      --ink: #1c2430;
+      --muted: #667085;
+      --line: rgba(28, 36, 48, 0.1);
+      --accent: #c45c26;
+      --accent-soft: rgba(196, 92, 38, 0.1);
       --rise: #d94a3d;
-      --card: rgba(20, 26, 33, 0.82);
-      --glow: rgba(232, 165, 75, 0.22);
+      --card: #ffffff;
       --serif: "Noto Serif SC", "Songti SC", serif;
       --sans: "Outfit", "PingFang SC", "Noto Sans SC", sans-serif;
     }
@@ -29,114 +29,234 @@
       color: var(--ink);
       font-family: var(--sans);
       background:
-        radial-gradient(1200px 600px at 12% -10%, rgba(232, 165, 75, 0.18), transparent 55%),
-        radial-gradient(900px 500px at 90% 0%, rgba(61, 120, 154, 0.18), transparent 50%),
-        linear-gradient(165deg, #0a0e12 0%, #121820 45%, #0c1014 100%);
+        linear-gradient(180deg, #ffffff 0%, #f5f7fa 55%, #ffffff 100%);
       background-attachment: fixed;
     }
-    .noise {
-      pointer-events: none; position: fixed; inset: 0; opacity: 0.04; z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
     }
-    .wrap { position: relative; z-index: 1; width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 2.2rem 0 4rem; }
     .hero {
-      min-height: min(58vh, 520px); display: grid; align-content: end; gap: 1rem;
-      padding: 2rem 0 2rem; border-bottom: 1px solid var(--line); animation: rise .8s ease both;
+      display: grid;
+      align-content: end;
+      gap: 1rem;
+      padding: 1.6rem 0 1.8rem;
+      border-bottom: 1px solid var(--line);
+      animation: rise .7s ease both;
     }
     .brand {
-      font-family: var(--serif); font-size: clamp(2.8rem, 8vw, 5.2rem); font-weight: 700;
-      letter-spacing: .04em; line-height: .95; margin: 0; text-shadow: 0 0 40px var(--glow);
+      font-family: var(--serif);
+      font-size: clamp(2.6rem, 7vw, 4.8rem);
+      font-weight: 700;
+      letter-spacing: .04em;
+      line-height: .95;
+      margin: 0;
+      color: var(--ink);
     }
     .brand span {
-      display: block; color: var(--amber); font-size: .28em; letter-spacing: .35em;
-      font-family: var(--sans); font-weight: 500; margin-bottom: .8rem;
+      display: block;
+      color: var(--accent);
+      font-size: .28em;
+      letter-spacing: .32em;
+      font-family: var(--sans);
+      font-weight: 500;
+      margin-bottom: .75rem;
     }
-    .lead { max-width: 36rem; font-size: 1.02rem; line-height: 1.65; color: var(--muted); margin: 0; }
+    .lead {
+      max-width: 38rem;
+      font-size: 1.02rem;
+      line-height: 1.65;
+      color: var(--muted);
+      margin: 0;
+    }
     .lead strong { color: var(--ink); font-weight: 600; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; margin-top: .5rem; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      align-items: center;
+      margin-top: .35rem;
+    }
     .pill {
-      display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .85rem;
-      border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); font-size: .85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .45rem .8rem;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: .85rem;
+      border-radius: 2px;
     }
-    .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 1.8s ease-in-out infinite; }
-    select, .btn {
-      border: 1px solid rgba(232,165,75,.45); background: var(--amber-soft); color: var(--amber);
-      font: inherit; font-weight: 600; padding: .55rem .9rem; cursor: pointer;
+    .dot {
+      width: .5rem; height: .5rem; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.8s ease-in-out infinite;
     }
-    select { color: var(--ink); background: rgba(20,26,33,.9); }
-    .btn:hover { background: rgba(232,165,75,.28); }
+    select, input[type="date"], .btn {
+      border: 1px solid rgba(196, 92, 38, 0.35);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 600;
+      padding: .5rem .8rem;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .btn {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .btn:hover { background: rgba(196, 92, 38, 0.18); }
     .btn:disabled { opacity: .5; cursor: wait; }
+    .btn.ghost { background: #fff; }
     .verdict {
-      margin-top: 1.4rem; padding: 1.15rem 1.3rem;
-      background: linear-gradient(120deg, rgba(232,165,75,.14), rgba(20,26,33,.5));
-      border-left: 3px solid var(--amber); animation: rise .9s .1s ease both;
+      margin-top: 1.2rem;
+      padding: 1.1rem 1.2rem;
+      background: linear-gradient(120deg, rgba(196, 92, 38, 0.08), #fff);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      animation: rise .8s .05s ease both;
     }
-    .verdict h2 { margin: 0 0 .4rem; font-family: var(--serif); font-size: 1.3rem; }
+    .verdict h2 {
+      margin: 0 0 .4rem;
+      font-family: var(--serif);
+      font-size: 1.28rem;
+      color: var(--ink);
+    }
     .verdict p { margin: 0; color: var(--muted); line-height: 1.55; font-size: .95rem; }
     .warn {
-      margin-top: .8rem; padding: .7rem .9rem; border: 1px dashed rgba(232,165,75,.35);
-      color: #e6c38a; font-size: .86rem; line-height: 1.45; display: none;
+      margin-top: .8rem;
+      padding: .7rem .9rem;
+      border: 1px dashed rgba(196, 92, 38, 0.35);
+      background: #fff8f3;
+      color: #8a4b22;
+      font-size: .86rem;
+      line-height: 1.45;
+      display: none;
     }
-    section { margin-top: 2.2rem; animation: rise .85s ease both; }
+    section { margin-top: 2.1rem; animation: rise .75s ease both; }
     .sec-h {
-      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
-      margin-bottom: 1rem; border-bottom: 1px solid var(--line); padding-bottom: .55rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: .55rem;
     }
-    .sec-h h3 { margin: 0; font-family: var(--serif); font-size: 1.3rem; }
+    .sec-h h3 { margin: 0; font-family: var(--serif); font-size: 1.28rem; }
     .sec-h p { margin: 0; color: var(--muted); font-size: .88rem; }
     .picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     @media (max-width: 760px) { .picks { grid-template-columns: 1fr; } }
-    .pick {
-      position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--line);
-      padding: 1.2rem 1.25rem 1.3rem; backdrop-filter: blur(8px);
+    .pick, .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 24px rgba(28, 36, 48, 0.04);
     }
-    .pick-rank { font-size: .75rem; letter-spacing: .18em; color: var(--amber); margin-bottom: .5rem; }
-    .pick-name { font-family: var(--serif); font-size: 1.8rem; margin: 0; line-height: 1.1; }
+    .pick { padding: 1.15rem 1.2rem 1.25rem; }
+    .pick-rank { font-size: .75rem; letter-spacing: .16em; color: var(--accent); margin-bottom: .5rem; }
+    .pick-name { font-family: var(--serif); font-size: 1.75rem; margin: 0; line-height: 1.1; }
     .pick-code { color: var(--muted); font-size: .9rem; margin-top: .25rem; }
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-top: 1rem; }
-    .metric { padding: .5rem .4rem; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: 1rem; }
+    .metric {
+      padding: .5rem .4rem;
+      background: var(--bg1);
+      border: 1px solid var(--line);
+    }
     .metric b { display: block; font-size: 1.02rem; }
     .metric span { color: var(--muted); font-size: .72rem; }
-    .note { margin-top: .9rem; color: var(--muted); font-size: .86rem; line-height: 1.5; }
+    .note { margin-top: .85rem; color: var(--muted); font-size: .86rem; line-height: 1.5; }
     .up { color: var(--rise); }
-    .tag { display: inline-block; margin-top: .65rem; font-size: .75rem; padding: .2rem .5rem; border: 1px solid rgba(232,165,75,.35); color: var(--amber); }
+    .tag {
+      display: inline-block;
+      margin-top: .6rem;
+      font-size: .75rem;
+      padding: .2rem .5rem;
+      border: 1px solid rgba(196, 92, 38, 0.3);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
     .anchors { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; }
     @media (max-width: 760px) { .anchors { grid-template-columns: 1fr; } }
-    .panel { background: var(--card); border: 1px solid var(--line); padding: 1.1rem 1.2rem; }
-    .panel h4 { margin: 0 0 .35rem; font-family: var(--serif); font-size: 1.12rem; }
+    .panel { padding: 1.05rem 1.15rem; }
+    .panel h4 { margin: 0 0 .35rem; font-family: var(--serif); font-size: 1.1rem; }
     .panel .sub { color: var(--muted); font-size: .85rem; margin-bottom: .85rem; }
-    .row { display: flex; justify-content: space-between; gap: .75rem; padding: .55rem 0; border-top: 1px solid var(--line); font-size: .92rem; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .55rem 0;
+      border-top: 1px solid var(--line);
+      font-size: .92rem;
+    }
     .row:first-of-type { border-top: 0; }
     .muted { color: var(--muted); }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    th, td { text-align: left; padding: .7rem .55rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
-    th { color: var(--muted); font-weight: 500; font-size: .78rem; }
-    .badge { display: inline-block; padding: .12rem .4rem; font-size: .72rem; border: 1px solid var(--line); color: var(--muted); }
-    .badge.yizi { color: #b8a58a; border-color: rgba(184,165,138,.35); }
-    .badge.ok { color: var(--amber); border-color: rgba(232,165,75,.4); }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; background: #fff; }
+    th, td {
+      text-align: left;
+      padding: .7rem .55rem;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    th { color: var(--muted); font-weight: 500; font-size: .78rem; background: var(--bg1); }
+    tr:hover td { background: #fafbfc; }
+    .badge {
+      display: inline-block;
+      padding: .12rem .4rem;
+      font-size: .72rem;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: #fff;
+    }
+    .badge.yizi { color: #8a7355; border-color: rgba(138, 115, 85, 0.35); }
+    .badge.ok { color: var(--accent); border-color: rgba(196, 92, 38, 0.35); }
     .rules { display: grid; gap: .55rem; color: var(--muted); font-size: .92rem; line-height: 1.55; }
-    .rules li::marker { color: var(--amber); }
-    .empty, .error { padding: 1.2rem; border: 1px dashed var(--line); color: var(--muted); }
-    .error { border-color: rgba(217,74,61,.4); color: #e8a9a3; }
-    .scroll { overflow-x: auto; }
-    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
-    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .rules li::marker { color: var(--accent); }
+    .empty, .error {
+      padding: 1.15rem;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      background: #fff;
+    }
+    .error { border-color: rgba(217, 74, 61, 0.35); color: #b42318; background: #fff5f5; }
+    .scroll { overflow-x: auto; border: 1px solid var(--line); background: #fff; }
+    footer {
+      margin-top: 2.8rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .35; }
+    }
   </style>
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
   <div class="wrap" id="captureRoot">
     <header class="hero">
       <h1 class="brand"><span>SHUNSHI · LEADER CONFIRM</span>顺势选股</h1>
       <p class="lead">
         只做<strong>龙头确认</strong>：一字买不进当高度锚；真龙头看竞价与封板。
-        支持东方财富 / 同花顺 / 通达信免费源切换，并支持一键截屏。
+        交易日可选手动复盘，支持多数据源与一键截屏。
       </p>
       <div class="toolbar">
         <div class="pill"><span class="dot"></span><span id="session">加载中</span></div>
-        <div class="pill" id="datePill">—</div>
         <div class="pill" id="statsPill">—</div>
+        <label class="pill" style="gap:.55rem">
+          交易日
+          <input id="dateInput" type="date" title="选择交易日复盘" />
+        </label>
+        <button class="btn ghost" id="todayBtn" type="button" title="回到今天">今天</button>
         <label class="pill" style="gap:.55rem">
           数据源
           <select id="sourceSelect" title="切换免费数据源">
@@ -208,6 +328,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const SOURCE_KEY = "shunshi_source";
+    const DATE_KEY = "shunshi_date";
     let timer = null;
 
     function fmt(v, d = 2) {
@@ -215,8 +336,31 @@
       return Number(v).toFixed(d);
     }
 
+    function todayISO() {
+      const n = new Date();
+      const y = n.getFullYear();
+      const m = String(n.getMonth() + 1).padStart(2, "0");
+      const d = String(n.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function isoToYmd(iso) {
+      return String(iso || "").replaceAll("-", "");
+    }
+
+    function ymdToIso(ymd) {
+      const s = String(ymd || "");
+      if (s.length !== 8) return todayISO();
+      return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+    }
+
     function currentSource() {
       return localStorage.getItem(SOURCE_KEY) || $("sourceSelect").value || "eastmoney";
+    }
+
+    function currentDateYmd() {
+      const iso = $("dateInput").value || todayISO();
+      return isoToYmd(iso);
     }
 
     function pickCard(c, i) {
@@ -241,17 +385,18 @@
     function render(data) {
       const s = data.session || {};
       const src = data.source_meta?.name || data.source || "—";
-      $("session").textContent = `${s.phase || "—"} · ${s.now || ""} · ${src}`;
-      $("datePill").textContent = `交易日 ${data.date}`;
+      $("session").textContent = `${s.phase || "—"} · ${src} · 复盘 ${data.date}`;
       const st = data.stats || {};
       $("statsPill").textContent = `涨停 ${st.zt_count || 0} · 非一字 ${st.non_yizi_count || 0} · 行情 ${st.quote_count || 0}`;
 
       if (data.source) $("sourceSelect").value = data.source;
+      if (data.date) $("dateInput").value = ymdToIso(data.date);
 
       const conf = data.confirm || {};
       $("verdictTitle").textContent = conf.verdict || data.error || "暂无确认结论";
       const tradable = conf.tradable_height;
       $("verdictSub").textContent = [
+        `交易日 ${data.date}`,
         conf.yizi_height_note || "",
         tradable ? `可交易高度：${tradable.name} ${tradable.boards}板` : "",
       ].filter(Boolean).join(" ｜ ") || (data.error || "");
@@ -269,7 +414,7 @@
       const picks = data.picks || [];
       $("picks").innerHTML = picks.length
         ? picks.map(pickCard).join("")
-        : `<div class="empty">暂无足够的非一字确认样本（可切换数据源后重试）</div>`;
+        : `<div class="empty">暂无足够的非一字确认样本（可换交易日或数据源后重试）</div>`;
 
       const height = conf.height_anchor;
       const yiziList = data.yizi_anchors || [];
@@ -323,14 +468,17 @@
       btn.disabled = true;
       try {
         const source = currentSource();
-        const res = await fetch(`/api/leader?source=${encodeURIComponent(source)}`, { cache: "no-store" });
+        const date = currentDateYmd();
+        localStorage.setItem(DATE_KEY, date);
+        const qs = new URLSearchParams({ source, date });
+        const res = await fetch(`/api/leader?${qs.toString()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         render(data);
       } catch (e) {
         $("verdictTitle").textContent = "数据拉取失败";
         $("verdictSub").textContent = String(e.message || e);
-        $("picks").innerHTML = `<div class="error">无法连接行情接口：${e.message || e}。可切换数据源后重试。</div>`;
+        $("picks").innerHTML = `<div class="error">无法连接行情接口：${e.message || e}。可切换交易日或数据源后重试。</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -343,13 +491,13 @@
       try {
         if (typeof html2canvas !== "function") throw new Error("截屏库未加载，检查网络");
         const canvas = await html2canvas($("captureRoot"), {
-          backgroundColor: "#0c1014",
+          backgroundColor: "#ffffff",
           scale: window.devicePixelRatio > 1 ? 2 : 1,
           useCORS: true,
           logging: false,
         });
         const a = document.createElement("a");
-        const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "");
+        const stamp = currentDateYmd() + "-" + new Date().toISOString().slice(11, 19).replaceAll(":", "");
         a.download = `shunshi-leader-${stamp}.png`;
         a.href = canvas.toDataURL("image/png");
         a.click();
@@ -361,15 +509,32 @@
       }
     }
 
+    // init date
+    const savedDate = localStorage.getItem(DATE_KEY);
+    $("dateInput").value = savedDate ? ymdToIso(savedDate) : todayISO();
+    $("dateInput").max = todayISO();
+
     $("sourceSelect").value = localStorage.getItem(SOURCE_KEY) || "eastmoney";
     $("sourceSelect").addEventListener("change", () => {
       localStorage.setItem(SOURCE_KEY, $("sourceSelect").value);
       load();
     });
+    $("dateInput").addEventListener("change", () => {
+      localStorage.setItem(DATE_KEY, currentDateYmd());
+      load();
+    });
+    $("todayBtn").addEventListener("click", () => {
+      $("dateInput").value = todayISO();
+      localStorage.setItem(DATE_KEY, currentDateYmd());
+      load();
+    });
     $("refreshBtn").addEventListener("click", load);
     $("shotBtn").addEventListener("click", screenshot);
     load();
-    timer = setInterval(load, 60_000);
+    timer = setInterval(() => {
+      // 仅“今天”自动刷新，复盘日不刷
+      if ($("dateInput").value === todayISO()) load();
+    }, 60_000);
   </script>
 </body>
 </html>
