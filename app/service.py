@@ -23,6 +23,7 @@ from auction_screener.rules import (
     turnover_pct,
     vol_over_free,
     vol_ratio,
+    wr100_ok,
 )
 from auction_screener.trajectory import (
     AuctionTick,
@@ -31,9 +32,6 @@ from auction_screener.trajectory import (
     score_trajectory,
 )
 
-# 回测胜率100%硬条件
-WR100_OPEN_LO = 3.0
-WR100_OPEN_HI = 5.0
 WR100_TOP_N = 3
 WR100_TP = 0.008
 
@@ -81,6 +79,9 @@ def enrich_from_trends(zt: dict[str, Any]) -> dict[str, Any] | None:
     open_pct = (open_px / prev - 1) * 100 if prev else 0.0
     amt_ratio = (today["amt"] / yest["amt"]) if yest["amt"] else 0.0
     mv_yi = ltsz / 1e8 if ltsz else 0.0
+    zttj = zt.get("zttj") or {}
+    if not isinstance(zttj, dict):
+        zttj = {}
     return {
         "code": code,
         "name": name,
@@ -89,6 +90,8 @@ def enrich_from_trends(zt: dict[str, Any]) -> dict[str, Any] | None:
         "zbc": int(zt.get("zbc") or 0),
         "fbt": int(zt.get("fbt") or 150000),
         "hs": float(zt.get("hs") or 0),
+        "zt_days": int(zttj.get("days") or 0),
+        "zt_ct": int(zttj.get("ct") or 0),
         "mv_yi": round(mv_yi, 2),
         "prev": round(prev, 3),
         "open": round(open_px, 3),
@@ -106,25 +109,6 @@ def enrich_from_trends(zt: dict[str, Any]) -> dict[str, Any] | None:
         "trade_date": auction["today"],
         "zt_date": auction["yesterday"],
     }
-
-
-def wr100_ok(row: dict[str, Any]) -> bool:
-    open_pct = float(row.get("open_pct") or 0)
-    if not (WR100_OPEN_LO < open_pct < WR100_OPEN_HI):
-        return False
-    lbc = int(row.get("lbc") or 1)
-    if not (1 <= lbc <= 4):
-        return False
-    if int(row.get("zbc") or 0) > 1:
-        return False
-    mv = float(row.get("mv_yi") or 0)
-    if mv > 0 and not (20 < mv < 150):
-        return False
-    if int(row.get("fbt") or 150000) > 100000:
-        return False
-    if row.get("is_auction_zt"):
-        return False
-    return True
 
 
 def wr100_select(rows: list[dict[str, Any]], top_n: int = WR100_TOP_N) -> dict[str, list[dict[str, Any]]]:
@@ -273,6 +257,9 @@ def _build_preopen_bases(pool: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "lbc": int(zt.get("lbc") or 0) or 1,
                 "zbc": int(zt.get("zbc") or 0),
                 "fbt": int(zt.get("fbt") or 150000),
+                "hs": float(zt.get("hs") or 0),
+                "zt_days": int((zt.get("zttj") or {}).get("days") or 0) if isinstance(zt.get("zttj"), dict) else 0,
+                "zt_ct": int((zt.get("zttj") or {}).get("ct") or 0) if isinstance(zt.get("zttj"), dict) else 0,
                 "mv_yi": round(ltsz / 1e8, 2) if ltsz else 0.0,
                 "prev": prev,
                 "free_float": free,
@@ -378,8 +365,8 @@ STRATEGIES = [
     },
     {
         "id": "wr100",
-        "name": "胜率100%",
-        "desc": "回测 36 笔全胜方案：涨幅3–5%，每天最多3只，开盘后 +0.8% 止盈",
+        "name": "胜率优先",
+        "desc": "复盘加强：昨换手≤10%，一进二优先；二板开盘须<3.7%。开盘后仍建议 +0.8% 止盈",
     },
     {
         "id": "baseline",

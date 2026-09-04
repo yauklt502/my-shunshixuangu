@@ -34,6 +34,14 @@ OPT_ZBC_MAX = 1
 OPT_MV_YI_MIN = 20.0
 OPT_MV_YI_MAX = 150.0
 OPT_TOP_N = 5
+# 2026-09-04 复盘：金帝股份昨换手12.8%+二板偏高开 → 冲板回落；海量数据一进二低换手更健康
+OPT_YEST_HS_MAX = 10.0
+WR100_OPEN_LO = 3.0
+WR100_OPEN_HI = 4.5
+WR100_OPEN_HI_LBC2 = 3.7
+WR100_YEST_HS_MAX = 10.0
+WR100_LBC_MAX = 2
+WR100_TOP_N = 3
 
 
 def is_st(name: str) -> bool:
@@ -111,7 +119,7 @@ def numeric_ok(row: dict[str, Any]) -> bool:
 
 
 def optimized_numeric_ok(row: dict[str, Any]) -> bool:
-    """连板优化硬过滤：收紧无效上限，补高度/炸板/市值。"""
+    """连板优化硬过滤：收紧无效上限，补高度/炸板/市值/昨换手。"""
     vol = float(row.get("auction_shares") or 0)
     if not (OPT_VOL_MIN < vol < OPT_VOL_MAX):
         return False
@@ -135,6 +143,36 @@ def optimized_numeric_ok(row: dict[str, Any]) -> bool:
         return False
     mv = float(row.get("mv_yi") or 0)
     if mv > 0 and not (OPT_MV_YI_MIN < mv < OPT_MV_YI_MAX):
+        return False
+    hs = float(row.get("hs") or 0)
+    if hs > OPT_YEST_HS_MAX:
+        return False
+    # 二板及以上：避免偏高开诱多（金帝 2板+3.95% 冲板回落）
+    if lbc >= 2 and open_pct >= 3.8:
+        return False
+    return True
+
+
+def wr100_ok(row: dict[str, Any]) -> bool:
+    """胜率方案 v2（2026-09-04 复盘后）。"""
+    if row.get("is_auction_zt"):
+        return False
+    open_pct = float(row.get("open_pct") or 0)
+    lbc = int(row.get("lbc") or 1)
+    if not (1 <= lbc <= WR100_LBC_MAX):
+        return False
+    hi = WR100_OPEN_HI_LBC2 if lbc >= 2 else WR100_OPEN_HI
+    if not (WR100_OPEN_LO < open_pct < hi):
+        return False
+    if int(row.get("zbc") or 0) > 1:
+        return False
+    mv = float(row.get("mv_yi") or 0)
+    if mv > 0 and not (20 < mv < 150):
+        return False
+    if int(row.get("fbt") or 150000) > 100000:
+        return False
+    hs = float(row.get("hs") or 0)
+    if hs > WR100_YEST_HS_MAX:
         return False
     return True
 
@@ -205,17 +243,41 @@ def score_lianban(row: dict[str, Any], plate_counts: dict[str, int] | None = Non
         reasons.append(f"换手偏高{turnover:.3f}%")
 
     if lbc == 1:
-        score += 10
-        reasons.append("一进二")
+        score += 14
+        reasons.append("一进二优先")
     elif lbc == 2:
-        score += 12
-        reasons.append("二进三")
+        score += 4
+        reasons.append("二进三谨慎")
+        if open_pct >= 3.8:
+            score -= 16
+            reasons.append("二板偏高开易冲回落")
     elif lbc == 3:
-        score += 8
-        reasons.append("三进四")
+        score += 1
+        reasons.append("三进四高风险")
     elif lbc == 4:
+        score -= 4
+        reasons.append("四进五降权")
+
+    hs = float(row.get("hs") or 0)
+    if 2.5 <= hs <= 8:
+        score += 10
+        reasons.append(f"昨换手健康{hs:.1f}%")
+    elif 8 < hs <= 10:
+        score += 2
+        reasons.append(f"昨换手偏高{hs:.1f}%")
+    elif hs > 10:
+        score -= 14
+        reasons.append(f"昨换手过大{hs:.1f}%")
+    elif 0 < hs < 2.5:
         score += 3
-        reasons.append("四进五谨慎")
+        reasons.append(f"昨换手偏低{hs:.1f}%")
+
+    # 断板再连：近N日涨停次数 < 天数（如 4日3板）
+    zt_days = int(row.get("zt_days") or 0)
+    zt_ct = int(row.get("zt_ct") or 0)
+    if zt_days >= 3 and zt_ct > 0 and zt_ct < zt_days:
+        score -= 8
+        reasons.append(f"断板再连{zt_days}日{zt_ct}板")
 
     if zbc == 0:
         score += 10

@@ -9,7 +9,9 @@ from auction_screener.rules import (
     sequential_select,
     turnover_pct,
     vol_ratio,
+    wr100_ok,
 )
+from app.service import wr100_select
 from auction_screener.trajectory import (
     AuctionTick,
     TrajectoryState,
@@ -56,6 +58,7 @@ def _row(**kwargs):
         "zbc": 0,
         "fbt": 93000,
         "mv_yi": 50.0,
+        "hs": 5.0,
         "hy": "银行",
     }
     base.update(kwargs)
@@ -81,7 +84,56 @@ def test_optimized_tightens_useless_caps():
     assert not optimized_numeric_ok(_row(vol_ratio=12, amt_ratio=1.2, open_pct=3.0, turnover=0.1))
     assert not optimized_numeric_ok(_row(lbc=6, open_pct=3.0))
     assert not optimized_numeric_ok(_row(zbc=3, open_pct=3.0))
+    assert not optimized_numeric_ok(_row(open_pct=3.0, hs=12.8))  # 金帝类昨换手
+    assert not optimized_numeric_ok(_row(open_pct=3.95, lbc=2, hs=5.0))  # 二板偏高开
     assert optimized_numeric_ok(_row(open_pct=3.0, vol_ratio=12, amt_ratio=1.5, turnover=0.6))
+
+
+def test_review_20260904_jindi_vs_hailiang():
+    """金帝冲板回落应剔除；海量一进二应保留且分更高。"""
+    from auction_screener.rules import wr100_ok
+    from app.service import wr100_select
+
+    jindi = _row(
+        code="603270",
+        name="金帝股份",
+        open_pct=3.95,
+        lbc=2,
+        zbc=0,
+        fbt=93351,
+        hs=12.77,
+        mv_yi=24.7,
+        zt_days=4,
+        zt_ct=3,
+        hy="通用设备",
+        vol_ratio=12,
+        amt_ratio=1.5,
+        turnover=0.6,
+    )
+    hailiang = _row(
+        code="603138",
+        name="海量数据",
+        open_pct=3.45,
+        lbc=1,
+        zbc=1,
+        fbt=93226,
+        hs=3.35,
+        mv_yi=41.8,
+        zt_days=1,
+        zt_ct=1,
+        hy="IT服务Ⅱ",
+        vol_ratio=12,
+        amt_ratio=1.5,
+        turnover=0.6,
+    )
+    assert not wr100_ok(jindi)
+    assert not optimized_numeric_ok(jindi)
+    assert wr100_ok(hailiang)
+    out = wr100_select([jindi, hailiang], top_n=3)
+    assert [r["name"] for r in out["top5"]] == ["海量数据"]
+    sj, _ = score_lianban(jindi)
+    sh, _ = score_lianban(hailiang)
+    assert sh > sj
 
 
 def test_sequential_top8_then_filters_then_top5():
@@ -111,8 +163,8 @@ def test_sequential_top8_then_filters_then_top5():
 
 def test_optimized_select_ranks_by_score():
     rows = [
-        _row(code="000001", name="弱板", open_pct=1.8, fbt=145000, zbc=1, lbc=1, vol_over_free=0.02, hy="A"),
-        _row(code="000002", name="强板", open_pct=3.5, fbt=93000, zbc=0, lbc=2, vol_over_free=0.015, hy="A"),
+        _row(code="000001", name="弱板", open_pct=1.8, fbt=145000, zbc=1, lbc=1, vol_over_free=0.02, hy="A", hs=5),
+        _row(code="000002", name="强板", open_pct=3.5, fbt=93000, zbc=0, lbc=1, vol_over_free=0.015, hy="A", hs=4),
         _row(code="000003", name="巨量", open_pct=3.0, vol_ratio=40, amt_ratio=10, vol_over_free=0.05, hy="A"),
         _row(code="300001", name="创业", open_pct=3.5, vol_over_free=0.09, hy="A"),
     ]

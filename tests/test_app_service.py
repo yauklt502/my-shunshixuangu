@@ -1,4 +1,5 @@
-from app.service import auction_phase, wr100_ok, wr100_select
+from auction_screener.rules import wr100_ok
+from app.service import auction_phase, wr100_select
 
 
 def test_auction_phase_keys():
@@ -20,6 +21,7 @@ def test_wr100_select():
             "zbc": 0,
             "fbt": 93000,
             "mv_yi": 50,
+            "hs": 4.0,
             "hy": "银行",
             "vol_over_free": 0.01,
             "auction_shares": 2_000_000,
