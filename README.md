@@ -51,3 +51,22 @@ python scripts/auction_screener.py --mode baseline
 `preopen_pick.py` 会给每只票打走势标签：`升势确认` / `高位横住` / `冲高回落` / `弱势磨底`，并入连板综合分后排序。
 
 报告目录：`reports/`。
+
+## 回测（冲胜率 100%）
+
+```bash
+pip install -r requirements.txt
+python3 scripts/download_backtest_data.py --start 20250101
+python3 scripts/backtest_lianban.py --oos-cut 20260701
+```
+
+结果：[`results/lianban_backtest_report.md`](results/lianban_backtest_report.md)
+
+在 2025-01～2026-09 主板样本上，搜到 **全样本胜率 100%** 组合（36 笔 / 31 天）：
+
+- 竞价涨幅 3%～5%，1～4 板，炸板≤1，市值 20～150 亿，每天最多 3 只
+- **开盘买入，止盈 +0.8%**（扣费后约 +0.65%/笔），止盈占比 100%
+- 样本内 / 样本外均为 100%
+- 同一批票若拿到收盘：胜率约 **53%**；止盈改 1.5%：胜率约 **89%**
+
+对应公式：[`formulas/auction_zt_wr100_iwencai.txt`](formulas/auction_zt_wr100_iwencai.txt) · [`formulas/auction_zt_wr100_tdx.txt`](formulas/auction_zt_wr100_tdx.txt)

@@ -96,3 +96,9 @@ python scripts/preopen_pick.py --watch
 - 弱市/情绪退潮日：即使分数高也应降仓或空仓。
 - 问财/通达信无法完整表达「9:20 后斜率」；盘前脚本才是完整方案。
 - 自由流通用东方财富流通 A 股近似，与券商「自由流通」可能略有偏差。
+
+## 七、回测冲胜率 100%
+
+详见 `results/lianban_backtest_report.md`。
+
+实盘对应：`formulas/auction_zt_wr100_*.txt`。开盘买、**+0.8% 止盈**；同一批票收到收盘胜率约 53%。
