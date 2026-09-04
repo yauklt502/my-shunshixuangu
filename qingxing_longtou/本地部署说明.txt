@@ -4,7 +4,8 @@
 
 【系统要求】
   - Windows 10/11（推荐，通达信/同花顺同机使用）
-  - Python 3.10 / 3.11 / 3.12 / 3.13（64位）
+  - Python 3.11 或 3.12（64位，离线包已内置对应 wheels）
+    也可用 3.10 / 3.13，此时安装脚本会自动改走联网 pip
     下载：https://www.python.org/downloads/
     安装时务必勾选 “Add python.exe to PATH”
 
