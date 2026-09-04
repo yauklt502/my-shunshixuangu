@@ -1,0 +1,11 @@
+解压后请按顺序双击：
+
+  1) 00_先点我_CHECK.bat     ← 检查有没有 Python
+  2) 02_安装依赖_INSTALL.bat
+  3) 01_启动_START.bat
+
+如果提示找不到 python：
+  - 安装 Python 3.11/3.12，勾选 Add to PATH
+  - 关闭：设置→应用→应用执行别名→python.exe
+
+完整说明见：本地部署说明.txt
