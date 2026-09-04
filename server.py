@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from strategy.engine import (
@@ -81,6 +81,27 @@ async def health():
 @app.get("/api/sources")
 async def sources():
     return {"sources": list(SOURCES.values()), "default": "eastmoney"}
+
+
+def recent_trading_dates(n: int = 60) -> list[dict]:
+    """近 N 个交易日（跳过周末；不含法定节假日精确表，复盘够用）。"""
+    out: list[dict] = []
+    day = datetime.now(CN).date()
+    while len(out) < n:
+        if day.weekday() < 5:  # Mon-Fri
+            ymd = day.strftime("%Y%m%d")
+            label = day.strftime("%Y-%m-%d")
+            week = "一二三四五六日"[day.weekday()]
+            out.append({"date": ymd, "label": f"{label} 周{week}"})
+        day -= timedelta(days=1)
+    return out
+
+
+@app.get("/api/dates")
+async def dates(limit: int = Query(default=60, ge=5, le=120)):
+    items = recent_trading_dates(limit)
+    today = trading_date()
+    return {"dates": items, "today": today, "default": items[0]["date"] if items else today}
 
 
 @app.get("/api/leader")
@@ -192,7 +213,20 @@ def _strategy_block() -> dict:
 
 @app.get("/")
 async def index():
-    return FileResponse(STATIC / "index.html")
+    # 禁止缓存，避免本地仍看到旧版黑底页面
+    return FileResponse(
+        STATIC / "index.html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return Response(status_code=204)
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
