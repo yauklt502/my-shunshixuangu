@@ -116,6 +116,9 @@ body {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 .btn:hover { background: var(--soft); }
 .btn.primary {

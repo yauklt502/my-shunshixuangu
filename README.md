@@ -10,7 +10,21 @@
 4. 数据源切换：东方财富 / 同花顺 / 通达信兼容（腾讯）
 5. 一键截图（白底 PNG）
 
-## 本地启动
+## Windows 本地完整包（推荐）
+
+下载：
+
+https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
+
+解压后双击 `启动.bat`（或 `一键部署到本地.bat` / `一键部署到E盘.bat`）。
+
+重新打包：
+
+```bash
+npm run pack:local
+```
+
+## 本地启动（开发）
 
 ```bash
 npm install

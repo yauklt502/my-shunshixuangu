@@ -1,0 +1,40 @@
+三条纪律看板 · 本地完整包
+================================
+
+一、下载（任选一个链接）
+
+1) GitHub 直链（推荐）
+   https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
+
+2) GitHub 页面下载
+   https://github.com/yauklt502/my-shunshixuangu/blob/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
+   打开后点右上角 Download / 下载 原始文件
+
+二、安装运行（Windows）
+
+1. 解压 zip
+2. 双击「启动.bat」
+   - 首次会自动 npm install
+   - 浏览器打开 http://127.0.0.1:5177/
+
+可选：
+- 双击「一键部署到本地.bat」→ 安装到 %USERPROFILE%\三条纪律看板
+- 双击「一键部署到E盘.bat」→ 安装到 E:\三条纪律看板（无 E 盘则回退到用户目录）
+
+三、环境要求
+
+- 已安装 Node.js 18+（https://nodejs.org/ ，勾选 Add to PATH）
+- 能访问外网（拉取东方财富 / 同花顺 / 腾讯免费行情）
+
+四、使用说明
+
+- 右上角切换数据源：东方财富 / 同花顺 / 通达信兼容（腾讯）
+- ① 低吸纪律：看日内位置 + MA5
+- ② 二三板节奏：看涨停梯队；点击股票可加入观察
+- ③ 回撤别动：看指数距近高回撤；可调软/硬冻结阈值
+- 「一键截图」导出白底 PNG
+
+五、注意
+
+- 不要直接双击 web\index.html（必须通过启动.bat 起本地服务）
+- 仅供纪律可视化学习，不构成投资建议

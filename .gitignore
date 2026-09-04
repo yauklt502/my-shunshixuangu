@@ -1,4 +1,5 @@
 node_modules/
+.pack-node-modules/
 .DS_Store
 *.log
 .env
