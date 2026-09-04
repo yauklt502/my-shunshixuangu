@@ -63,6 +63,7 @@ python cli.py --source tdx --limit 10
 
 1. 下载发布包 `qingxing_longtou_windows_portable.zip` 并解压
 2. 安装 [Python 3.11/3.12 x64](https://www.python.org/downloads/)，勾选 Add to PATH
-3. 双击 `安装依赖.bat`，再双击 `启动选股.bat`
+3. 若双击没反应：先跑 `CHECK.bat`，并关闭系统设置里 python 的「应用执行别名」
+4. 双击 `INSTALL.bat`，再双击 **`START.bat`**（推荐英文入口）
 
 离线依赖位于包内 `wheels_win/`（适配 Python 3.11 / 3.12）。详见 `本地部署说明.txt`。

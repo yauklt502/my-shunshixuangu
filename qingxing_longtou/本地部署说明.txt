@@ -1,49 +1,38 @@
 ================================================================================
-  清醒龙头战法 · 选股软件 —— 本地部署说明
+  清醒龙头战法 · 选股软件 —— 本地部署说明（请先看这里）
 ================================================================================
 
-【系统要求】
-  - Windows 10/11（推荐，通达信/同花顺同机使用）
-  - Python 3.11 或 3.12（64位，离线包已内置对应 wheels）
-    也可用 3.10 / 3.13，此时安装脚本会自动改走联网 pip
-    下载：https://www.python.org/downloads/
-    安装时务必勾选 “Add python.exe to PATH”
+【若双击启动没反应】请按这个顺序排查：
 
-【一键安装（推荐）】
-  1. 解压本压缩包到任意目录，例如 D:\qingxing_longtou
-  2. 双击运行：安装依赖.bat
-  3. 双击运行：启动选股.bat
+  1. 双击运行：CHECK.bat（或「诊断环境.bat」）
+     - 看有没有找到 Python
+     - 若弹出微软应用商店，说明没装真 Python
 
-【手动安装】
-  cd 到本目录后执行：
-    python -m pip install --no-index --find-links=wheels_win -r requirements.txt
-  若离线包不匹配你的 Python 版本，可联网安装：
-    python -m pip install -r requirements.txt
-  然后：
-    python run.py
+  2. 安装 Python 3.11 或 3.12（64位）
+     https://www.python.org/downloads/
+     ★ 必须勾选：Add python.exe to PATH
+     ★ 安装后关闭所有黑窗口，重新打开文件夹
+
+  3. 关掉 Windows「应用执行别名」里的假 python：
+     设置 → 应用 → 高级应用设置 → 应用执行别名
+     把 python.exe / python3.exe 开关关掉
+
+  4. 双击：INSTALL.bat（安装依赖）
+  5. 双击：START.bat（启动软件）← 推荐用这个英文名
+
+  6. 若仍失败：打开同目录 start_log.txt，把内容发给开发者
+
+【正常安装步骤】
+  1. 解压本压缩包
+  2. INSTALL.bat
+  3. START.bat
 
 【功能】
-  - 刷新选股：按「交易的清醒」龙头框架打分（聚焦/观察/回避）
+  - 刷新选股 / 一键截屏 / 导出 CSV
   - 数据源：东方财富（默认）/ 同花顺 / 通达信
-  - 一键截屏：保存到 screenshots\ 目录
-  - 导出 CSV
 
-【同花顺】
-  - 在线：复制 .env.example 为 .env，填写 FUYAO_API_KEY
-  - 离线：把导出 CSV 放到 plugins\ths_export\（见该目录 README）
+【同花顺】复制 .env.example 为 .env，填写 FUYAO_API_KEY
+【通达信】导出 CSV 放到 plugins\tdx\export\
 
-【通达信】
-  - 把插件/公式导出的 CSV 放到 plugins\tdx\export\
-  - 或在 .env 中设置 TDX_HOME=你的通达信安装目录
-  - 或设置 TDX_PLUGIN_URL=本地插件 HTTP 地址
-  样例数据已在 plugins\tdx\export\，可先选数据源 tdx 试跑
-
-【命令行】
-  python cli.py --source auto --limit 20
-  python cli.py --source tdx
-  python cli.py --status
-
-【免责声明】
-  本软件仅供学习研究，不构成任何投资建议。
-
+【免责声明】学习研究用途，不构成投资建议。
 ================================================================================
