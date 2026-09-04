@@ -398,6 +398,7 @@
       const height = conf.height_anchor;
       const yiziList = data.yizi_anchors || [];
       const failed = data.failed || [];
+      const failedHigh = (data.confirm || {}).failed_high || [];
       $("anchors").innerHTML = `
         <div class="panel">
           <h4>高度锚（含一字）</h4>
@@ -412,12 +413,12 @@
           `).join("")}
         </div>
         <div class="panel">
-          <h4>掉队对照</h4>
-          <div class="sub">竞价弱 / 未晋级，用来反证龙头</div>
-          ${failed.length ? failed.slice(0, 6).map(f => `
+          <h4>晋级失败对照</h4>
+          <div class="sub">高位未晋级，用来反证真龙头</div>
+          ${(failedHigh.length ? failedHigh : failed.slice(0, 6)).length ? (failedHigh.length ? failedHigh : failed.slice(0, 6)).map(f => `
             <div class="row">
               <span>${f.name}</span>
-              <span class="muted">竞价 ${fmt(f.open_pct)}% · 现 ${fmt(f.change_pct)}%</span>
+              <span class="muted">昨${f.prev_boards}板 · 现 ${fmt(f.change_pct)}%</span>
             </div>`).join("") : `<div class="empty">暂无掉队样本</div>`}
         </div>`;
 

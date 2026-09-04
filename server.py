@@ -112,6 +112,10 @@ async def leader(
     d = trading_date(date)
     session = market_session()
     warnings: list[str] = []
+    today = trading_date()
+    historical = d != today
+    if historical:
+        warnings.append(f"复盘模式 {d}：竞价改用首封时间估算，避免实时行情串日")
 
     try:
         market = await load_market(source, d)
@@ -124,7 +128,7 @@ async def leader(
                 "session": session,
                 "source": source,
                 "error": f"数据源不可用：{e}",
-                "warnings": [str(e)],
+                "warnings": warnings + [str(e)],
                 "picks": [],
                 "candidates": [],
                 "ladder": [],
@@ -136,6 +140,7 @@ async def leader(
                     "tradable_height": None,
                     "height_anchor": None,
                     "confirmed_picks": [],
+                    "failed_high": [],
                 },
                 "stats": {
                     "zt_count": 0,
@@ -151,10 +156,16 @@ async def leader(
     yesterday = market["yesterday"]
     today_zt = market["today_zt"]
     zb = market["zb"]
-    quotes = market["quotes"]
+    quotes = market["quotes"] if not historical else {}
     warnings.extend(market.get("warnings") or [])
 
-    candidates = build_candidates(yesterday, today_zt, quotes, min_prev_boards=2)
+    candidates = build_candidates(
+        yesterday,
+        today_zt,
+        quotes,
+        min_prev_boards=1,
+        historical=historical,
+    )
     picks = pick_confirmed_leaders(candidates, n=2)
     ladder = build_ladder(today_zt)
     summary = confirm_summary(candidates, ladder, picks)
@@ -172,6 +183,7 @@ async def leader(
         "session": session,
         "source": market["source"],
         "source_meta": market["source_meta"],
+        "historical": historical,
         "warnings": warnings,
         "strategy": _strategy_block(),
         "confirm": summary,
@@ -199,15 +211,16 @@ def _strategy_block() -> dict:
             "以昨日连板股为池，排除一字伪高度，用竞价涨幅、炸板次数、封单厚度"
             "确认今日可交易龙头；主输出最可能完成确认的两只非一字。"
         ),
-        "rules": [
-            "一字板：只记高度结构，不进可交易确认榜（买不进）",
-            "候选池：昨连板 ≥ 2，剔除 ST",
-            "龙头确认优先看竞价：理想高开约 4%～9.5%",
-            "二次过滤：早封、零炸板、封单厚、真实换手 3%～18%",
-            "高度龙若竞价弱/多次炸板 → 高度在，龙头不稳",
-            "主输出：综合得分最高的 2 只非一字确认标的",
-            "数据源可切换：东方财富 / 同花顺 / 通达信(腾讯免费行情)",
-        ],
+            "rules": [
+                "一字板：只记高度结构，不进可交易确认榜（买不进）",
+                "确认榜只从今日成功封板晋级的非一字中选",
+                "高度优先：有 3 板及以上时，不再让弱 2 板抢龙头名分",
+                "封板质量次之：早封、少炸板、封单厚度",
+                "竞价为辅：复盘日用首封时间估竞价，避免实时行情串日",
+                "晋级失败高位股只作对照，不进确认榜",
+                "主输出：综合得分最高的 2 只非一字真龙头",
+                "数据源可切换：东方财富 / 同花顺 / 通达信(腾讯免费行情)",
+            ],
     }
 
 
