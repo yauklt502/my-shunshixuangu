@@ -1,0 +1,19 @@
+顺势选股 · 龙头确认 — 本地部署
+
+【Windows】
+1. 下载最新包并解压到新文件夹
+2. 双击 start.bat
+3. 看到 Uvicorn running on http://127.0.0.1:8654 后
+4. 浏览器打开 http://127.0.0.1:8654
+5. 黑窗口必须一直开着
+
+【若页面提示行情失败 / HTTP 500】
+- 页面顶部切换数据源：东方财富 / 同花顺 / 通达信
+- 再点「刷新确认」
+- 程序已忽略系统代理（常见掉线原因）
+
+【截屏】
+点击「一键截屏」保存当前龙头确认页 PNG
+
+下载：
+https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/realtime-leader-stock-picker-89c3.zip
