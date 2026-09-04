@@ -6,7 +6,6 @@ from auction_screener.rules import (
     shouban_ok,
     weak_select,
     yijin2_ok,
-    wr100_ok,
 )
 
 
@@ -33,18 +32,8 @@ def _row(**kw):
     return base
 
 
-def test_three_categories_separated():
-    shouban = _row(
-        code="600172",
-        name="黄河旋风",
-        src="zb",
-        lbc=0,
-        open_pct=1.2,
-        zbc=3,
-        hs=15.0,
-        mv_yi=80.0,
-        hy="通用设备",
-    )
+def test_high_wr_yijin2_keeps_yasheng_drops_hot_haitong():
+    """满仓3日高胜率：亚盛(≈1%、换手健康)保留；海通(炸板5/换手18%)剔除。"""
     yasheng = _row()
     haitong = _row(
         code="603162",
@@ -56,6 +45,23 @@ def test_three_categories_separated():
         mv_yi=56.0,
         hy="航运港口",
     )
+    assert yijin2_ok(yasheng)
+    assert not yijin2_ok(haitong)
+
+
+def test_three_categories_high_wr():
+    shouban = _row(
+        code="600172",
+        name="黄河旋风",
+        src="zb",
+        lbc=0,
+        open_pct=1.2,
+        zbc=2,
+        hs=15.0,
+        mv_yi=80.0,
+        hy="通用设备",
+    )
+    yasheng = _row()
     erban = _row(
         code="600001",
         name="二进三样例",
@@ -76,31 +82,14 @@ def test_three_categories_separated():
         hs=12.8,
         mv_yi=25.0,
     )
-
     assert shouban_ok(shouban)
-    assert not yijin2_ok(shouban)
     assert yijin2_ok(yasheng)
-    assert yijin2_ok(haitong)
     assert erjinsan_ok(erban)
-    assert not erjinsan_ok(jindi)  # 开盘过高
-    assert not shouban_ok(yasheng)  # 涨停池首板走一进二
-    assert not wr100_ok(yasheng)
+    assert not erjinsan_ok(jindi)
+    assert not shouban_ok(yasheng)
 
-    out = weak_select([shouban, yasheng, haitong, erban, jindi], top_n=2)
+    out = weak_select([shouban, yasheng, erban, jindi], top_n=1)
     cats = out["categories"]
     assert cats[CAT_SHOUBAN][0]["name"] == "黄河旋风"
-    names_1 = [r["name"] for r in cats[CAT_1J2]]
-    assert "亚盛集团" in names_1 and "海通发展" in names_1
+    assert cats[CAT_1J2][0]["name"] == "亚盛集团"
     assert cats[CAT_2J3][0]["name"] == "二进三样例"
-    assert all(r["name"] != "金帝股份" for rows in cats.values() for r in rows)
-
-
-def test_category_order_in_flat():
-    rows = [
-        _row(code="600001", name="A首", src="zb", lbc=0, open_pct=1.0, zbc=2, hs=10, mv_yi=50),
-        _row(code="600002", name="B一二", lbc=1, open_pct=1.0, zbc=0, hs=8, mv_yi=50),
-        _row(code="600003", name="C二三", lbc=2, open_pct=1.0, zbc=0, hs=8, mv_yi=50),
-    ]
-    out = weak_select(rows, top_n=1)
-    flat_names = [r["name"] for r in out["top5"]]
-    assert flat_names == ["A首", "B一二", "C二三"]

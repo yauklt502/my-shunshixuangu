@@ -44,26 +44,35 @@ WR100_LBC_MAX = 2
 WR100_TOP_N = 3
 
 # ---------- 竞价弱转强（9:30前，少而精，三类分开）----------
-# 2026-09-04：亚盛+1.01%、海通发展+0.98% 均一进二成功；旧公式要求高开>1.5%/3% 把它们误杀。
-# 可买成功票多为微高开/平开，一字高开不可买故不做。
-# 三类：首板（昨炸板→今打首板）、一进二（昨1板）、二进三（昨2板）
-WEAK_OPEN_LO = -2.0
-WEAK_OPEN_HI = 2.5
-WEAK_OPEN_HI_2J3 = 2.2  # 二进三更严，避开金帝式偏高开
+# 回测（仓位干满、持股3日收盘卖，2024-12～2026-09）：
+#   一进二最优约 WR 73%~78%（开盘0.5~1.5、炸板≤1、换手≤16、每天1只）
+#   二进三最优约 WR 75%（开盘0~2.2、炸板≤1、换手≤8、每天1只）
+#   首板 3 日满仓难超约 51%，仅作观察，不作为高胜率主仓
+# 可买成功票多为微高开；一字高开不可买故不做。
+WEAK_OPEN_LO_1J2 = 0.5
+WEAK_OPEN_HI_1J2 = 1.5
+WEAK_OPEN_LO_2J3 = 0.0
+WEAK_OPEN_HI_2J3 = 2.2
+WEAK_OPEN_LO_SB = 0.5
+WEAK_OPEN_HI_SB = 1.5
 WEAK_FBT_MAX = 103000
-WEAK_ZBC_MAX_1J2 = 5
-WEAK_ZBC_MAX_2J3 = 2
-WEAK_HS_MAX_1J2 = 22.0
-WEAK_HS_MAX_2J3 = 12.0
-WEAK_HS_MAX_SB = 25.0
+WEAK_ZBC_MAX_1J2 = 1
+WEAK_ZBC_MAX_2J3 = 1
+WEAK_ZBC_MAX_SB = 2
+WEAK_HS_MAX_1J2 = 16.0
+WEAK_HS_MAX_2J3 = 8.0
+WEAK_HS_MAX_SB = 16.0
 WEAK_MV_LO = 20.0
 WEAK_MV_HI = 120.0
-WEAK_TOP_PER_CAT = 2
+WEAK_MV_LO_TIGHT = 25.0
+WEAK_MV_HI_TIGHT = 100.0
+WEAK_TOP_PER_CAT = 1
 WEAK_TP = 0.015
+WEAK_HOLD_DAYS = 3
 
-# 兼容旧名
-YIJIN2_OPEN_LO = WEAK_OPEN_LO
-YIJIN2_OPEN_HI = WEAK_OPEN_HI
+# 兼容旧名（一进二带）
+YIJIN2_OPEN_LO = WEAK_OPEN_LO_1J2
+YIJIN2_OPEN_HI = WEAK_OPEN_HI_1J2
 YIJIN2_FBT_MAX = WEAK_FBT_MAX
 YIJIN2_ZBC_MAX = WEAK_ZBC_MAX_1J2
 YIJIN2_HS_MAX = WEAK_HS_MAX_1J2
@@ -211,11 +220,21 @@ def wr100_ok(row: dict[str, Any]) -> bool:
     return True
 
 
-def _weak_common_ok(row: dict[str, Any], *, open_hi: float, hs_max: float, zbc_max: int, need_fbt: bool) -> bool:
+def _weak_common_ok(
+    row: dict[str, Any],
+    *,
+    open_lo: float,
+    open_hi: float,
+    hs_max: float,
+    zbc_max: int,
+    need_fbt: bool,
+    mv_lo: float = WEAK_MV_LO,
+    mv_hi: float = WEAK_MV_HI,
+) -> bool:
     if row.get("is_auction_zt"):
         return False
     open_pct = float(row.get("open_pct") or 0)
-    if not (WEAK_OPEN_LO < open_pct < open_hi):
+    if not (open_lo < open_pct < open_hi):
         return False
     if need_fbt and int(row.get("fbt") or 150000) > WEAK_FBT_MAX:
         return False
@@ -224,13 +243,13 @@ def _weak_common_ok(row: dict[str, Any], *, open_hi: float, hs_max: float, zbc_m
     if float(row.get("hs") or 0) > hs_max:
         return False
     mv = float(row.get("mv_yi") or 0)
-    if mv > 0 and not (WEAK_MV_LO < mv < WEAK_MV_HI):
+    if mv > 0 and not (mv_lo < mv < mv_hi):
         return False
     return True
 
 
 def shouban_ok(row: dict[str, Any]) -> bool:
-    """首板弱转强：昨炸板/未封死，今开可买微高开，打今日首板。"""
+    """首板弱转强：昨炸板；3日满仓胜率约五成，仅作观察仓。"""
     src = str(row.get("src") or "")
     if src == "zt":
         return False
@@ -238,22 +257,26 @@ def shouban_ok(row: dict[str, Any]) -> bool:
         return False
     return _weak_common_ok(
         row,
-        open_hi=WEAK_OPEN_HI,
+        open_lo=WEAK_OPEN_LO_SB,
+        open_hi=WEAK_OPEN_HI_SB,
         hs_max=WEAK_HS_MAX_SB,
-        zbc_max=8,
+        zbc_max=WEAK_ZBC_MAX_SB,
         need_fbt=False,
+        mv_lo=WEAK_MV_LO_TIGHT,
+        mv_hi=WEAK_MV_HI_TIGHT,
     )
 
 
 def yijin2_ok(row: dict[str, Any]) -> bool:
-    """一进二弱转强：昨首板(lbc=1)、今开可买、微高开/小低开。"""
+    """一进二弱转强：回测满仓3日高胜率带（开盘约0.5~1.5%）。"""
     if int(row.get("lbc") or 0) != 1:
         return False
     if str(row.get("src") or "") == "zb":
         return False
     return _weak_common_ok(
         row,
-        open_hi=WEAK_OPEN_HI,
+        open_lo=WEAK_OPEN_LO_1J2,
+        open_hi=WEAK_OPEN_HI_1J2,
         hs_max=WEAK_HS_MAX_1J2,
         zbc_max=WEAK_ZBC_MAX_1J2,
         need_fbt=True,
@@ -261,17 +284,20 @@ def yijin2_ok(row: dict[str, Any]) -> bool:
 
 
 def erjinsan_ok(row: dict[str, Any]) -> bool:
-    """二进三弱转强：昨2板、今开更严（避开偏高开冲板回落）。"""
+    """二进三弱转强：回测满仓3日高胜率带。"""
     if int(row.get("lbc") or 0) != 2:
         return False
     if str(row.get("src") or "") == "zb":
         return False
     return _weak_common_ok(
         row,
+        open_lo=WEAK_OPEN_LO_2J3,
         open_hi=WEAK_OPEN_HI_2J3,
         hs_max=WEAK_HS_MAX_2J3,
         zbc_max=WEAK_ZBC_MAX_2J3,
         need_fbt=True,
+        mv_lo=WEAK_MV_LO_TIGHT,
+        mv_hi=WEAK_MV_HI_TIGHT,
     )
 
 
