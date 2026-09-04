@@ -1,15 +1,20 @@
 from auction_screener.rules import (
+    CAT_1J2,
+    CAT_2J3,
+    CAT_SHOUBAN,
+    erjinsan_ok,
+    shouban_ok,
+    weak_select,
     yijin2_ok,
-    yijin2_select,
-    score_yijin2,
     wr100_ok,
 )
 
 
-def _ashare(**kw):
+def _row(**kw):
     base = {
         "code": "600108",
         "name": "亚盛集团",
+        "src": "zt",
         "is_auction_zt": False,
         "open_pct": 1.01,
         "lbc": 1,
@@ -28,9 +33,20 @@ def _ashare(**kw):
     return base
 
 
-def test_yijin2_catches_yasheng_and_haitong():
-    yasheng = _ashare()
-    haitong = _ashare(
+def test_three_categories_separated():
+    shouban = _row(
+        code="600172",
+        name="黄河旋风",
+        src="zb",
+        lbc=0,
+        open_pct=1.2,
+        zbc=3,
+        hs=15.0,
+        mv_yi=80.0,
+        hy="通用设备",
+    )
+    yasheng = _row()
+    haitong = _row(
         code="603162",
         name="海通发展",
         open_pct=0.98,
@@ -40,7 +56,18 @@ def test_yijin2_catches_yasheng_and_haitong():
         mv_yi=56.0,
         hy="航运港口",
     )
-    jindi = _ashare(
+    erban = _row(
+        code="600001",
+        name="二进三样例",
+        lbc=2,
+        open_pct=1.1,
+        zbc=0,
+        fbt=93100,
+        hs=6.0,
+        mv_yi=40.0,
+        hy="示例",
+    )
+    jindi = _row(
         code="603270",
         name="金帝股份",
         open_pct=3.95,
@@ -49,25 +76,31 @@ def test_yijin2_catches_yasheng_and_haitong():
         hs=12.8,
         mv_yi=25.0,
     )
-    hailiang = _ashare(
-        code="603138",
-        name="海量数据",
-        open_pct=3.45,
-        lbc=1,
-        zbc=1,
-        hs=3.35,
-        mv_yi=42.0,
-    )
+
+    assert shouban_ok(shouban)
+    assert not yijin2_ok(shouban)
     assert yijin2_ok(yasheng)
     assert yijin2_ok(haitong)
-    assert not yijin2_ok(jindi)  # 二板偏高开，非弱转强
-    assert not yijin2_ok(hailiang)  # 开盘 3.45% 超出弱转强上限
-    assert not wr100_ok(yasheng)  # 旧高开方案故意选不中微高开
+    assert erjinsan_ok(erban)
+    assert not erjinsan_ok(jindi)  # 开盘过高
+    assert not shouban_ok(yasheng)  # 涨停池首板走一进二
+    assert not wr100_ok(yasheng)
 
-    out = yijin2_select([yasheng, haitong, jindi, hailiang], top_n=2)
-    names = [r["name"] for r in out["top5"]]
-    assert "亚盛集团" in names
-    assert "海通发展" in names
-    assert "金帝股份" not in names
-    # 亚盛换手更健康，分应不低于海通
-    assert score_yijin2(yasheng)[0] >= score_yijin2(haitong)[0]
+    out = weak_select([shouban, yasheng, haitong, erban, jindi], top_n=2)
+    cats = out["categories"]
+    assert cats[CAT_SHOUBAN][0]["name"] == "黄河旋风"
+    names_1 = [r["name"] for r in cats[CAT_1J2]]
+    assert "亚盛集团" in names_1 and "海通发展" in names_1
+    assert cats[CAT_2J3][0]["name"] == "二进三样例"
+    assert all(r["name"] != "金帝股份" for rows in cats.values() for r in rows)
+
+
+def test_category_order_in_flat():
+    rows = [
+        _row(code="600001", name="A首", src="zb", lbc=0, open_pct=1.0, zbc=2, hs=10, mv_yi=50),
+        _row(code="600002", name="B一二", lbc=1, open_pct=1.0, zbc=0, hs=8, mv_yi=50),
+        _row(code="600003", name="C二三", lbc=2, open_pct=1.0, zbc=0, hs=8, mv_yi=50),
+    ]
+    out = weak_select(rows, top_n=1)
+    flat_names = [r["name"] for r in out["top5"]]
+    assert flat_names == ["A首", "B一二", "C二三"]

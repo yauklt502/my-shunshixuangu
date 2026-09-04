@@ -74,9 +74,9 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/last":
                 return self._json(200, {"ok": True, "result": _last_scan or None})
             if path == "/api/scan":
-                mode = (q.get("mode") or ["yijin2"])[0]
+                mode = (q.get("mode") or ["weak"])[0]
                 top = int((q.get("top") or ["5"])[0])
-                if mode not in ("optimized", "wr100", "baseline", "yijin2"):
+                if mode not in ("optimized", "wr100", "baseline", "yijin2", "weak"):
                     return self._json(400, {"ok": False, "error": "bad mode"})
                 if not _scan_lock.acquire(blocking=False):
                     return self._json(409, {"ok": False, "error": "扫描进行中，请稍候"})
@@ -88,9 +88,9 @@ class Handler(SimpleHTTPRequestHandler):
                 finally:
                     _scan_lock.release()
             if path == "/api/preopen":
-                mode = (q.get("mode") or ["yijin2"])[0]
+                mode = (q.get("mode") or ["weak"])[0]
                 top = int((q.get("top") or ["5"])[0])
-                if mode not in ("optimized", "wr100", "baseline", "yijin2"):
+                if mode not in ("optimized", "wr100", "baseline", "yijin2", "weak"):
                     return self._json(400, {"ok": False, "error": "bad mode"})
                 if not _scan_lock.acquire(blocking=False):
                     return self._json(409, {"ok": False, "error": "扫描进行中，请稍候"})

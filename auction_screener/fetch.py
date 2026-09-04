@@ -21,6 +21,12 @@ ZT_URL = (
     "?ut=7eea3edcaed734bea9cbfc24409ed989&dpt=wz.ztzt"
     "&Pageindex=0&pagesize=200&sort=lbc:desc&date={date}"
 )
+# 昨日炸板：次日常做「首板弱转强」候选
+ZB_URL = (
+    "https://push2ex.eastmoney.com/getTopicZBPool"
+    "?ut=7eea3edcaed734bea9cbfc24409ed989&dpt=wz.ztzt"
+    "&Pageindex=0&pagesize=200&sort=amount:desc&date={date}"
+)
 SNAP_URL = (
     "https://push2.eastmoney.com/api/qt/stock/get"
     "?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b"
@@ -93,20 +99,29 @@ def sina_prefix(code: str) -> str:
     return "sz" + code
 
 
-def latest_zt_date(now: datetime | None = None) -> tuple[str, list[dict[str, Any]]]:
+def _latest_pool(url_tpl: str, now: datetime | None = None) -> tuple[str, list[dict[str, Any]]]:
     now = now or datetime.now(CST)
     last_err: Exception | None = None
     for i in range(1, 12):
         day = yyyymmdd(now - timedelta(days=i))
         try:
-            data = http_json(ZT_URL.format(date=day))
+            data = http_json(url_tpl.format(date=day))
         except Exception as exc:  # noqa: BLE001
             last_err = exc
             continue
         pool = (data.get("data") or {}).get("pool") or []
         if pool:
             return day, pool
-    raise RuntimeError(f"no zt pool in last 11 days: {last_err}")
+    raise RuntimeError(f"no pool in last 11 days: {last_err}")
+
+
+def latest_zt_date(now: datetime | None = None) -> tuple[str, list[dict[str, Any]]]:
+    return _latest_pool(ZT_URL, now)
+
+
+def latest_zb_date(now: datetime | None = None) -> tuple[str, list[dict[str, Any]]]:
+    """昨日炸板池（未封死涨停）。用于首板弱转强候选。"""
+    return _latest_pool(ZB_URL, now)
 
 
 def parse_trend_bar(bar: str) -> dict[str, float]:

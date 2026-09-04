@@ -43,18 +43,39 @@ WR100_YEST_HS_MAX = 10.0
 WR100_LBC_MAX = 2
 WR100_TOP_N = 3
 
-# ---------- 一进二弱转强（9:30前高胜率，少而精）----------
+# ---------- 竞价弱转强（9:30前，少而精，三类分开）----------
 # 2026-09-04：亚盛+1.01%、海通发展+0.98% 均一进二成功；旧公式要求高开>1.5%/3% 把它们误杀。
 # 可买成功票多为微高开/平开，一字高开不可买故不做。
-YIJIN2_OPEN_LO = -2.0
-YIJIN2_OPEN_HI = 2.5
-YIJIN2_FBT_MAX = 103000
-YIJIN2_ZBC_MAX = 5
-YIJIN2_HS_MAX = 22.0
-YIJIN2_MV_LO = 20.0
-YIJIN2_MV_HI = 120.0
-YIJIN2_TOP_N = 2
-YIJIN2_TP = 0.015
+# 三类：首板（昨炸板→今打首板）、一进二（昨1板）、二进三（昨2板）
+WEAK_OPEN_LO = -2.0
+WEAK_OPEN_HI = 2.5
+WEAK_OPEN_HI_2J3 = 2.2  # 二进三更严，避开金帝式偏高开
+WEAK_FBT_MAX = 103000
+WEAK_ZBC_MAX_1J2 = 5
+WEAK_ZBC_MAX_2J3 = 2
+WEAK_HS_MAX_1J2 = 22.0
+WEAK_HS_MAX_2J3 = 12.0
+WEAK_HS_MAX_SB = 25.0
+WEAK_MV_LO = 20.0
+WEAK_MV_HI = 120.0
+WEAK_TOP_PER_CAT = 2
+WEAK_TP = 0.015
+
+# 兼容旧名
+YIJIN2_OPEN_LO = WEAK_OPEN_LO
+YIJIN2_OPEN_HI = WEAK_OPEN_HI
+YIJIN2_FBT_MAX = WEAK_FBT_MAX
+YIJIN2_ZBC_MAX = WEAK_ZBC_MAX_1J2
+YIJIN2_HS_MAX = WEAK_HS_MAX_1J2
+YIJIN2_MV_LO = WEAK_MV_LO
+YIJIN2_MV_HI = WEAK_MV_HI
+YIJIN2_TOP_N = WEAK_TOP_PER_CAT
+YIJIN2_TP = WEAK_TP
+
+CAT_SHOUBAN = "首板"
+CAT_1J2 = "一进二"
+CAT_2J3 = "二进三"
+CATEGORY_ORDER = (CAT_SHOUBAN, CAT_1J2, CAT_2J3)
 
 
 def is_st(name: str) -> bool:
@@ -190,30 +211,72 @@ def wr100_ok(row: dict[str, Any]) -> bool:
     return True
 
 
-def yijin2_ok(row: dict[str, Any]) -> bool:
-    """一进二弱转强：只做昨首板、今开可买、微高开/小低开。"""
+def _weak_common_ok(row: dict[str, Any], *, open_hi: float, hs_max: float, zbc_max: int, need_fbt: bool) -> bool:
     if row.get("is_auction_zt"):
         return False
-    if int(row.get("lbc") or 0) != 1:
-        return False
     open_pct = float(row.get("open_pct") or 0)
-    if not (YIJIN2_OPEN_LO < open_pct < YIJIN2_OPEN_HI):
+    if not (WEAK_OPEN_LO < open_pct < open_hi):
         return False
-    if int(row.get("fbt") or 150000) > YIJIN2_FBT_MAX:
+    if need_fbt and int(row.get("fbt") or 150000) > WEAK_FBT_MAX:
         return False
-    if int(row.get("zbc") or 0) > YIJIN2_ZBC_MAX:
+    if int(row.get("zbc") or 0) > zbc_max:
         return False
-    hs = float(row.get("hs") or 0)
-    if hs > YIJIN2_HS_MAX:
+    if float(row.get("hs") or 0) > hs_max:
         return False
     mv = float(row.get("mv_yi") or 0)
-    if mv > 0 and not (YIJIN2_MV_LO < mv < YIJIN2_MV_HI):
+    if mv > 0 and not (WEAK_MV_LO < mv < WEAK_MV_HI):
         return False
     return True
 
 
-def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None) -> tuple[float, list[str]]:
-    """弱转强评分：越接近「微高开+早封+换手不过热」越高。"""
+def shouban_ok(row: dict[str, Any]) -> bool:
+    """首板弱转强：昨炸板/未封死，今开可买微高开，打今日首板。"""
+    src = str(row.get("src") or "")
+    if src == "zt":
+        return False
+    if src not in ("zb", "shouban") and int(row.get("lbc") or 0) >= 1:
+        return False
+    return _weak_common_ok(
+        row,
+        open_hi=WEAK_OPEN_HI,
+        hs_max=WEAK_HS_MAX_SB,
+        zbc_max=8,
+        need_fbt=False,
+    )
+
+
+def yijin2_ok(row: dict[str, Any]) -> bool:
+    """一进二弱转强：昨首板(lbc=1)、今开可买、微高开/小低开。"""
+    if int(row.get("lbc") or 0) != 1:
+        return False
+    if str(row.get("src") or "") == "zb":
+        return False
+    return _weak_common_ok(
+        row,
+        open_hi=WEAK_OPEN_HI,
+        hs_max=WEAK_HS_MAX_1J2,
+        zbc_max=WEAK_ZBC_MAX_1J2,
+        need_fbt=True,
+    )
+
+
+def erjinsan_ok(row: dict[str, Any]) -> bool:
+    """二进三弱转强：昨2板、今开更严（避开偏高开冲板回落）。"""
+    if int(row.get("lbc") or 0) != 2:
+        return False
+    if str(row.get("src") or "") == "zb":
+        return False
+    return _weak_common_ok(
+        row,
+        open_hi=WEAK_OPEN_HI_2J3,
+        hs_max=WEAK_HS_MAX_2J3,
+        zbc_max=WEAK_ZBC_MAX_2J3,
+        need_fbt=True,
+    )
+
+
+def score_weak(row: dict[str, Any], plate_counts: dict[str, int] | None = None) -> tuple[float, list[str]]:
+    """弱转强评分：越接近「微高开+早封/回封预期+换手不过热」越高。"""
     score = 0.0
     reasons: list[str] = []
     open_pct = float(row.get("open_pct") or 0)
@@ -223,8 +286,8 @@ def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None
     hy = str(row.get("hy") or "")
     traj = float(row.get("traj_score") or 0)
     traj_label = str(row.get("traj_label") or "")
+    cat = str(row.get("category") or "")
 
-    # 开盘：0~2% 最佳（亚盛/海通≈1%）；小低开次之；接近 2.5% 降权
     if 0.3 <= open_pct <= 2.0:
         score += 36
         reasons.append(f"弱转强开盘{open_pct:.2f}%")
@@ -244,28 +307,43 @@ def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None
         score += 4
         reasons.append(f"开盘边缘{open_pct:.2f}%")
 
-    if fbt <= 93030:
-        score += 16
-        reasons.append("昨秒板")
-    elif fbt <= 100000:
-        score += 12
-        reasons.append("昨早盘封")
-    elif fbt <= 103000:
-        score += 6
-        reasons.append("昨午前封")
-
-    if zbc == 0:
-        score += 12
-        reasons.append("昨未开板")
-    elif zbc == 1:
-        score += 8
-        reasons.append("昨开板1次")
-    elif zbc <= 3:
-        score += 2
-        reasons.append(f"昨开板{zbc}次尚可")
+    if cat == CAT_SHOUBAN:
+        # 炸板回封：昨开板次数适中反而说明有承接
+        if 1 <= zbc <= 3:
+            score += 10
+            reasons.append(f"昨炸板开{zbc}次")
+        elif zbc == 0:
+            score += 4
+            reasons.append("昨近板未炸")
+        else:
+            score -= 4
+            reasons.append(f"昨反复开{zbc}次")
+        if fbt and fbt <= 103000:
+            score += 6
+            reasons.append("昨曾早触及涨停")
     else:
-        score -= 6
-        reasons.append(f"昨烂板开{zbc}次")
+        if fbt <= 93030:
+            score += 16
+            reasons.append("昨秒板")
+        elif fbt <= 100000:
+            score += 12
+            reasons.append("昨早盘封")
+        elif fbt <= 103000:
+            score += 6
+            reasons.append("昨午前封")
+
+        if zbc == 0:
+            score += 12
+            reasons.append("昨未开板")
+        elif zbc == 1:
+            score += 8
+            reasons.append("昨开板1次")
+        elif zbc <= 3:
+            score += 2
+            reasons.append(f"昨开板{zbc}次尚可")
+        else:
+            score -= 6
+            reasons.append(f"昨烂板开{zbc}次")
 
     if 3 <= hs <= 11:
         score += 14
@@ -288,7 +366,6 @@ def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None
         score -= 1
 
     if traj_label:
-        # 弱开后 9:20 抬升最加分
         score += traj
         reasons.append(f"走势:{traj_label}({traj:+.0f})")
         if traj_label == "升势确认" and open_pct < 2.0:
@@ -300,7 +377,23 @@ def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None
     return score, reasons
 
 
-def yijin2_select(rows: Iterable[dict[str, Any]], *, top_n: int = YIJIN2_TOP_N) -> dict[str, list[dict[str, Any]]]:
+score_yijin2 = score_weak  # 兼容旧测试/导入
+
+
+def _rank_weak(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(
+        items,
+        key=lambda r: (float(r.get("score") or 0), -abs(float(r.get("open_pct") or 0) - 1.0)),
+        reverse=True,
+    )
+
+
+def weak_select(
+    rows: Iterable[dict[str, Any]],
+    *,
+    top_n: int = WEAK_TOP_PER_CAT,
+) -> dict[str, Any]:
+    """竞价弱转强：首板 / 一进二 / 二进三 分类筛选。"""
     universe: list[dict[str, Any]] = []
     for row in rows:
         code = str(row.get("code") or "")
@@ -314,27 +407,53 @@ def yijin2_select(rows: Iterable[dict[str, Any]], *, top_n: int = YIJIN2_TOP_N) 
         universe.append(row)
 
     plate_counts = Counter(str(r.get("hy") or "") for r in universe if r.get("hy"))
-    passed: list[dict[str, Any]] = []
-    for row in universe:
-        if not yijin2_ok(row):
-            continue
-        sc, reasons = score_yijin2(row, plate_counts)
-        item = dict(row)
-        item["score"] = round(sc, 2)
-        item["reasons"] = reasons + [f"止盈建议+{YIJIN2_TP * 100:.1f}%"]
-        item["tp_hint"] = YIJIN2_TP
-        passed.append(item)
+    buckets: dict[str, list[dict[str, Any]]] = {c: [] for c in CATEGORY_ORDER}
 
-    ranked = sorted(
-        passed,
-        key=lambda r: (float(r.get("score") or 0), -abs(float(r.get("open_pct") or 0) - 1.0)),
-        reverse=True,
-    )
+    for row in universe:
+        cat = ""
+        if shouban_ok(row):
+            cat = CAT_SHOUBAN
+        elif yijin2_ok(row):
+            cat = CAT_1J2
+        elif erjinsan_ok(row):
+            cat = CAT_2J3
+        else:
+            continue
+        item = dict(row)
+        item["category"] = cat
+        sc, reasons = score_weak(item, plate_counts)
+        item["score"] = round(sc, 2)
+        item["reasons"] = [cat] + reasons + [f"止盈建议+{WEAK_TP * 100:.1f}%"]
+        item["tp_hint"] = WEAK_TP
+        buckets[cat].append(item)
+
+    categories: dict[str, list[dict[str, Any]]] = {}
+    flat: list[dict[str, Any]] = []
+    for cat in CATEGORY_ORDER:
+        ranked = _rank_weak(buckets[cat])[:top_n]
+        categories[cat] = ranked
+        flat.extend(ranked)
+
     return {
         "universe": universe,
+        "categories": categories,
+        "after_numeric": flat,
+        "top5": flat,
+        "top8": flat,
+    }
+
+
+def yijin2_select(rows: Iterable[dict[str, Any]], *, top_n: int = YIJIN2_TOP_N) -> dict[str, Any]:
+    """兼容：仅一进二（旧接口）。新逻辑请用 weak_select。"""
+    only = [r for r in rows if int(r.get("lbc") or 0) == 1 and str(r.get("src") or "") != "zb"]
+    out = weak_select(only, top_n=top_n)
+    ranked = out["categories"].get(CAT_1J2, [])
+    return {
+        "universe": out["universe"],
         "after_numeric": ranked,
         "top5": ranked[:top_n],
         "top8": ranked[: max(8, top_n)],
+        "categories": {CAT_1J2: ranked[:top_n]},
     }
 
 

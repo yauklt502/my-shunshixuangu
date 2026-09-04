@@ -1,7 +1,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const state = {
-    mode: "yijin2",
+    mode: "weak",
     result: null,
     watching: false,
     timer: null,
@@ -61,54 +61,89 @@
     return `<span class="${cls}">${label}</span>`;
   }
 
+  function catClass(name) {
+    if (name === "首板") return "cat-shouban";
+    if (name === "一进二") return "cat-1j2";
+    if (name === "二进三") return "cat-2j3";
+    return "";
+  }
+
+  function pickCard(r, i, catName) {
+    const why = (r.reasons || []).slice(0, 4).join("；");
+    const tp = r.tp_hint ? ` · 止盈+${(r.tp_hint * 100).toFixed(1)}%` : "";
+    const badge = catName || r.category || "";
+    return `<article class="pick ${catClass(badge)}">
+      <div class="rank">${badge ? badge + " · " : ""}#${i + 1}${tp}</div>
+      <h4>${r.name || ""}<span>${r.code || ""}</span></h4>
+      <div class="pct">${Number(r.open_pct || 0).toFixed(2)}%</div>
+      <dl>
+        <div><dt>高度</dt><dd>${r.lbc ?? "-"}板</dd></div>
+        <div><dt>分数</dt><dd>${r.score ?? "-"}</dd></div>
+        <div><dt>竞价量</dt><dd>${r.auction_wan ?? ((r.auction_shares || 0) / 1e4).toFixed(0)}万</dd></div>
+        <div><dt>量比</dt><dd>${Number(r.vol_ratio || 0).toFixed(1)}</dd></div>
+        <div><dt>换手</dt><dd>${Number(r.turnover || 0).toFixed(3)}%</dd></div>
+        <div><dt>金额比</dt><dd>${Number(r.amt_ratio || 0).toFixed(2)}</dd></div>
+      </dl>
+      <div class="why">${why || r.traj_label || ""}</div>
+    </article>`;
+  }
+
   function renderResult(data) {
     state.result = data;
     $("resultTitle").textContent = data.title || "扫描结果";
-    $("resultSub").textContent = `${data.generated_at || ""} · 昨涨停 ${data.zt_date || "-"} · ${data.tip || ""}`;
-    $("statTop").textContent = String((data.top || []).length);
+    $("resultSub").textContent = `${data.generated_at || ""} · 昨涨停 ${data.zt_date || "-"}${
+      data.zb_date ? " · 昨炸板 " + data.zb_date : ""
+    } · ${data.tip || ""}`;
+    const cats = data.categories || [];
+    const topFlat = cats.length
+      ? cats.flatMap((c) => c.items || [])
+      : data.top || [];
+    $("statTop").textContent = String(topFlat.length);
     $("statMain").textContent = String(data.main_n || 0);
     $("statFetched").textContent = String(data.fetched || data.quoted || 0);
     $("tipBox").textContent = data.tip || "";
     $("meta").innerHTML = `策略 <strong>${data.mode}</strong> · 耗时 <strong>${data.elapsed_sec ?? "-"}</strong>s · 错误 ${data.errors_n ?? 0}`;
 
     const cards = $("cards");
-    const top = data.top || [];
-    if (!top.length) {
-      cards.innerHTML = `<div class="empty">过滤后无标的。可换策略，或等 9:25 后再扫。</div>`;
-    } else {
-      cards.innerHTML = top
-        .map((r, i) => {
-          const why = (r.reasons || []).slice(0, 4).join("；");
-          const tp = r.tp_hint ? ` · 止盈+${(r.tp_hint * 100).toFixed(1)}%` : "";
-          return `<article class="pick">
-            <div class="rank">TOP ${i + 1}${tp}</div>
-            <h4>${r.name || ""}<span>${r.code || ""}</span></h4>
-            <div class="pct">${Number(r.open_pct || 0).toFixed(2)}%</div>
-            <dl>
-              <div><dt>高度</dt><dd>${r.lbc ?? "-"}板</dd></div>
-              <div><dt>分数</dt><dd>${r.score ?? "-"}</dd></div>
-              <div><dt>竞价量</dt><dd>${r.auction_wan ?? ((r.auction_shares || 0) / 1e4).toFixed(0)}万</dd></div>
-              <div><dt>量比</dt><dd>${Number(r.vol_ratio || 0).toFixed(1)}</dd></div>
-              <div><dt>换手</dt><dd>${Number(r.turnover || 0).toFixed(3)}%</dd></div>
-              <div><dt>金额比</dt><dd>${Number(r.amt_ratio || 0).toFixed(2)}</dd></div>
-            </dl>
-            <div class="why">${why || r.traj_label || ""}</div>
-          </article>`;
+    if (cats.length) {
+      const blocks = cats
+        .map((cat) => {
+          const items = cat.items || [];
+          const body = items.length
+            ? `<div class="cards-inner">${items.map((r, i) => pickCard(r, i, cat.name)).join("")}</div>`
+            : `<div class="empty slim">本类暂无标的</div>`;
+          return `<section class="cat-block ${catClass(cat.name)}">
+            <header class="cat-head">
+              <h4>${cat.name}</h4>
+              <span class="cat-count">${items.length} 只</span>
+            </header>
+            ${body}
+          </section>`;
         })
         .join("");
+      cards.innerHTML = blocks || `<div class="empty">过滤后无标的。</div>`;
+    } else {
+      const top = data.top || [];
+      if (!top.length) {
+        cards.innerHTML = `<div class="empty">过滤后无标的。可换策略，或等 9:25 后再扫。</div>`;
+      } else {
+        cards.innerHTML = `<div class="cards-inner">${top.map((r, i) => pickCard(r, i)).join("")}</div>`;
+      }
     }
 
-    const rows = (data.pool && data.pool.length ? data.pool : top) || [];
+    const rows = (data.pool && data.pool.length ? data.pool : topFlat) || [];
     const tb = $("tbody");
     if (!rows.length) {
-      tb.innerHTML = `<tr><td colspan="12" class="empty">暂无数据</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="13" class="empty">暂无数据</td></tr>`;
       return;
     }
     tb.innerHTML = rows
       .map((r, i) => {
         const wan = r.auction_wan ?? ((r.auction_shares || 0) / 1e4);
+        const cat = r.category || "";
         return `<tr>
           <td>${i + 1}</td>
+          <td>${cat ? `<span class="tag ${catClass(cat)}">${cat}</span>` : "-"}</td>
           <td class="mono">${r.code || ""}</td>
           <td>${r.name || ""}</td>
           <td class="up mono">${Number(r.open_pct || 0).toFixed(2)}%</td>
@@ -136,11 +171,12 @@
   }
 
   async function runScan() {
-    setBusy(true, "正在拉取昨涨停与竞价…约需几十秒");
+    setBusy(true, "正在拉取昨涨停/炸板与竞价…约需几十秒");
     try {
-      const data = await api(`/api/scan?mode=${encodeURIComponent(state.mode)}&top=5`);
+      const data = await api(`/api/scan?mode=${encodeURIComponent(state.mode)}&top=2`);
       renderResult(data);
-      toast(`完成：${(data.top || []).length} 只`);
+      const n = (data.categories || []).reduce((s, c) => s + (c.count || 0), 0) || (data.top || []).length;
+      toast(`完成：共 ${n} 只（已分类）`);
     } catch (e) {
       toast(String(e.message || e));
     } finally {
@@ -149,11 +185,12 @@
   }
 
   async function runPreopen() {
-    setBusy(true, "盘前快照…首次会缓存昨涨停池");
+    setBusy(true, "盘前快照…首次会缓存底池");
     try {
-      const data = await api(`/api/preopen?mode=${encodeURIComponent(state.mode)}&top=5`);
+      const data = await api(`/api/preopen?mode=${encodeURIComponent(state.mode)}&top=2`);
       renderResult(data);
-      toast(`盘前：${(data.top || []).length} 只 · ${data.phase?.tip || ""}`);
+      const n = (data.categories || []).reduce((s, c) => s + (c.count || 0), 0) || (data.top || []).length;
+      toast(`盘前：${n} 只 · ${data.phase?.tip || ""}`);
     } catch (e) {
       toast(String(e.message || e));
     } finally {

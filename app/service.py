@@ -1,4 +1,4 @@
-"""选股服务：三种策略扫描 + 盘前快照。"""
+"""选股服务：弱转强（首板/一进二/二进三）+ 其他策略 + 盘前快照。"""
 
 from __future__ import annotations
 
@@ -12,9 +12,12 @@ from auction_screener.fetch import (
     auction_from_trends,
     fetch_live_quotes,
     fetch_trends,
+    latest_zb_date,
     latest_zt_date,
 )
 from auction_screener.rules import (
+    CATEGORY_ORDER,
+    WEAK_TOP_PER_CAT,
     is_auction_limit_up,
     is_main_board,
     optimized_select,
@@ -23,6 +26,7 @@ from auction_screener.rules import (
     turnover_pct,
     vol_over_free,
     vol_ratio,
+    weak_select,
     wr100_ok,
     yijin2_select,
 )
@@ -35,6 +39,7 @@ from auction_screener.trajectory import (
 
 WR100_TOP_N = 3
 WR100_TP = 0.008
+WEAK_MODES = ("weak", "yijin2")
 
 
 def now_hhmmss(now: datetime | None = None) -> int:
@@ -64,7 +69,7 @@ def zt_prev_close(zt: dict[str, Any]) -> float:
     return p
 
 
-def enrich_from_trends(zt: dict[str, Any]) -> dict[str, Any] | None:
+def enrich_from_trends(zt: dict[str, Any], *, src: str = "zt") -> dict[str, Any] | None:
     code, name = zt["c"], zt["n"]
     payload = fetch_trends(code, ndays=5)
     auction = auction_from_trends(payload)
@@ -83,11 +88,17 @@ def enrich_from_trends(zt: dict[str, Any]) -> dict[str, Any] | None:
     zttj = zt.get("zttj") or {}
     if not isinstance(zttj, dict):
         zttj = {}
+    # 炸板池无 lbc；首板候选记 0
+    if src == "zb":
+        lbc = 0
+    else:
+        lbc = int(zt.get("lbc") or 0) or 1
     return {
         "code": code,
         "name": name,
+        "src": src,
         "hy": zt.get("hybk") or "",
-        "lbc": int(zt.get("lbc") or 0) or 1,
+        "lbc": lbc,
         "zbc": int(zt.get("zbc") or 0),
         "fbt": int(zt.get("fbt") or 150000),
         "hs": float(zt.get("hs") or 0),
@@ -149,6 +160,7 @@ def _public_row(r: dict[str, Any]) -> dict[str, Any]:
         "code", "name", "hy", "lbc", "zbc", "fbt", "mv_yi", "open", "prev", "open_pct",
         "auction_shares", "vol_ratio", "amt_ratio", "turnover", "vol_over_free",
         "score", "reasons", "traj_label", "traj_score", "tp_hint", "is_auction_zt",
+        "category", "src",
     )
     out = {k: r.get(k) for k in keys if k in r}
     if out.get("auction_shares") is not None:
@@ -156,135 +168,223 @@ def _public_row(r: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def scan_pool(
-    mode: str = "optimized",
+def _categories_public(picked: dict[str, Any]) -> list[dict[str, Any]]:
+    cats = picked.get("categories") or {}
+    out = []
+    for name in CATEGORY_ORDER:
+        rows = [_public_row(r) for r in cats.get(name, [])]
+        out.append({"id": name, "name": name, "count": len(rows), "items": rows})
+    # 若只有旧接口单类
+    if not cats and picked.get("top5"):
+        out = [{"id": "精选", "name": "精选", "count": len(picked["top5"]), "items": [_public_row(r) for r in picked["top5"]]}]
+    return out
+
+
+def _fetch_rows(
+    items: list[tuple[dict[str, Any], str]],
     *,
-    top_n: int = 5,
     progress: Callable[[str], None] | None = None,
-) -> dict[str, Any]:
-    """用昨涨停池 + 分时首根（竞价）扫描。"""
-    t0 = time.time()
-    now = datetime.now(CST)
-    zt_date, pool = latest_zt_date(now)
-    cands = [x for x in pool if is_main_board(x["c"], x["n"])]
+) -> tuple[list[dict[str, Any]], list[str]]:
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
     done = 0
+    seen: set[str] = set()
 
     def _prog(msg: str) -> None:
         if progress:
             progress(msg)
 
-    _prog(f"昨涨停 {zt_date} 主板候选 {len(cands)}")
     with ThreadPoolExecutor(max_workers=8) as ex:
-        futs = {ex.submit(enrich_from_trends, zt): zt for zt in cands}
+        futs = {ex.submit(enrich_from_trends, zt, src=src): (zt, src) for zt, src in items}
         for fut in as_completed(futs):
-            zt = futs[fut]
+            zt, src = futs[fut]
             done += 1
             try:
                 row = fut.result()
-                if row:
+                if row and row["code"] not in seen:
+                    seen.add(row["code"])
                     rows.append(row)
-                else:
+                elif not row:
                     errors.append(f"{zt['c']} 无竞价")
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{zt['c']} {exc}")
-            if done % 5 == 0 or done == len(cands):
-                _prog(f"拉取竞价 {done}/{len(cands)} 成功 {len(rows)}")
+            if done % 5 == 0 or done == len(items):
+                _prog(f"拉取竞价 {done}/{len(items)} 成功 {len(rows)}")
+    return rows, errors
 
-    if mode == "baseline":
+
+def scan_pool(
+    mode: str = "weak",
+    *,
+    top_n: int = 5,
+    progress: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    """用昨涨停/炸板 + 分时首根（竞价）扫描。"""
+    t0 = time.time()
+    now = datetime.now(CST)
+    zt_date, pool = latest_zt_date(now)
+
+    def _prog(msg: str) -> None:
+        if progress:
+            progress(msg)
+
+    items: list[tuple[dict[str, Any], str]] = []
+    zb_date = ""
+    zb_n = 0
+    if mode in WEAK_MODES:
+        cands_zt = [x for x in pool if is_main_board(x["c"], x["n"])]
+        items.extend((x, "zt") for x in cands_zt)
+        try:
+            zb_date, zb_pool = latest_zb_date(now)
+            cands_zb = [x for x in zb_pool if is_main_board(x["c"], x["n"])]
+            # 炸板与涨停去重：涨停优先做晋级
+            zt_codes = {x["c"] for x in cands_zt}
+            cands_zb = [x for x in cands_zb if x["c"] not in zt_codes]
+            items.extend((x, "zb") for x in cands_zb)
+            zb_n = len(cands_zb)
+            _prog(f"昨涨停 {zt_date} {len(cands_zt)} + 昨炸板 {zb_date} {zb_n}")
+        except Exception as exc:  # noqa: BLE001
+            _prog(f"昨涨停 {zt_date} {len(cands_zt)}（炸板池暂不可用: {exc}）")
+    else:
+        cands = [x for x in pool if is_main_board(x["c"], x["n"])]
+        items.extend((x, "zt") for x in cands)
+        _prog(f"昨涨停 {zt_date} 主板候选 {len(cands)}")
+
+    rows, errors = _fetch_rows(items, progress=progress)
+
+    if mode in WEAK_MODES:
+        per = min(max(top_n, 1), WEAK_TOP_PER_CAT)
+        if mode == "yijin2":
+            picked = yijin2_select(rows, top_n=per)
+            title = "一进二弱转强（兼容）"
+        else:
+            picked = weak_select(rows, top_n=per)
+            title = "竞价弱转强 · 首板/一进二/二进三"
+    elif mode == "baseline":
         picked = sequential_select(rows)
         title = "原版·竞价涨停取反"
     elif mode == "wr100":
         picked = wr100_select(rows, top_n=min(top_n, WR100_TOP_N))
         title = "胜率优先·高开区间"
-    elif mode == "yijin2":
-        picked = yijin2_select(rows, top_n=min(top_n, 2))
-        title = "一进二弱转强（9:30前）"
     else:
         picked = optimized_select(rows, top_n=top_n)
         title = "连板优化 v2"
 
+    categories = _categories_public(picked) if mode in WEAK_MODES else []
+    top = [_public_row(r) for r in picked.get("top5", [])]
+    if categories:
+        top = [r for cat in categories for r in cat["items"]]
+
     phase = auction_phase()
+    tip = (
+        "9:15–9:25 盘前盯盘；结果分【首板｜一进二｜二进三】。每类最多2只，宁缺毋滥。研究用，不构成投资建议。"
+        if mode in WEAK_MODES
+        else (
+            "开盘买入，挂 +0.8% 限价止盈；未触及收盘卖。"
+            if mode == "wr100"
+            else "9:25后结果更稳；主策略请用「竞价弱转强」。研究用，不构成投资建议。"
+        )
+    )
     return {
         "ok": True,
         "mode": mode,
         "title": title,
         "generated_at": now.strftime("%Y-%m-%d %H:%M:%S"),
         "zt_date": zt_date,
+        "zb_date": zb_date or None,
         "trade_date": rows[0]["trade_date"] if rows else None,
         "zt_total": len(pool),
-        "main_n": len(cands),
+        "zb_n": zb_n,
+        "main_n": len({c for c, _ in ((i[0]["c"], i[1]) for i in items)}),
         "fetched": len(rows),
         "elapsed_sec": round(time.time() - t0, 1),
         "phase": phase,
-        "top": [_public_row(r) for r in picked.get("top5", [])],
-        "pool": [_public_row(r) for r in picked.get("after_numeric", picked.get("top8", []))[:30]],
+        "categories": categories,
+        "top": top,
+        "pool": [_public_row(r) for r in picked.get("after_numeric", picked.get("top8", []))[:40]],
         "errors_n": len(errors),
-        "tip": (
-            "9:15–9:25 盘前盯盘锁定；开盘买入。微高开弱转强，建议止盈 +1.5% 或看封板。标的宜少（Top1–2）。"
-            if mode == "yijin2"
-            else (
-                "开盘买入，挂 +0.8% 限价止盈；未触及收盘卖。"
-                if mode == "wr100"
-                else "9:25后结果更稳；一进二请用「弱转强」策略。研究用，不构成投资建议。"
-            )
-        ),
+        "tip": tip,
     }
 
 
-_BASE_CACHE: dict[str, Any] = {"zt_date": "", "bases": [], "states": {}}
+_BASE_CACHE: dict[str, Any] = {"zt_date": "", "zb_date": "", "bases": [], "states": {}}
 
 
-def _build_preopen_bases(pool: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    cands = [x for x in pool if is_main_board(x["c"], x["n"])]
+def _base_from_pool_item(zt: dict[str, Any], *, src: str) -> dict[str, Any]:
+    code, name = zt["c"], zt["n"]
+    prev = zt_prev_close(zt)
+    ltsz = float(zt.get("ltsz") or 0)
+    free = (ltsz / prev) if prev else 0.0
+    yamt = 0.0
+    a5 = 0.0
+    try:
+        payload = fetch_trends(code, ndays=5)
+        auction = auction_from_trends(payload)
+        if auction:
+            yamt = float(auction["yest_auction"]["amt"] or 0)
+            a5 = float(auction["avg5_lots"] or 0)
+            if not prev:
+                prev = float(auction["prev_close"] or 0)
+                free = (ltsz / prev) if prev else 0.0
+    except Exception:  # noqa: BLE001
+        pass
+    lbc = 0 if src == "zb" else (int(zt.get("lbc") or 0) or 1)
+    return {
+        "code": code,
+        "name": name,
+        "src": src,
+        "hy": zt.get("hybk") or "",
+        "lbc": lbc,
+        "zbc": int(zt.get("zbc") or 0),
+        "fbt": int(zt.get("fbt") or 150000),
+        "hs": float(zt.get("hs") or 0),
+        "zt_days": int((zt.get("zttj") or {}).get("days") or 0) if isinstance(zt.get("zttj"), dict) else 0,
+        "zt_ct": int((zt.get("zttj") or {}).get("ct") or 0) if isinstance(zt.get("zttj"), dict) else 0,
+        "mv_yi": round(ltsz / 1e8, 2) if ltsz else 0.0,
+        "prev": prev,
+        "free_float": free,
+        "yest_auction_amt": yamt,
+        "avg5_lots": a5,
+    }
+
+
+def _build_preopen_bases(pool: list[dict[str, Any]], zb_pool: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     bases: list[dict[str, Any]] = []
-    for zt in cands:
-        code, name = zt["c"], zt["n"]
-        prev = zt_prev_close(zt)
-        ltsz = float(zt.get("ltsz") or 0)
-        free = (ltsz / prev) if prev else 0.0
-        yamt = 0.0
-        a5 = 0.0
-        try:
-            payload = fetch_trends(code, ndays=5)
-            auction = auction_from_trends(payload)
-            if auction:
-                yamt = float(auction["yest_auction"]["amt"] or 0)
-                a5 = float(auction["avg5_lots"] or 0)
-                if not prev:
-                    prev = float(auction["prev_close"] or 0)
-                    free = (ltsz / prev) if prev else 0.0
-        except Exception:  # noqa: BLE001
-            pass
-        bases.append(
-            {
-                "code": code,
-                "name": name,
-                "hy": zt.get("hybk") or "",
-                "lbc": int(zt.get("lbc") or 0) or 1,
-                "zbc": int(zt.get("zbc") or 0),
-                "fbt": int(zt.get("fbt") or 150000),
-                "hs": float(zt.get("hs") or 0),
-                "zt_days": int((zt.get("zttj") or {}).get("days") or 0) if isinstance(zt.get("zttj"), dict) else 0,
-                "zt_ct": int((zt.get("zttj") or {}).get("ct") or 0) if isinstance(zt.get("zttj"), dict) else 0,
-                "mv_yi": round(ltsz / 1e8, 2) if ltsz else 0.0,
-                "prev": prev,
-                "free_float": free,
-                "yest_auction_amt": yamt,
-                "avg5_lots": a5,
-            }
-        )
+    seen: set[str] = set()
+    for zt in pool:
+        if not is_main_board(zt["c"], zt["n"]):
+            continue
+        if zt["c"] in seen:
+            continue
+        seen.add(zt["c"])
+        bases.append(_base_from_pool_item(zt, src="zt"))
+    for zb in zb_pool or []:
+        if not is_main_board(zb["c"], zb["n"]):
+            continue
+        if zb["c"] in seen:
+            continue
+        seen.add(zb["c"])
+        bases.append(_base_from_pool_item(zb, src="zb"))
     return bases
 
 
-def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
-    """盘前：缓存昨涨停底池，用实时盘口 + 走势打分。"""
+def preopen_snapshot(mode: str = "weak", top_n: int = 5) -> dict[str, Any]:
+    """盘前：缓存昨涨停/炸板底池，用实时盘口 + 走势打分。"""
     now = datetime.now(CST)
     zt_date, pool = latest_zt_date(now)
-    if _BASE_CACHE.get("zt_date") != zt_date or not _BASE_CACHE.get("bases"):
+    zb_date, zb_pool = "", []
+    if mode in WEAK_MODES:
+        try:
+            zb_date, zb_pool = latest_zb_date(now)
+        except Exception:  # noqa: BLE001
+            zb_pool = []
+
+    cache_key = f"{zt_date}|{zb_date}|{mode in WEAK_MODES}"
+    if _BASE_CACHE.get("cache_key") != cache_key or not _BASE_CACHE.get("bases"):
+        _BASE_CACHE["cache_key"] = cache_key
         _BASE_CACHE["zt_date"] = zt_date
-        _BASE_CACHE["bases"] = _build_preopen_bases(pool)
+        _BASE_CACHE["zb_date"] = zb_date
+        _BASE_CACHE["bases"] = _build_preopen_bases(pool, zb_pool if mode in WEAK_MODES else None)
         _BASE_CACHE["states"] = {}
 
     bases: list[dict[str, Any]] = _BASE_CACHE["bases"]
@@ -339,9 +439,14 @@ def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
         }
         rows.append(row)
 
-    if mode == "yijin2":
-        picked = yijin2_select(rows, top_n=min(top_n, 2))
-        title = "盘前·一进二弱转强"
+    if mode in WEAK_MODES:
+        per = min(max(top_n, 1), WEAK_TOP_PER_CAT)
+        if mode == "yijin2":
+            picked = yijin2_select(rows, top_n=per)
+            title = "盘前·一进二（兼容）"
+        else:
+            picked = weak_select(rows, top_n=per)
+            title = "盘前·弱转强（首板/一进二/二进三）"
     elif mode == "wr100":
         picked = wr100_select(rows, top_n=min(top_n, WR100_TOP_N))
         title = "盘前·胜率优先"
@@ -352,6 +457,11 @@ def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
         picked = optimized_select(rows, top_n=top_n)
         title = "盘前·连板优化"
 
+    categories = _categories_public(picked) if mode in WEAK_MODES else []
+    top = [_public_row(r) for r in picked.get("top5", [])]
+    if categories:
+        top = [r for cat in categories for r in cat["items"]]
+
     phase = auction_phase(ts)
     return {
         "ok": True,
@@ -359,20 +469,22 @@ def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
         "title": title,
         "generated_at": now.strftime("%Y-%m-%d %H:%M:%S"),
         "zt_date": zt_date,
+        "zb_date": zb_date or None,
         "main_n": len(bases),
         "quoted": len(rows),
         "phase": phase,
-        "top": [_public_row(r) for r in picked.get("top5", [])],
-        "pool": [_public_row(r) for r in picked.get("after_numeric", [])[:30]],
-        "tip": phase["tip"] + " · 研究用，不构成投资建议。",
+        "categories": categories,
+        "top": top,
+        "pool": [_public_row(r) for r in picked.get("after_numeric", [])[:40]],
+        "tip": phase["tip"] + " · 分类：首板 / 一进二 / 二进三。研究用，不构成投资建议。",
     }
 
 
 STRATEGIES = [
     {
-        "id": "yijin2",
-        "name": "一进二弱转强",
-        "desc": "9:30前主策略：昨首板、今开-2%~+2.5%可买。专抓亚盛/海通发展这类微高开晋级，每天最多2只",
+        "id": "weak",
+        "name": "竞价弱转强",
+        "desc": "9:30前主策略：首板（昨炸板）+ 一进二 + 二进三，分开筛选、分类展示；每类最多2只",
     },
     {
         "id": "wr100",
