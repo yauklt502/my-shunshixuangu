@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>顺势竞价 · 选股软件</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,550;9..144,650&family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f6b56'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='28' fill='%23f3faf6' font-family='serif'%3E竞%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="shell">
+    <header class="brand">
+      <div class="brand-mark">
+        <div class="seal">竞</div>
+      </div>
+      <h1>顺势竞价</h1>
+      <p>竞价弱转强 · 首板 / 一进二 / 二进三分类 · 盘前盯盘。本地运行，研究用，不构成投资建议。</p>
+    </header>
+
+    <div class="layout">
+      <aside class="panel side">
+        <div>
+          <h2>时段</h2>
+          <div class="phase">
+            <div class="clock" id="clock">--:--:--</div>
+            <div class="tip" id="phaseTip">连接中…</div>
+          </div>
+        </div>
+
+        <div>
+          <h2>策略</h2>
+          <div class="strat" id="strategies"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btnScan">扫描选股</button>
+          <button class="btn btn-amber" id="btnPreopen">盘前盯盘</button>
+          <button class="btn btn-ghost" id="btnWatch">自动刷新（15s）</button>
+          <button class="btn btn-ghost" id="btnExport">导出 JSON</button>
+        </div>
+
+        <div class="meta" id="meta">
+          默认「竞价弱转强」：点选股后按【首板｜一进二｜二进三】分类显示。9:15–9:30 用盘前盯盘。
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="panel hero-bar">
+          <div>
+            <h3 id="resultTitle">等待扫描</h3>
+            <div class="sub" id="resultSub">尚未运行</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="statTop">0</div><div class="l">标的</div></div>
+            <div class="stat"><div class="n" id="statMain">0</div><div class="l">主板昨涨停</div></div>
+            <div class="stat"><div class="n" id="statFetched">0</div><div class="l">有效报价</div></div>
+          </div>
+        </div>
+
+        <div class="cards" id="cards">
+          <div class="empty">点左侧「扫描选股」或「盘前盯盘」开始</div>
+        </div>
+
+        <div class="panel table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>分类</th><th>代码</th><th>名称</th><th>涨幅</th><th>高度</th>
+                <th>量(万)</th><th>量比</th><th>换手%</th><th>金额比</th><th>分数</th><th>走势</th><th>板块</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="13" class="empty">暂无数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel drawer">
+          <details>
+            <summary>公式原文 / 操作提示</summary>
+            <p class="meta" id="tipBox" style="margin-top:10px"></p>
+            <div id="formulaBox"></div>
+          </details>
+        </div>
+      </section>
+    </div>
+
+    <footer class="foot">
+      主策略「竞价弱转强」：首板（昨炸板）、一进二、二进三分开选，宁缺毋滥。本地
+      <code>http://127.0.0.1:8787</code>。
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
