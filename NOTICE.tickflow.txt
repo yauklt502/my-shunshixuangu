@@ -1,0 +1,8 @@
+The following files include substantial portions of
+https://github.com/shy3130/tick-stock-panel (MIT License):
+
+- src/components/tickflow/EChartsIntraday.tsx
+- src/lib/intraday-chart.ts
+- src/lib/chart-theme.ts (chart palette excerpt)
+
+See that project's LICENSE for full terms.

@@ -1,0 +1,23 @@
+开盘啦 · 市场雷达 —— 下载后放到 F 盘
+
+不要用 install-to-F.bat。请下载现成压缩包，解压到 F 盘即可。
+
+1. 先安装 Node.js 18 或更高（勾选加入 PATH）
+   https://nodejs.org/
+
+2. 下载 kaipanla-windows.zip
+   地址：
+   https://github.com/yauklt502/my-shunshixuangu/raw/cursor/kaipanla-web-ui-71ed/deploy/kaipanla-windows.zip
+
+   也可打开 PR 页从仓库 deploy 目录下载该文件。
+
+3. 解压到 F 盘，得到：
+     F:\kaipanla\start.bat
+     F:\kaipanla\dist\
+     F:\kaipanla\server\
+
+4. 双击 F:\kaipanla\start.bat
+   浏览器会打开 http://127.0.0.1:3000
+   关掉黑色窗口，或双击 stop.bat，即停止。
+
+压缩包已包含前端构建结果。若解压后没有 node_modules，第一次启动会自动 npm install，需要能上网。
