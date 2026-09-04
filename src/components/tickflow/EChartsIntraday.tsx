@@ -11,6 +11,7 @@ import { computeIntradayAverage, formatMinuteTime, FULL_DAY_TIMES } from '@/lib/
 import { useChartTheme, type ChartTheme } from '@/lib/chart-theme'
 
 type YMode = 'adaptive' | 'limit'
+export type { YMode }
 
 // 序列颜色 (双主题通用); 画布轴/网格/十字线等主题相关色走 ChartTheme
 const THEME = {
@@ -33,7 +34,14 @@ interface Props {
   priceLines?: { value: number; label?: string; color?: string }[]
   showLimitLines?: boolean
   showAvgLine?: boolean
+  /** When set with onYModeChange, mode buttons are controlled by the parent (panel chrome). */
+  yMode?: YMode
+  onYModeChange?: (mode: YMode) => void
+  /** Hide built-in mode toggle (parent renders it). Default false. */
+  hideModeToggle?: boolean
 }
+
+export type { YMode }
 
 function fmtAmt(v: number): string {
   if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(2)}亿`
@@ -413,6 +421,9 @@ export function EChartsIntraday({
   priceLines,
   showLimitLines = true,
   showAvgLine = true,
+  yMode: yModeProp,
+  onYModeChange,
+  hideModeToggle = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<ECharts | null>(null)
@@ -431,7 +442,12 @@ export function EChartsIntraday({
   const fullDayToDataIdx = useRef<Map<number, number>>(new Map())
 
   const [infoIdx, setInfoIdx] = useState(data.length - 1)
-  const [yMode, setYMode] = useState<YMode>('adaptive')
+  const [yModeInner, setYModeInner] = useState<YMode>('adaptive')
+  const yMode = yModeProp ?? yModeInner
+  const setYMode = (mode: YMode) => {
+    onYModeChange?.(mode)
+    if (yModeProp == null) setYModeInner(mode)
+  }
   const ct = useChartTheme()
   const avgPrices = useMemo(() => computeIntradayAverage(data), [data])
 
@@ -548,16 +564,17 @@ export function EChartsIntraday({
   const isUp = chg != null ? chg > 0 : true
   const isFlat = chg != null ? chg === 0 : false
   const priceClr = isFlat ? '#A1A1AA' : isUp ? '#C74040' : '#2D9B65'
+  const showToggle = showLimitLines && !hideModeToggle
 
   return (
     <div className="eci-root">
       {/* 按钮行: 切换式按钮组, 居右 — TickFlow 原样 */}
-      {showLimitLines && (
+      {showToggle && (
         <div className="eci-modes">
           <div className="eci-mode-group">
             <button
               type="button"
-              onClick={() => setYMode('adaptive')}
+              onClick={(e) => { e.stopPropagation(); setYMode('adaptive') }}
               className={yMode === 'adaptive' ? 'eci-mode on' : 'eci-mode'}
             >
               自适应
@@ -565,7 +582,7 @@ export function EChartsIntraday({
             <div className="eci-mode-sep" />
             <button
               type="button"
-              onClick={() => setYMode('limit')}
+              onClick={(e) => { e.stopPropagation(); setYMode('limit') }}
               className={yMode === 'limit' ? 'eci-mode on' : 'eci-mode'}
             >
               涨跌停
@@ -613,7 +630,7 @@ export function EChartsIntraday({
           )}
         </div>
       </div>
-      <div ref={containerRef} className="eci-canvas" style={{ height: height - 42 }} />
+      <div ref={containerRef} className="eci-canvas" style={{ height: Math.max(160, height - (showToggle ? 42 : 40)) }} />
     </div>
   )
 }

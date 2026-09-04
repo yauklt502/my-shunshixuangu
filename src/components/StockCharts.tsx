@@ -2,9 +2,9 @@
  * Auction stock overlay: day K on the left + TickFlow EChartsIntraday float on the right.
  * Intraday panel logic/style ported from shy3130/tick-stock-panel (MIT).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { tdxKline, tdxMinute, toTdxCode } from "@/api/tdx";
-import { EChartsIntraday } from "@/components/tickflow/EChartsIntraday";
+import { EChartsIntraday, type YMode } from "@/components/tickflow/EChartsIntraday";
 import type { MinuteKlineRow, PriceLimitInfo } from "@/components/tickflow/types";
 
 type StockPick = { code: string; name: string };
@@ -21,6 +21,9 @@ export function StockChartModal({
 }) {
   const tdxCode = toTdxCode(stock.code);
   const marketTag = marketSuffix(stock.code);
+  const [yMode, setYMode] = useState<YMode>("adaptive");
+  const panelBodyRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState(560);
   const [minute, setMinute] = useState<{
     loading: boolean;
     error: string | null;
@@ -42,11 +45,24 @@ export function StockChartModal({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
+
+  useEffect(() => {
+    const el = panelBodyRef.current;
+    if (!el) return;
+    const measure = () => setChartHeight(Math.max(280, el.clientHeight - 8));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -163,10 +179,43 @@ export function StockChartModal({
       </div>
 
       <aside className="tick-panel" aria-label="TICK STOCK PANEL">
-        <button type="button" className="tick-close" onClick={onClose} aria-label="关闭浮窗">
+        <button
+          type="button"
+          className="tick-close"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          aria-label="关闭浮窗"
+        >
           ×
         </button>
-        <div className="tick-panel-bd tick-panel-bd-tickflow">
+        <div className="tick-panel-hd">
+          <div className="eci-mode-group">
+            <button
+              type="button"
+              className={yMode === "adaptive" ? "eci-mode on" : "eci-mode"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setYMode("adaptive");
+              }}
+            >
+              自适应
+            </button>
+            <div className="eci-mode-sep" />
+            <button
+              type="button"
+              className={yMode === "limit" ? "eci-mode on" : "eci-mode"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setYMode("limit");
+              }}
+            >
+              涨跌停
+            </button>
+          </div>
+        </div>
+        <div className="tick-panel-bd tick-panel-bd-tickflow" ref={panelBodyRef}>
           {minute.loading ? (
             <div className="spinner">正在拉取分时…</div>
           ) : minute.error ? (
@@ -174,11 +223,14 @@ export function StockChartModal({
           ) : minute.rows.length ? (
             <EChartsIntraday
               data={minute.rows}
-              height={640}
+              height={chartHeight}
               prevClose={panelPrevClose}
               date={date}
               priceLimit={minute.priceLimit}
               currentPrice={quote.price ?? undefined}
+              yMode={yMode}
+              onYModeChange={setYMode}
+              hideModeToggle
             />
           ) : (
             <div className="empty">暂无分时</div>
