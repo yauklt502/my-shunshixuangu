@@ -29,7 +29,7 @@ try {
 }
 
 $env:PYTHONPATH = (Get-Location).Path
-$port = 8765
+$port = 8654
 Write-Host "[3/3] Starting server http://127.0.0.1:$port"
 Write-Host "Press Ctrl+C to stop."
 & ".venv\Scripts\python.exe" -m uvicorn server:app --host 127.0.0.1 --port $port

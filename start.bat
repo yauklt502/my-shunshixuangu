@@ -36,7 +36,7 @@ if errorlevel 1 (
 )
 
 set "PYTHONPATH=%CD%"
-set "PORT=8765"
+set "PORT=8654"
 
 echo [3/3] Starting server...
 echo Open browser: http://127.0.0.1:%PORT%

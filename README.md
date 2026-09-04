@@ -27,7 +27,7 @@ python --version
 
 1. 解压到**尽量纯英文路径**，例如 `D:\shunshi-leader`
 2. 双击 `start.bat`（脚本为英文，避免 CMD 中文乱码）
-3. 浏览器打开：http://127.0.0.1:8765
+3. 浏览器打开：http://127.0.0.1:8654
 4. 若 `start.bat` 仍异常：右键 `start.ps1` → 用 PowerShell 运行
 
 首次会自动安装依赖（fastapi / uvicorn / httpx）。需要已安装 Python 3.10+，并勾选 Add to PATH。
@@ -42,7 +42,7 @@ chmod +x run.sh start.sh
 ./start.sh
 ```
 
-浏览器打开：http://127.0.0.1:8765
+浏览器打开：http://127.0.0.1:8654
 
 ---
 
@@ -60,7 +60,7 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 export PYTHONPATH=.
-python -m uvicorn server:app --host 127.0.0.1 --port 8765
+python -m uvicorn server:app --host 127.0.0.1 --port 8654
 ```
 
 ---
@@ -104,7 +104,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 # macOS / Linux
 PORT=9000 ./start.sh
 
-# Windows：编辑 start.bat，把 8765 改成其他空闲端口，例如 9000
+# Windows：编辑 start.bat，把 8654 改成其他空闲端口，例如 9000
 ```
 
 **4. 防火墙 / 公司网访问不了东财？**  

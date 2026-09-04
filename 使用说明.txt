@@ -4,7 +4,7 @@
 1. 解压到纯英文路径，例如 D:\shunshi-leader
    （尽量不要放在含中文或空格过多的目录）
 2. 双击 start.bat
-3. 浏览器打开 http://127.0.0.1:8765
+3. 浏览器打开 http://127.0.0.1:8654
 4. 若 bat 仍异常：右键 start.ps1 -> 使用 PowerShell 运行
 
 【若提示找不到 python】
@@ -13,6 +13,6 @@
 
 【macOS / Linux】
 chmod +x start.sh && ./start.sh
-浏览器打开 http://127.0.0.1:8765
+浏览器打开 http://127.0.0.1:8654
 
 详细说明见 README.md

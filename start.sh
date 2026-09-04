@@ -27,7 +27,7 @@ if ! python -m pip install -r requirements.txt; then
 fi
 
 export PYTHONPATH="$(pwd)"
-PORT="${PORT:-8765}"
+PORT="${PORT:-8654}"
 
 echo "[3/3] 启动服务 http://127.0.0.1:${PORT}"
 echo "浏览器打开上述地址；按 Ctrl+C 可停止"
