@@ -526,22 +526,169 @@ table.data th.sorted .sort-mark {
 }
 .lianban { font-size: 11px; color: var(--up); font-weight: 600; }
 
-.chart-modal { padding-top: 8px; }
-.chart-modal .tab { padding: 8px 16px; font-size: 13px; }
-.chart-meta {
+/* TICK STOCK PANEL — right float matching 开盘啦 style */
+.tick-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 34vw);
+  background: #f7f8fa;
+}
+.tick-stage-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 10px 8px 12px 14px;
+}
+.tick-stage-hd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 18px;
+  padding: 4px 4px 8px;
+}
+.tick-stage-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: 700;
+}
+.tick-code {
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+.tick-name { font-size: 16px; color: var(--text); }
+.tick-stage-quote {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  margin: 10px 0 4px;
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
 }
-.chart-meta b { font-size: 22px; }
-.stock-chart {
+.tick-stage-quote b { font-size: 22px; font-weight: 700; }
+.tick-stage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+.tick-stage-tabs .on { color: var(--up); font-weight: 600; }
+.tick-stage-body {
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+  border-radius: 4px;
+  padding: 4px 0 0;
+}
+.tick-day-chart,
+.tick-chart {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   background: #fff;
+}
+.tick-axis {
+  font-size: 10px;
+  fill: #8a97a6;
+  font-family: var(--mono);
+}
+.tick-axis.up { fill: #e53935; }
+.tick-axis.dn { fill: #1aa37a; }
+
+.tick-panel {
+  position: relative;
+  z-index: 2;
+  margin: 48px 14px 18px 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14), 0 1px 0 rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+}
+.tick-close {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(120, 130, 145, 0.92);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  z-index: 3;
+}
+.tick-close:hover { background: #6b7785; }
+.tick-panel-hd {
+  padding: 10px 14px 0;
+  flex: 0 0 auto;
+}
+.tick-panel-modes {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+.tick-mode {
+  border: 0;
+  background: transparent;
+  color: #8a97a6;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tick-mode.on {
+  color: #3d8bfd;
+  background: rgba(61, 139, 253, 0.12);
+  font-weight: 600;
+}
+.tick-panel-handle {
+  width: 36px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.12);
+  margin: 10px auto 6px;
+}
+.tick-panel-bd {
+  flex: 1;
+  min-height: 0;
+  padding: 0 6px 8px;
+  display: flex;
+  flex-direction: column;
+}
+.tick-panel-bd .spinner,
+.tick-panel-bd .error-box,
+.tick-panel-bd .empty {
+  margin: 24px 12px;
+}
+
+@media (max-width: 900px) {
+  .tick-stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(40vh, 1fr) minmax(48vh, 1.1fr);
+  }
+  .tick-panel {
+    margin: 8px 10px 12px;
+  }
+  .tick-close {
+    top: 8px;
+    left: 8px;
+  }
+  .tick-stage-tabs { display: none; }
 }
 
 @media (max-width: 1100px) {
