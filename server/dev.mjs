@@ -6,10 +6,13 @@ function run(command, args, extraEnv = {}) {
   const child = spawn(command, args, {
     stdio: "inherit",
     env: { ...process.env, ...extraEnv },
+    shell: command.endsWith(".bat") || command.endsWith(".cmd"),
   });
   children.push(child);
   child.on("exit", (code) => {
     if (shuttingDown) return;
+    // Keep vite/proxy alive even if optional tdx gateway exits.
+    if (extraEnv.TDX_OPTIONAL === "1") return;
     shuttingDown = true;
     for (const other of children) {
       if (other !== child) other.kill("SIGTERM");
@@ -31,3 +34,11 @@ process.on("SIGTERM", shutdown);
 
 run("node", ["server/index.mjs"], { PORT: "8787", NODE_ENV: "development" });
 run("npx", ["vite", "--host", "0.0.0.0", "--port", "5173"]);
+
+const tdxPython = process.env.TDX_PYTHON || process.env.PYTHON || "python3";
+const tdxHost = process.env.TDX_HOST || "115.238.90.165:7709";
+run(
+  tdxPython,
+  ["-m", "eltdx.http_server", "--host", "127.0.0.1", "--port", "8790", "--tdx-host", tdxHost, "--log-level", "warning"],
+  { TDX_OPTIONAL: "1" },
+);

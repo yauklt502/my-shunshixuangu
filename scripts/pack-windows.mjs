@@ -35,6 +35,9 @@ fs.mkdirSync(path.join(root, "deploy"), { recursive: true });
 
 copyDir(path.join(root, "dist"), path.join(stage, "dist"));
 copyFile(path.join(root, "server", "index.mjs"), path.join(stage, "server", "index.mjs"));
+copyFile(path.join(root, "server", "tdx.mjs"), path.join(stage, "server", "tdx.mjs"));
+copyFile(path.join(root, "server", "tdx_bridge.py"), path.join(stage, "server", "tdx_bridge.py"));
+copyFile(path.join(root, "requirements-tdx.txt"), path.join(stage, "requirements-tdx.txt"));
 copyFile(path.join(root, "stop.bat"), path.join(stage, "stop.bat"));
 
 fs.writeFileSync(
@@ -79,9 +82,24 @@ if not exist "node_modules\\" (
   )
 )
 
+where python >nul 2>&1
+if not errorlevel 1 (
+  if not exist "%LOCALAPPDATA%\\kaipanla-tdx.flag" (
+    echo Installing eltdx for stock charts...
+    python -m pip install -r requirements-tdx.txt
+    if not errorlevel 1 (
+      echo ok> "%LOCALAPPDATA%\\kaipanla-tdx.flag"
+    )
+  )
+  start "KaiPanLa-TDX" /min cmd /c "python -m eltdx.http_server --host 127.0.0.1 --port 8790 --tdx-host 115.238.90.165:7709 --log-level warning"
+) else (
+  echo [WARN] Python not found. Auction list works, but stock 分时/日K charts need Python + eltdx.
+)
+
 set NODE_ENV=production
 set PORT=3000
 set HOST=127.0.0.1
+set TDX_HTTP_URL=http://127.0.0.1:8790
 echo.
 echo KaiPanLa: http://127.0.0.1:3000
 echo Close this window to stop.

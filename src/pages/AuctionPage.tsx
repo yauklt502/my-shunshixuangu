@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "@/api/services";
 import { Table } from "@/components/ui";
+import { StockChartModal, stockFromRow } from "@/components/StockCharts";
 import { bidVolume, fmtVol, marketSessionDate, num, pctClass, str } from "@/lib/format";
 import { useAsync } from "@/lib/useAsync";
 import { useApp } from "@/state";
@@ -41,6 +42,7 @@ function BidPct({ value }: { value: unknown }) {
 export function AuctionPage() {
   const { date, today, holidays, common } = useApp();
   const [tab, setTab] = useState("0");
+  const [picked, setPicked] = useState<{ code: string; name: string } | null>(null);
   const current = BID_TABS.find((item) => item.id === tab) || BID_TABS[0];
   const live = date === today || date === marketSessionDate(holidays);
 
@@ -200,8 +202,10 @@ export function AuctionPage() {
           loading={list.loading}
           error={list.error}
           emptyText="暂无数据"
+          onRowClick={(row) => setPicked(stockFromRow(row))}
         />
       </section>
+      {picked ? <StockChartModal stock={picked} date={date} onClose={() => setPicked(null)} /> : null}
     </>
   );
 }

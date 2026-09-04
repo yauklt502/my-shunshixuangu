@@ -34,7 +34,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   limit: { title: "涨停分析", sub: "天梯、分板、破板、原因与回撤" },
   sector: { title: "板块数据", sub: "强度排名、行业地区与竞价异动" },
   lhb: { title: "龙虎榜", sub: "上榜个股、游资动向与席位" },
-  auction: { title: "早盘竞价", sub: "涨停委买 · 当前涨幅 · 竞价涨幅 · 竞价额 · 竞价量 · 竞价换手" },
+  auction: { title: "早盘竞价", sub: "点击个股看分时 / 日K · 涨停委买 · 竞价额 · 竞价量" },
   grab: { title: "尾盘抢筹", sub: "抢筹金额 · 抢筹幅度 · 游资机构" },
   stock: { title: "股票数据", sub: "所属板块、新高与区间统计" },
   feng: { title: "风口概念", sub: "最强风口与概念强度" },

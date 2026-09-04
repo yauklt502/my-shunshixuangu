@@ -2,6 +2,7 @@ import express from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { fetchKline, fetchMinute, tdxAvailable } from "./tdx.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -27,7 +28,38 @@ app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, tdx: tdxAvailable() });
+});
+
+app.get("/api/tdx/kline", async (req, res) => {
+  try {
+    const code = String(req.query.code || "").trim();
+    if (!code) {
+      res.status(400).json({ errcode: "400", errmsg: "缺少 code" });
+      return;
+    }
+    const period = String(req.query.period || "day");
+    const count = Math.min(800, Math.max(10, Number(req.query.count) || 120));
+    const result = await fetchKline(code, period, count);
+    res.json({ errcode: "0", ...result });
+  } catch (error) {
+    res.status(502).json({ errcode: "502", errmsg: error?.message || "通达信日K获取失败" });
+  }
+});
+
+app.get("/api/tdx/minute", async (req, res) => {
+  try {
+    const code = String(req.query.code || "").trim();
+    if (!code) {
+      res.status(400).json({ errcode: "400", errmsg: "缺少 code" });
+      return;
+    }
+    const date = String(req.query.date || "").replaceAll("-", "");
+    const result = await fetchMinute(code, date);
+    res.json({ errcode: "0", ...result });
+  } catch (error) {
+    res.status(502).json({ errcode: "502", errmsg: error?.message || "通达信分时获取失败" });
+  }
 });
 
 app.post("/api/kpl", async (req, res) => {
