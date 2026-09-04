@@ -27,7 +27,7 @@ python --version
 
 1. 解压本压缩包到任意目录，例如 `D:\shunshi-leader`
 2. 双击 `start.bat`
-3. 浏览器打开：http://127.0.0.1:8000
+3. 浏览器打开：http://127.0.0.1:8765
 
 首次会自动安装依赖（fastapi / uvicorn / httpx）。
 
@@ -41,7 +41,7 @@ chmod +x run.sh start.sh
 ./start.sh
 ```
 
-浏览器打开：http://127.0.0.1:8000
+浏览器打开：http://127.0.0.1:8765
 
 ---
 
@@ -59,7 +59,7 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 export PYTHONPATH=.
-python -m uvicorn server:app --host 127.0.0.1 --port 8000
+python -m uvicorn server:app --host 127.0.0.1 --port 8765
 ```
 
 ---
@@ -101,9 +101,9 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ```bash
 # macOS / Linux
-PORT=8001 ./start.sh
+PORT=9000 ./start.sh
 
-# Windows：编辑 start.bat，把 8000 改成 8001
+# Windows：编辑 start.bat，把 8765 改成其他空闲端口，例如 9000
 ```
 
 **4. 防火墙 / 公司网访问不了东财？**  
