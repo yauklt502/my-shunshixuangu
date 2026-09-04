@@ -43,6 +43,19 @@ WR100_YEST_HS_MAX = 10.0
 WR100_LBC_MAX = 2
 WR100_TOP_N = 3
 
+# ---------- 一进二弱转强（9:30前高胜率，少而精）----------
+# 2026-09-04：亚盛+1.01%、海通发展+0.98% 均一进二成功；旧公式要求高开>1.5%/3% 把它们误杀。
+# 可买成功票多为微高开/平开，一字高开不可买故不做。
+YIJIN2_OPEN_LO = -2.0
+YIJIN2_OPEN_HI = 2.5
+YIJIN2_FBT_MAX = 103000
+YIJIN2_ZBC_MAX = 5
+YIJIN2_HS_MAX = 22.0
+YIJIN2_MV_LO = 20.0
+YIJIN2_MV_HI = 120.0
+YIJIN2_TOP_N = 2
+YIJIN2_TP = 0.015
+
 
 def is_st(name: str) -> bool:
     n = (name or "").upper().replace(" ", "")
@@ -154,7 +167,7 @@ def optimized_numeric_ok(row: dict[str, Any]) -> bool:
 
 
 def wr100_ok(row: dict[str, Any]) -> bool:
-    """胜率方案 v2（2026-09-04 复盘后）。"""
+    """胜率方案 v2（高开区间）。"""
     if row.get("is_auction_zt"):
         return False
     open_pct = float(row.get("open_pct") or 0)
@@ -175,6 +188,154 @@ def wr100_ok(row: dict[str, Any]) -> bool:
     if hs > WR100_YEST_HS_MAX:
         return False
     return True
+
+
+def yijin2_ok(row: dict[str, Any]) -> bool:
+    """一进二弱转强：只做昨首板、今开可买、微高开/小低开。"""
+    if row.get("is_auction_zt"):
+        return False
+    if int(row.get("lbc") or 0) != 1:
+        return False
+    open_pct = float(row.get("open_pct") or 0)
+    if not (YIJIN2_OPEN_LO < open_pct < YIJIN2_OPEN_HI):
+        return False
+    if int(row.get("fbt") or 150000) > YIJIN2_FBT_MAX:
+        return False
+    if int(row.get("zbc") or 0) > YIJIN2_ZBC_MAX:
+        return False
+    hs = float(row.get("hs") or 0)
+    if hs > YIJIN2_HS_MAX:
+        return False
+    mv = float(row.get("mv_yi") or 0)
+    if mv > 0 and not (YIJIN2_MV_LO < mv < YIJIN2_MV_HI):
+        return False
+    return True
+
+
+def score_yijin2(row: dict[str, Any], plate_counts: dict[str, int] | None = None) -> tuple[float, list[str]]:
+    """弱转强评分：越接近「微高开+早封+换手不过热」越高。"""
+    score = 0.0
+    reasons: list[str] = []
+    open_pct = float(row.get("open_pct") or 0)
+    hs = float(row.get("hs") or 0)
+    zbc = int(row.get("zbc") or 0)
+    fbt = int(row.get("fbt") or 150000)
+    hy = str(row.get("hy") or "")
+    traj = float(row.get("traj_score") or 0)
+    traj_label = str(row.get("traj_label") or "")
+
+    # 开盘：0~2% 最佳（亚盛/海通≈1%）；小低开次之；接近 2.5% 降权
+    if 0.3 <= open_pct <= 2.0:
+        score += 36
+        reasons.append(f"弱转强开盘{open_pct:.2f}%")
+    elif 0 <= open_pct < 0.3:
+        score += 28
+        reasons.append(f"平开附近{open_pct:.2f}%")
+    elif -1.0 <= open_pct < 0:
+        score += 22
+        reasons.append(f"小低开{open_pct:.2f}%")
+    elif -2.0 < open_pct < -1.0:
+        score += 12
+        reasons.append(f"偏低开{open_pct:.2f}%")
+    elif 2.0 < open_pct < 2.5:
+        score += 14
+        reasons.append(f"开盘偏强{open_pct:.2f}%")
+    else:
+        score += 4
+        reasons.append(f"开盘边缘{open_pct:.2f}%")
+
+    if fbt <= 93030:
+        score += 16
+        reasons.append("昨秒板")
+    elif fbt <= 100000:
+        score += 12
+        reasons.append("昨早盘封")
+    elif fbt <= 103000:
+        score += 6
+        reasons.append("昨午前封")
+
+    if zbc == 0:
+        score += 12
+        reasons.append("昨未开板")
+    elif zbc == 1:
+        score += 8
+        reasons.append("昨开板1次")
+    elif zbc <= 3:
+        score += 2
+        reasons.append(f"昨开板{zbc}次尚可")
+    else:
+        score -= 6
+        reasons.append(f"昨烂板开{zbc}次")
+
+    if 3 <= hs <= 11:
+        score += 14
+        reasons.append(f"昨换手适中{hs:.1f}%")
+    elif 1.5 <= hs < 3:
+        score += 8
+        reasons.append(f"昨换手偏低{hs:.1f}%")
+    elif 11 < hs <= 16:
+        score += 2
+        reasons.append(f"昨换手偏高{hs:.1f}%")
+    elif hs > 16:
+        score -= 8
+        reasons.append(f"昨换手过大{hs:.1f}%")
+
+    plate_n = (plate_counts or {}).get(hy, 0) if hy else 0
+    if plate_n >= 3:
+        score += 8
+        reasons.append(f"板块共振{hy}×{plate_n}")
+    elif plate_n == 1:
+        score -= 1
+
+    if traj_label:
+        # 弱开后 9:20 抬升最加分
+        score += traj
+        reasons.append(f"走势:{traj_label}({traj:+.0f})")
+        if traj_label == "升势确认" and open_pct < 2.0:
+            score += 8
+            reasons.append("弱开后升势确认")
+    elif traj:
+        score += traj
+
+    return score, reasons
+
+
+def yijin2_select(rows: Iterable[dict[str, Any]], *, top_n: int = YIJIN2_TOP_N) -> dict[str, list[dict[str, Any]]]:
+    universe: list[dict[str, Any]] = []
+    for row in rows:
+        code = str(row.get("code") or "")
+        name = str(row.get("name") or "")
+        if not is_main_board(code, name):
+            continue
+        if is_st(name):
+            continue
+        if row.get("is_auction_zt"):
+            continue
+        universe.append(row)
+
+    plate_counts = Counter(str(r.get("hy") or "") for r in universe if r.get("hy"))
+    passed: list[dict[str, Any]] = []
+    for row in universe:
+        if not yijin2_ok(row):
+            continue
+        sc, reasons = score_yijin2(row, plate_counts)
+        item = dict(row)
+        item["score"] = round(sc, 2)
+        item["reasons"] = reasons + [f"止盈建议+{YIJIN2_TP * 100:.1f}%"]
+        item["tp_hint"] = YIJIN2_TP
+        passed.append(item)
+
+    ranked = sorted(
+        passed,
+        key=lambda r: (float(r.get("score") or 0), -abs(float(r.get("open_pct") or 0) - 1.0)),
+        reverse=True,
+    )
+    return {
+        "universe": universe,
+        "after_numeric": ranked,
+        "top5": ranked[:top_n],
+        "top8": ranked[: max(8, top_n)],
+    }
 
 
 def _rank_key(row: dict[str, Any]) -> float:

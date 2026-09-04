@@ -24,6 +24,7 @@ from auction_screener.rules import (
     vol_over_free,
     vol_ratio,
     wr100_ok,
+    yijin2_select,
 )
 from auction_screener.trajectory import (
     AuctionTick,
@@ -196,7 +197,10 @@ def scan_pool(
         title = "原版·竞价涨停取反"
     elif mode == "wr100":
         picked = wr100_select(rows, top_n=min(top_n, WR100_TOP_N))
-        title = "胜率100%方案（+0.8%止盈）"
+        title = "胜率优先·高开区间"
+    elif mode == "yijin2":
+        picked = yijin2_select(rows, top_n=min(top_n, 2))
+        title = "一进二弱转强（9:30前）"
     else:
         picked = optimized_select(rows, top_n=top_n)
         title = "连板优化 v2"
@@ -218,9 +222,13 @@ def scan_pool(
         "pool": [_public_row(r) for r in picked.get("after_numeric", picked.get("top8", []))[:30]],
         "errors_n": len(errors),
         "tip": (
-            "开盘买入，挂 +0.8% 限价止盈；未触及收盘卖。回测同票拿到收盘胜率约53%。"
-            if mode == "wr100"
-            else "9:25后结果更稳；盘前请用「盘前盯盘」。研究用，不构成投资建议。"
+            "9:15–9:25 盘前盯盘锁定；开盘买入。微高开弱转强，建议止盈 +1.5% 或看封板。标的宜少（Top1–2）。"
+            if mode == "yijin2"
+            else (
+                "开盘买入，挂 +0.8% 限价止盈；未触及收盘卖。"
+                if mode == "wr100"
+                else "9:25后结果更稳；一进二请用「弱转强」策略。研究用，不构成投资建议。"
+            )
         ),
     }
 
@@ -331,9 +339,12 @@ def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
         }
         rows.append(row)
 
-    if mode == "wr100":
+    if mode == "yijin2":
+        picked = yijin2_select(rows, top_n=min(top_n, 2))
+        title = "盘前·一进二弱转强"
+    elif mode == "wr100":
         picked = wr100_select(rows, top_n=min(top_n, WR100_TOP_N))
-        title = "盘前·胜率100%"
+        title = "盘前·胜率优先"
     elif mode == "baseline":
         picked = sequential_select(rows)
         title = "盘前·原版"
@@ -359,18 +370,23 @@ def preopen_snapshot(mode: str = "optimized", top_n: int = 5) -> dict[str, Any]:
 
 STRATEGIES = [
     {
+        "id": "yijin2",
+        "name": "一进二弱转强",
+        "desc": "9:30前主策略：昨首板、今开-2%~+2.5%可买。专抓亚盛/海通发展这类微高开晋级，每天最多2只",
+    },
+    {
+        "id": "wr100",
+        "name": "高开止盈",
+        "desc": "竞价涨幅3%~4.5%，昨换手≤10%；开盘后 +0.8% 止盈（与弱转强不同）",
+    },
+    {
         "id": "optimized",
         "name": "连板优化",
         "desc": "收紧量比/金额比，加高度·炸板·市值，综合分排序 Top5",
     },
     {
-        "id": "wr100",
-        "name": "胜率优先",
-        "desc": "复盘加强：昨换手≤10%，一进二优先；二板开盘须<3.7%。开盘后仍建议 +0.8% 止盈",
-    },
-    {
         "id": "baseline",
         "name": "原版公式",
-        "desc": "你的原始问财条件：竞价涨停取反 + 量占自由前5",
+        "desc": "原始「竞价涨停取反」条件",
     },
 ]

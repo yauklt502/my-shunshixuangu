@@ -1,7 +1,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const state = {
-    mode: "optimized",
+    mode: "yijin2",
     result: null,
     watching: false,
     timer: null,
