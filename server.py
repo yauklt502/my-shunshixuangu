@@ -7,9 +7,8 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import httpx
 from fastapi import FastAPI, Query
@@ -24,7 +23,18 @@ from strategy.engine import (
     pick_confirmed_leaders,
 )
 
-CN = ZoneInfo("Asia/Shanghai")
+
+def _china_tz():
+    """Windows 默认无 IANA 时区库；优先 ZoneInfo，失败则用固定 UTC+8。"""
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo("Asia/Shanghai")
+    except Exception:
+        return timezone(timedelta(hours=8), name="CST")
+
+
+CN = _china_tz()
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
 
