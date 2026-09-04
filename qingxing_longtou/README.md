@@ -57,3 +57,12 @@ python cli.py --source tdx --limit 10
 ## 免责声明
 
 学习研究用途，**不构成任何投资建议**。第三方数据可能延迟、缺失或与券商终端不一致。
+
+
+## Windows 本地部署
+
+1. 下载发布包 `qingxing_longtou_windows_portable.zip` 并解压
+2. 安装 [Python 3.11/3.12 x64](https://www.python.org/downloads/)，勾选 Add to PATH
+3. 双击 `安装依赖.bat`，再双击 `启动选股.bat`
+
+离线依赖位于包内 `wheels_win/`（适配 Python 3.11 / 3.12）。详见 `本地部署说明.txt`。
