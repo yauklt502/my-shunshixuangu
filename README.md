@@ -25,11 +25,12 @@ python --version
 
 ## Windows 一键启动
 
-1. 解压本压缩包到任意目录，例如 `D:\shunshi-leader`
-2. 双击 `start.bat`
+1. 解压到**尽量纯英文路径**，例如 `D:\shunshi-leader`
+2. 双击 `start.bat`（脚本为英文，避免 CMD 中文乱码）
 3. 浏览器打开：http://127.0.0.1:8765
+4. 若 `start.bat` 仍异常：右键 `start.ps1` → 用 PowerShell 运行
 
-首次会自动安装依赖（fastapi / uvicorn / httpx）。
+首次会自动安装依赖（fastapi / uvicorn / httpx）。需要已安装 Python 3.10+，并勾选 Add to PATH。
 
 ---
 
