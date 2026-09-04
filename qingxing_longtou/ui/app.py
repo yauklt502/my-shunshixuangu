@@ -115,9 +115,19 @@ class App(tk.Tk):
         self.run_btn.pack(side="left", padx=(4, 6))
         ttk.Button(bar, text="一键截屏", command=self.on_screenshot).pack(side="left", padx=4)
         ttk.Button(bar, text="导出CSV", command=self.on_export).pack(side="left", padx=4)
-        ttk.Button(bar, text="数据源状态", command=self.refresh_source_status).pack(side="left", padx=4)
 
-        self.status_var = tk.StringVar(value="就绪。默认东方财富公开行情；同花顺/通达信需配置 Key 或导出 CSV。")
+        # 连接指示灯：绿=已连接，红=未连接（替代「数据源状态」五字按钮）
+        lamp_frame = ttk.Frame(bar)
+        lamp_frame.pack(side="left", padx=(10, 4))
+        self._source_lamp = tk.Canvas(lamp_frame, width=18, height=18, highlightthickness=0, bg="#f3f0e8")
+        self._source_lamp.pack(side="left")
+        self._lamp_id = self._source_lamp.create_oval(2, 2, 16, 16, fill="#c0392b", outline="#7f1d1d")
+        self._lamp_label = ttk.Label(lamp_frame, text="未连接", style="Sub.TLabel")
+        self._lamp_label.pack(side="left", padx=(4, 0))
+        self._source_lamp.bind("<Button-1>", lambda _e: self.refresh_source_status())
+        self._lamp_label.bind("<Button-1>", lambda _e: self.refresh_source_status())
+
+        self.status_var = tk.StringVar(value="就绪。东方财富 / 同花顺(免费公开) / 通达信均可选，无需付费 Key。")
         ttk.Label(self, textvariable=self.status_var, style="Sub.TLabel", padding=(16, 0)).pack(fill="x")
 
         theory = ttk.Frame(self, padding=(16, 6))
@@ -162,12 +172,22 @@ class App(tk.Tk):
     def refresh_source_status(self) -> None:
         try:
             rows = source_status()
+            ok_any = any(bool(r.get("available")) for r in rows)
             text = " | ".join(
                 f"{r['label']}:{'OK' if r['available'] else '—'}" for r in rows
             )
-            self.status_var.set(f"数据源状态 —— {text}")
+            self.status_var.set(text)
+            # 绿=有可用源，红=全部不可用
+            if ok_any:
+                self._source_lamp.itemconfig(self._lamp_id, fill="#1a7f37", outline="#0b3d2e")
+                self._lamp_label.configure(text="已连接")
+            else:
+                self._source_lamp.itemconfig(self._lamp_id, fill="#c0392b", outline="#7f1d1d")
+                self._lamp_label.configure(text="未连接")
         except Exception as exc:
             self.status_var.set(f"状态检查失败：{exc}")
+            self._source_lamp.itemconfig(self._lamp_id, fill="#c0392b", outline="#7f1d1d")
+            self._lamp_label.configure(text="未连接")
 
     def on_run(self) -> None:
         if self._busy:

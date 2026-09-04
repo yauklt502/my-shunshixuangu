@@ -11,7 +11,7 @@
 - **策略引擎**：板块强度、带动性、连板质量、相对强度、弱势信号综合评分
 - **数据源**
   - 东方财富：公开行情 / 涨停·炸板池（默认，免 Key）
-  - 同花顺：扶摇 API（`FUYAO_API_KEY`）或 `plugins/ths_export/` CSV
+  - 同花顺：`data.10jqka.com.cn` 免费公开接口（涨停板块榜 / 热门概念 / 热股，**免 Key**）
   - 通达信：第三方插件导出 `plugins/tdx/export/`、本地 `TDX_HOME`、或 `TDX_PLUGIN_URL` HTTP 桥
 - **一键截屏**：保存主窗口 PNG 到 `screenshots/`
 - **导出 CSV** / CLI 无界面跑批
