@@ -1,18 +1,23 @@
 顺势选股 · 龙头确认 — 本地部署
 
-【Windows 推荐】
-1. 解压到纯英文路径，例如 D:\shunshi-leader
-   （尽量不要放在含中文或空格过多的目录）
-2. 双击 start.bat
-3. 浏览器打开 http://127.0.0.1:8654
-4. 若 bat 仍异常：右键 start.ps1 -> 使用 PowerShell 运行
-
-【若提示找不到 python】
-先安装 Python 3.10+：https://www.python.org/downloads/
-安装时务必勾选 Add python.exe to PATH
-
-【macOS / Linux】
-chmod +x start.sh && ./start.sh
+【重要】
+启动成功后，黑色窗口必须一直开着，不要关。
 浏览器打开 http://127.0.0.1:8654
+只有按 Ctrl+C 停服务后，再按任意键才会关闭窗口。
+若一启动就出现“按任意键”，说明服务启动失败，请看上方英文报错。
 
-详细说明见 README.md
+【Windows】
+1. 重新下载最新包（含时区修复）
+   https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/realtime-leader-stock-picker-89c3.zip
+2. 解压到新文件夹（不要混用旧文件）
+3. 双击 start.bat
+4. 看到 "Uvicorn running on http://127.0.0.1:8654" 后再打开浏览器
+
+【若仍失败】
+右键 start.ps1 -> 使用 PowerShell 运行
+或在该目录手动执行：
+  .venv\Scripts\python.exe -m pip install -r requirements.txt tzdata
+  set PYTHONPATH=%CD%
+  .venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8654
+
+需要 Python 3.10+，安装时勾选 Add to PATH。

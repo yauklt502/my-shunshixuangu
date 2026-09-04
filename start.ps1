@@ -28,8 +28,20 @@ try {
   & ".venv\Scripts\python.exe" -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 }
 
+& ".venv\Scripts\python.exe" -m pip install tzdata | Out-Null
+
 $env:PYTHONPATH = (Get-Location).Path
 $port = 8654
-Write-Host "[3/3] Starting server http://127.0.0.1:$port"
-Write-Host "Press Ctrl+C to stop."
-& ".venv\Scripts\python.exe" -m uvicorn server:app --host 127.0.0.1 --port $port
+
+Write-Host "[3/4] Preflight import check..."
+& ".venv\Scripts\python.exe" -c "import server; print('import ok')"
+
+Write-Host "[4/4] Starting server http://127.0.0.1:$port"
+Write-Host "Keep this window OPEN while using. Press Ctrl+C to stop."
+try {
+  & ".venv\Scripts\python.exe" -m uvicorn server:app --host 127.0.0.1 --port $port
+} finally {
+  Write-Host ""
+  Write-Host "Server stopped. If there was an error, read the traceback above."
+  Read-Host "Press Enter to close"
+}
