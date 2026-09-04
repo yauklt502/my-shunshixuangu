@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>顺势选股 · 龙头确认</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0c1014;
+      --bg1: #141a21;
+      --ink: #e8e2d6;
+      --muted: #9aa3ad;
+      --line: rgba(232, 226, 214, 0.12);
+      --amber: #e8a54b;
+      --amber-soft: rgba(232, 165, 75, 0.16);
+      --rise: #d94a3d;
+      --fall: #3d9a6a;
+      --card: rgba(20, 26, 33, 0.82);
+      --glow: rgba(232, 165, 75, 0.22);
+      --serif: "Noto Serif SC", "Songti SC", serif;
+      --sans: "Outfit", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 600px at 12% -10%, rgba(232, 165, 75, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(61, 120, 154, 0.18), transparent 50%),
+        linear-gradient(165deg, #0a0e12 0%, #121820 45%, #0c1014 100%);
+      background-attachment: fixed;
+    }
+
+    .noise {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.2rem 0 4rem;
+    }
+
+    /* Hero: one composition */
+    .hero {
+      min-height: min(72vh, 620px);
+      display: grid;
+      align-content: end;
+      gap: 1.1rem;
+      padding: 2rem 0 2.4rem;
+      border-bottom: 1px solid var(--line);
+      animation: rise 0.8s ease both;
+    }
+    .brand {
+      font-family: var(--serif);
+      font-size: clamp(3rem, 9vw, 5.6rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 0.95;
+      margin: 0;
+      text-shadow: 0 0 40px var(--glow);
+    }
+    .brand span {
+      display: block;
+      color: var(--amber);
+      font-size: 0.28em;
+      letter-spacing: 0.35em;
+      font-family: var(--sans);
+      font-weight: 500;
+      margin-bottom: 0.8rem;
+      opacity: 0.9;
+    }
+    .lead {
+      max-width: 34rem;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--muted);
+      margin: 0;
+    }
+    .lead strong { color: var(--ink); font-weight: 600; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 0.6rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .dot {
+      width: 0.5rem; height: 0.5rem; border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    .btn {
+      border: 1px solid rgba(232,165,75,0.45);
+      background: var(--amber-soft);
+      color: var(--amber);
+      font: inherit;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); background: rgba(232,165,75,0.28); }
+    .btn:disabled { opacity: 0.5; cursor: wait; }
+
+    .verdict {
+      margin-top: 1.6rem;
+      padding: 1.2rem 1.35rem;
+      background: linear-gradient(120deg, rgba(232,165,75,0.14), rgba(20,26,33,0.5));
+      border-left: 3px solid var(--amber);
+      animation: rise 0.9s 0.1s ease both;
+    }
+    .verdict h2 {
+      margin: 0 0 0.4rem;
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+    .verdict p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    section {
+      margin-top: 2.4rem;
+      animation: rise 0.85s ease both;
+    }
+    .sec-h {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.55rem;
+    }
+    .sec-h h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+    .sec-h p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+    .picks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 760px) {
+      .picks { grid-template-columns: 1fr; }
+    }
+
+    .pick {
+      position: relative;
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 1.25rem 1.3rem 1.35rem;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.25s ease, transform 0.25s ease;
+    }
+    .pick:hover {
+      border-color: rgba(232,165,75,0.45);
+      transform: translateY(-2px);
+    }
+    .pick::before {
+      content: "";
+      position: absolute;
+      inset: auto -20% -40% auto;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, var(--glow), transparent 70%);
+      opacity: 0.7;
+    }
+    .pick-rank {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      color: var(--amber);
+      text-transform: uppercase;
+      margin-bottom: 0.55rem;
+    }
+    .pick-name {
+      font-family: var(--serif);
+      font-size: 1.85rem;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .pick-code { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin-top: 1.1rem;
+    }
+    .metric {
+      padding: 0.55rem 0.45rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+    }
+    .metric b {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+    .note {
+      margin-top: 0.95rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+      position: relative;
+    }
+    .up { color: var(--rise); }
+    .tag {
+      display: inline-block;
+      margin-top: 0.7rem;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid rgba(232,165,75,0.35);
+      color: var(--amber);
+    }
+
+    .anchors {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 760px) {
+      .anchors { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 1.1rem 1.2rem;
+    }
+    .panel h4 {
+      margin: 0 0 0.35rem;
+      font-family: var(--serif);
+      font-size: 1.15rem;
+    }
+    .panel .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.85rem; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0;
+      border-top: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+    .row:first-of-type { border-top: 0; }
+    .muted { color: var(--muted); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.7rem 0.55rem;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge {
+      display: inline-block;
+      padding: 0.12rem 0.4rem;
+      font-size: 0.72rem;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .badge.yizi { color: #b8a58a; border-color: rgba(184,165,138,0.35); }
+    .badge.ok { color: var(--amber); border-color: rgba(232,165,75,0.4); }
+
+    .rules {
+      display: grid;
+      gap: 0.55rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .rules li::marker { color: var(--amber); }
+
+    .empty, .error {
+      padding: 1.2rem;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+    }
+    .error { border-color: rgba(217,74,61,0.4); color: #e8a9a3; }
+
+    .scroll { overflow-x: auto; }
+
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="brand"><span>SHUNSHI · LEADER CONFIRM</span>顺势选股</h1>
+      <p class="lead">
+        网页只做一件事：<strong>龙头确认</strong>。
+        一字板买不进，只当高度锚；真龙头看竞价主动性与封板承接，输出今日最可能确认的两只非一字。
+      </p>
+      <div class="toolbar">
+        <div class="pill"><span class="dot"></span><span id="session">加载中</span></div>
+        <div class="pill" id="datePill">—</div>
+        <div class="pill" id="statsPill">—</div>
+        <button class="btn" id="refreshBtn" type="button">刷新确认</button>
+      </div>
+      <div class="verdict" id="verdictBox">
+        <h2 id="verdictTitle">正在确认今日龙头…</h2>
+        <p id="verdictSub">拉取东财涨停池 / 昨日涨停表现 / 竞价开盘数据</p>
+      </div>
+    </header>
+
+    <section>
+      <div class="sec-h">
+        <h3>确认榜 · Top 2 非一字</h3>
+        <p>主输出：可交易真龙头候选</p>
+      </div>
+      <div class="picks" id="picks"></div>
+    </section>
+
+    <section>
+      <div class="sec-h">
+        <h3>结构对照</h3>
+        <p>高度锚 vs 可交易高度</p>
+      </div>
+      <div class="anchors" id="anchors"></div>
+    </section>
+
+    <section>
+      <div class="sec-h">
+        <h3>连板天梯</h3>
+        <p>一字标注为不可买</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>代码</th><th>名称</th><th>高度</th><th>类型</th><th>首封</th>
+              <th>炸板</th><th>封单(亿)</th><th>换手%</th><th>行业</th>
+            </tr>
+          </thead>
+          <tbody id="ladderBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-h">
+        <h3>候选评分</h3>
+        <p>昨连板≥2，按确认分排序</p>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>排名</th><th>名称</th><th>路径</th><th>竞价%</th><th>现涨%</th>
+              <th>状态</th><th>得分</th><th>备注</th>
+            </tr>
+          </thead>
+          <tbody id="candBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-h">
+        <h3>确认规则</h3>
+        <p>与人工龙头确认同口径</p>
+      </div>
+      <ol class="rules" id="rules"></ol>
+    </section>
+
+    <footer>
+      数据来源：东方财富涨停池 / 昨日涨停表现 / 行情接口。仅供盘面结构与龙头确认参考，不构成投资建议。
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let timer = null;
+
+    function fmt(v, d = 2) {
+      if (v === null || v === undefined || Number.isNaN(v)) return "—";
+      return Number(v).toFixed(d);
+    }
+
+    function pickCard(c, i) {
+      return `
+        <article class="pick">
+          <div class="pick-rank">CONFIRM #${i + 1}</div>
+          <h4 class="pick-name">${c.name}</h4>
+          <div class="pick-code">${c.code} · ${c.industry || "—"}</div>
+          <span class="tag">${c.status}</span>
+          <div class="metrics">
+            <div class="metric"><b class="up">${fmt(c.open_pct)}%</b><span>竞价涨幅</span></div>
+            <div class="metric"><b>${c.prev_boards}→${c.target_boards}</b><span>晋级路径</span></div>
+            <div class="metric"><b>${fmt(c.score, 1)}</b><span>确认分</span></div>
+            <div class="metric"><b>${c.first_seal}</b><span>首封时间</span></div>
+            <div class="metric"><b>${c.open_count}</b><span>炸板次数</span></div>
+            <div class="metric"><b>${fmt(c.seal_fund_yi)}</b><span>封单(亿)</span></div>
+          </div>
+          <p class="note">${c.rank_note || ""}</p>
+        </article>`;
+    }
+
+    function render(data) {
+      const s = data.session || {};
+      $("session").textContent = `${s.phase || "—"} · ${s.now || ""}`;
+      $("datePill").textContent = `交易日 ${data.date}`;
+      const st = data.stats || {};
+      $("statsPill").textContent = `涨停 ${st.zt_count || 0} · 非一字 ${st.non_yizi_count || 0} · 一字 ${st.yizi_count || 0}`;
+
+      const conf = data.confirm || {};
+      $("verdictTitle").textContent = conf.verdict || "暂无确认结论";
+      const tradable = conf.tradable_height;
+      const yiziNote = conf.yizi_height_note || "";
+      $("verdictSub").textContent = [
+        yiziNote,
+        tradable ? `可交易高度：${tradable.name} ${tradable.boards}板` : "",
+      ].filter(Boolean).join(" ｜ ");
+
+      const picks = data.picks || [];
+      $("picks").innerHTML = picks.length
+        ? picks.map(pickCard).join("")
+        : `<div class="empty">暂无足够的非一字确认样本（可能未开盘或连板稀薄）</div>`;
+
+      const height = conf.height_anchor;
+      const yiziList = data.yizi_anchors || [];
+      const failed = data.failed || [];
+      $("anchors").innerHTML = `
+        <div class="panel">
+          <h4>高度锚（含一字）</h4>
+          <div class="sub">只看结构，不作为可买标的</div>
+          ${height ? `
+            <div class="row"><span>${height.name} ${height.code}</span><b>${height.boards}板 · ${height.board_type}</b></div>
+            <div class="row"><span class="muted">首封 / 炸板</span><span>${height.first_seal} / ${height.open_count}</span></div>
+            <div class="row"><span class="muted">封单(亿)</span><span>${fmt(height.seal_fund_yi)}</span></div>
+          ` : `<div class="empty">暂无连板高度</div>`}
+          ${yiziList.slice(0, 3).map(y => `
+            <div class="row"><span class="muted">${y.name}</span><span>一字锚 · 昨${y.prev_boards}板</span></div>
+          `).join("")}
+        </div>
+        <div class="panel">
+          <h4>掉队对照</h4>
+          <div class="sub">竞价弱 / 未晋级，用来反证龙头</div>
+          ${failed.length ? failed.slice(0, 6).map(f => `
+            <div class="row">
+              <span>${f.name}</span>
+              <span class="muted">竞价 ${fmt(f.open_pct)}% · 现 ${fmt(f.change_pct)}%</span>
+            </div>`).join("") : `<div class="empty">暂无掉队样本</div>`}
+        </div>`;
+
+      const ladder = data.ladder || [];
+      $("ladderBody").innerHTML = ladder.slice(0, 25).map(r => `
+        <tr>
+          <td>${r.code}</td>
+          <td>${r.name}</td>
+          <td>${r.boards}板</td>
+          <td><span class="badge ${r.is_yizi ? "yizi" : "ok"}">${r.board_type}</span></td>
+          <td>${r.first_seal}</td>
+          <td>${r.open_count}</td>
+          <td>${fmt(r.seal_fund_yi)}</td>
+          <td>${fmt(r.turnover)}</td>
+          <td>${r.industry || "—"}</td>
+        </tr>`).join("") || `<tr><td colspan="9">暂无涨停数据</td></tr>`;
+
+      const cands = (data.candidates || []).filter(c => !c.is_yizi);
+      $("candBody").innerHTML = cands.slice(0, 20).map((c, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${c.name}</td>
+          <td>${c.prev_boards}→${c.target_boards}</td>
+          <td class="up">${fmt(c.open_pct)}</td>
+          <td class="up">${fmt(c.change_pct)}</td>
+          <td>${c.status}</td>
+          <td><b>${fmt(c.score, 1)}</b></td>
+          <td class="muted">${(c.rank_note || "").slice(0, 36)}</td>
+        </tr>`).join("") || `<tr><td colspan="8">暂无候选</td></tr>`;
+
+      $("rules").innerHTML = (data.strategy?.rules || []).map(r => `<li>${r}</li>`).join("");
+    }
+
+    async function load() {
+      const btn = $("refreshBtn");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/leader", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        render(data);
+      } catch (e) {
+        $("verdictTitle").textContent = "数据拉取失败";
+        $("verdictSub").textContent = String(e.message || e);
+        $("picks").innerHTML = `<div class="error">无法连接行情接口：${e.message || e}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    $("refreshBtn").addEventListener("click", load);
+    load();
+    timer = setInterval(load, 60_000);
+  </script>
+</body>
+</html>
