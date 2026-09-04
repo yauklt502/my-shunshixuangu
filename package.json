@@ -1,0 +1,15 @@
+{
+  "name": "three-discipline-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "低吸纪律 / 二三板节奏 / 回撤不乱动 — 实时行情看板",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "dev": "node server/index.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "iconv-lite": "^0.6.3"
+  }
+}
