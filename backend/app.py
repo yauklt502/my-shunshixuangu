@@ -5,6 +5,7 @@ import json
 import math
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated, Any
@@ -510,36 +511,168 @@ def with_fallback(primary: str, method: str, *args):
 
 
 def attach_ma5(quotes: list[dict], used: str) -> list[dict]:
-    out = []
-    for q in quotes:
+    """逐票补 MA5；并发拉取，避免串行卡顿。"""
+
+    def one(q: dict) -> dict:
         try:
             kl, _, _, _ = with_fallback(used, "kline", q["code"], 30)
             ma5v = sma([float(k["close"]) for k in kl], 5)
-            out.append(
-                make_quote(
-                    code=q["code"],
-                    name=q.get("name"),
-                    price=q.get("price"),
-                    open_=q.get("open"),
-                    prev_close=q.get("prevClose"),
-                    high=q.get("high"),
-                    low=q.get("low"),
-                    change_pct=q.get("changePct"),
-                    volume=q.get("volume"),
-                    amount=q.get("amount"),
-                    time=q.get("time"),
-                    ma5=ma5v,
-                )
+            return make_quote(
+                code=q["code"],
+                name=q.get("name"),
+                price=q.get("price"),
+                open_=q.get("open"),
+                prev_close=q.get("prevClose"),
+                high=q.get("high"),
+                low=q.get("low"),
+                change_pct=q.get("changePct"),
+                volume=q.get("volume"),
+                amount=q.get("amount"),
+                time=q.get("time"),
+                ma5=ma5v,
             )
         except Exception:  # noqa: BLE001
-            out.append(q)
-    return out
+            return q
+
+    if not quotes:
+        return []
+    out: list[dict | None] = [None] * len(quotes)
+    with ThreadPoolExecutor(max_workers=min(8, len(quotes))) as pool:
+        futs = {pool.submit(one, q): i for i, q in enumerate(quotes)}
+        for fut in as_completed(futs):
+            out[futs[fut]] = fut.result()
+    return [x for x in out if x is not None]
 
 
 def parse_codes(raw: str | None) -> list[str]:
-    if not raw:
+    if not raw or not str(raw).strip():
         return list(DEFAULT_WATCH)
-    return [x.strip() for x in re.split(r"[,，\s]+", raw) if x.strip()]
+    codes = []
+    seen = set()
+    for x in re.split(r"[,，\s]+", str(raw)):
+        d = re.sub(r"\D", "", x.strip())
+        if not d:
+            continue
+        c = d.zfill(6)[-6:]
+        if c not in seen:
+            seen.add(c)
+            codes.append(c)
+    return codes or list(DEFAULT_WATCH)
+
+
+def collect_focus_codes(primary: str, extra: list[str] | None = None, limit: int = 24) -> list[dict]:
+    """二三板 + 观察票，供回撤个股列表。"""
+    rows: list[dict] = []
+    seen: set[str] = set()
+    try:
+        pool, _, _, _ = with_fallback(primary, "limit_up")
+        for x in pool:
+            b = int(x.get("boards") or parse_boards(x.get("highDays")))
+            if b not in (2, 3):
+                continue
+            code = re.sub(r"\D", "", str(x.get("code") or "")).zfill(6)[-6:]
+            if not code or code in seen:
+                continue
+            seen.add(code)
+            rows.append(
+                {
+                    "code": code,
+                    "name": x.get("name") or code,
+                    "boards": b,
+                    "highDays": x.get("highDays"),
+                    "changePct": x.get("changePct"),
+                    "from": "boards",
+                }
+            )
+            if len(rows) >= limit:
+                break
+    except Exception:  # noqa: BLE001
+        pass
+    for raw in extra or []:
+        code = re.sub(r"\D", "", str(raw)).zfill(6)[-6:]
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        rows.append({"code": code, "name": code, "boards": None, "from": "watch"})
+        if len(rows) >= limit + 10:
+            break
+    return rows
+
+
+def stock_drawdown_rows(
+    items: list[dict],
+    primary: str,
+    soft: float,
+    hard: float,
+    days: int,
+) -> list[dict]:
+    """个股相对近 N 日高点回撤 + 冻结建议。"""
+
+    def one(item: dict) -> dict | None:
+        code = item["code"]
+        try:
+            kl, used, label, _ = with_fallback(primary, "kline", code, days)
+            dd = drawdown_from_high(kl)
+            fr = freeze_by_dd(dd.get("drawdownPct") if dd else None, soft, hard)
+            name = item.get("name") or code
+            # 用最新行情补名称/涨跌（可选，失败忽略）
+            return {
+                "code": code,
+                "name": name,
+                "boards": item.get("boards"),
+                "highDays": item.get("highDays"),
+                "from": item.get("from") or "boards",
+                "source": used,
+                "sourceLabel": label,
+                "drawdown": dd,
+                "freeze": fr,
+                "changePct": item.get("changePct"),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "code": code,
+                "name": item.get("name") or code,
+                "boards": item.get("boards"),
+                "from": item.get("from") or "boards",
+                "drawdown": None,
+                "freeze": {"level": "unknown", "label": "无数据", "action": "等待", "reason": str(exc)},
+                "changePct": item.get("changePct"),
+            }
+
+    if not items:
+        return []
+    out: list[dict] = []
+    with ThreadPoolExecutor(max_workers=min(8, len(items))) as pool:
+        futs = [pool.submit(one, it) for it in items]
+        for fut in as_completed(futs):
+            row = fut.result()
+            if row:
+                out.append(row)
+    rank = {"hard": 3, "soft": 2, "ok": 1, "unknown": 0}
+    out.sort(
+        key=lambda x: (
+            -rank.get((x.get("freeze") or {}).get("level"), 0),
+            (x.get("drawdown") or {}).get("drawdownPct") or 0,
+        )
+    )
+    # 补行情名称/涨跌
+    try:
+        codes = [x["code"] for x in out]
+        quotes, _, _, _ = with_fallback(primary, "quotes", codes)
+        qmap = {str(q["code"]): q for q in quotes}
+        for x in out:
+            q = qmap.get(str(x["code"]))
+            if not q:
+                continue
+            if q.get("name"):
+                x["name"] = q["name"]
+            if q.get("changePct") is not None:
+                x["changePct"] = q["changePct"]
+            if q.get("price") is not None:
+                x["price"] = q["price"]
+    except Exception:  # noqa: BLE001
+        pass
+    return out
 
 
 # ---------- API ----------
@@ -563,18 +696,6 @@ def low_buy(
 ):
     primary = source if source in SOURCES else "tongdaxin"
     code_list = parse_codes(codes)
-    # 无观察栏：默认用当日二三板个股做低吸判定
-    if not codes.strip():
-        try:
-            pool, _, _, _ = with_fallback(primary, "limit_up")
-            focus = []
-            for x in pool:
-                b = int(x.get("boards") or parse_boards(x.get("highDays")))
-                if b in (2, 3):
-                    focus.append(str(x.get("code")))
-            code_list = focus[:30] or code_list
-        except Exception:
-            pass
     data, used, label, errors = with_fallback(primary, "quotes", code_list)
     with_ma = attach_ma5(data, used)
     summary = {
@@ -636,13 +757,12 @@ def boards(
         code, lab, reason = "weak", "高度不足", "首板占比过高、二三板稀缺，节奏偏弱"
     elif len(b4) >= 2 and len(b2) <= 1:
         code, lab, reason = "fragile", "高位独苗", "高位板多但二三板断层，龙头容易核"
-    # 给二三板个股打上可买入/观察标签（直接体现在列表上）
+    # 轻量标签：仅用日内行情，不逐票拉 K 线（避免看板卡顿）
     focus_codes = [x["code"] for x in (b2[:20] + b3[:20]) if x.get("code")]
     action_map: dict[str, dict] = {}
     if focus_codes:
         try:
-            qdata, qused, _, _ = with_fallback(primary, "quotes", focus_codes)
-            qdata = attach_ma5(qdata, qused)
+            qdata, _, _, _ = with_fallback(primary, "quotes", focus_codes)
             for q in qdata:
                 st = q.get("lowBuyStatus") or "neutral"
                 if st == "ok":
@@ -660,6 +780,7 @@ def boards(
                     "dayRangePos": q.get("dayRangePos"),
                     "changePct": q.get("changePct"),
                     "price": q.get("price"),
+                    "reason": q.get("lowBuyReason") or "",
                 }
         except Exception as exc:  # noqa: BLE001
             errors.append({"stage": "action_tag", "message": str(exc)})
@@ -668,7 +789,15 @@ def boards(
         out = []
         for x in rows:
             info = action_map.get(str(x.get("code")), {})
-            out.append({**x, **info, "action": info.get("action") or "watch", "actionLabel": info.get("actionLabel") or "观察"})
+            out.append(
+                {
+                    **x,
+                    **info,
+                    "action": info.get("action") or "watch",
+                    "actionLabel": info.get("actionLabel") or "观察",
+                    "reason": info.get("reason") or x.get("reason") or "",
+                }
+            )
         return out
 
     b2, b3 = _tag(b2), _tag(b3)
@@ -707,6 +836,7 @@ def drawdown(
     soft: Annotated[float, Query()] = -3,
     hard: Annotated[float, Query()] = -5,
     days: Annotated[int, Query()] = 20,
+    codes: Annotated[str, Query()] = "",
 ):
     primary = source if source in SOURCES else "tongdaxin"
     results, errors = [], []
@@ -735,6 +865,18 @@ def drawdown(
         if results
         else {"freeze": {"level": "unknown", "label": "无数据", "action": "等待", "reason": ""}}
     )
+
+    watch = parse_codes(codes) if codes.strip() else []
+    # 默认展示二三板个股回撤；观察栏代码一并并入
+    focus_items = collect_focus_codes(primary, extra=watch, limit=24)
+    stocks = stock_drawdown_rows(focus_items, primary, soft, hard, days)
+    stock_summary = {
+        "hard": sum(1 for x in stocks if (x.get("freeze") or {}).get("level") == "hard"),
+        "soft": sum(1 for x in stocks if (x.get("freeze") or {}).get("level") == "soft"),
+        "ok": sum(1 for x in stocks if (x.get("freeze") or {}).get("level") == "ok"),
+        "total": len(stocks),
+    }
+
     return {
         "source": primary,
         "sourceLabel": SOURCES[primary]["label"],
@@ -744,16 +886,17 @@ def drawdown(
                 f"相对近 {days} 日高点回撤 ≤ {soft}%：软冻结——暂停新开仓",
                 f"回撤 ≤ {hard}%：硬冻结——禁止新开仓/加仓，只准防守",
                 "回撤区最常见亏法：忍不住「补仓摊薄」和「换股乱动」",
-                "真实体现：看指数离阶段高点多远，再决定动不动手",
+                "个股与指数分开看：指数可操作 ≠ 个股可乱动；个股硬冻结优先守",
             ],
         },
         "thresholds": {"soft": soft, "hard": hard, "days": days},
         "overall": worst["freeze"],
         "indices": results,
+        "stocks": stocks,
+        "stockSummary": stock_summary,
         "fallbackErrors": errors,
         "updatedAt": now_iso(),
     }
-
 
 
 @app.get("/api/dates")
@@ -773,15 +916,16 @@ def api_panel(
     code: str,
     source: Annotated[str, Query()] = "tdx",
 ):
-    """Tick Stock Panel：日K / 分时 / 1m·5m / 五档（TDX TCP 优先，失败回退东财）。"""
+    """Tick Stock Panel：强制通达信 TCP（eltdx），不回退东财冒充。"""
     from backend import panel_data as pd
 
-    data = pd.build_panel(code, source=source)
-    # normalize keys for frontend
+    data = pd.build_panel(code, source="tdx")
     data["tdxHost"] = data.get("tdx_host") or pd.TDX_HOST
-    data["tdxConnected"] = bool(data.get("tdxConnected") or pd.tdx_available())
-    data["daySource"] = data.get("daySource") or data.get("day_source") or source
+    data["tdxConnected"] = bool(data.get("tdxConnected"))
+    data["daySource"] = "tdx"
     data["errors"] = data.get("errors") or []
+    if not data.get("ok"):
+        return JSONResponse(data, status_code=502)
     return data
 
 

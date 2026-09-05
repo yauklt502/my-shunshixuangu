@@ -1,14 +1,16 @@
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  source: localStorage.getItem('discipline_source') || 'tongdaxin',
-  soft: localStorage.getItem('discipline_soft') || '-3',
-  hard: localStorage.getItem('discipline_hard') || '-5',
-  date: localStorage.getItem('discipline_date') || '',
+  source: localStorage.getItem('td_source') || 'tongdaxin',
+  soft: localStorage.getItem('td_soft') || '-3',
+  hard: localStorage.getItem('td_hard') || '-5',
+  date: localStorage.getItem('td_date') || '',
+  codes: localStorage.getItem('td_codes') || '600519,000001,300750,002594,600900',
   timer: null,
   panel: null,
   intraPeriod: '1min',
   charts: { day: null, minute: null, intra: null },
+  refreshing: false,
 };
 
 function toast(msg) {
@@ -22,14 +24,15 @@ function toast(msg) {
 }
 
 function fmtPct(n, digits = 2) {
-  if (n == null || Number.isNaN(n)) return '—';
-  const sign = n > 0 ? '+' : '';
-  return `${sign}${n.toFixed(digits)}%`;
+  if (n == null || Number.isNaN(Number(n))) return '—';
+  const v = Number(n);
+  return `${v > 0 ? '+' : ''}${v.toFixed(digits)}%`;
 }
 
 function clsPct(n) {
-  if (n == null) return '';
-  return n > 0 ? 'up' : n < 0 ? 'down' : '';
+  if (n == null || Number.isNaN(Number(n))) return '';
+  const v = Number(n);
+  return v > 0 ? 'up' : v < 0 ? 'down' : '';
 }
 
 function fmtNum(v, d = 2) {
@@ -39,8 +42,8 @@ function fmtNum(v, d = 2) {
 
 async function api(path) {
   const res = await fetch(path);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || res.statusText);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.detail || res.statusText);
   return data;
 }
 
@@ -54,15 +57,48 @@ function actionTag(action, label) {
     chase: ['chase', '勿追高'],
     watch: ['neutral', '观察'],
     neutral: ['neutral', '观察'],
+    hard: ['chase', '硬冻结'],
+    soft: ['neutral', '软冻结'],
   };
   const [cls, text] = map[action] || map.watch;
   return `<span class="tag ${cls}">${label || text}</span>`;
 }
 
+function freezeTag(level, label) {
+  const map = { hard: 'chase', soft: 'neutral', ok: 'ok', unknown: 'neutral' };
+  return `<span class="tag ${map[level] || 'neutral'}">${label || level || '—'}</span>`;
+}
+
 function bindStockClicks(root) {
   root.querySelectorAll('[data-code]').forEach((el) => {
-    el.addEventListener('click', () => openPanel(el.dataset.code, el.dataset.name || ''));
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-add]')) return;
+      openPanel(el.dataset.code, el.dataset.name || '');
+    });
   });
+  root.querySelectorAll('[data-add]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addToWatch(btn.dataset.add);
+    });
+  });
+}
+
+function addToWatch(code) {
+  const c = String(code).replace(/\D/g, '').padStart(6, '0');
+  const cur = $('codes')
+    .value.split(/[,，\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (cur.includes(c)) {
+    toast(`${c} 已在观察栏`);
+    return;
+  }
+  cur.push(c);
+  $('codes').value = cur.join(',');
+  localStorage.setItem('td_codes', $('codes').value);
+  toast(`已加入观察：${c}`);
+  refresh();
 }
 
 function renderLowBuy(data) {
@@ -74,25 +110,26 @@ function renderLowBuy(data) {
     <span class="tag chase">勿追高 ${s.chase ?? 0}</span>
   `;
   const body = $('lowBuyBody');
-  body.innerHTML = (data.quotes || [])
-    .map((q) => {
-      const pos = q.dayRangePos == null ? 0 : Math.max(0, Math.min(1, q.dayRangePos));
-      const action = q.lowBuyStatus === 'ok' ? 'ok' : q.lowBuyStatus === 'chase' ? 'chase' : 'watch';
-      const label = action === 'ok' ? '可买入' : action === 'chase' ? '勿追高' : '观察';
-      return `<tr class="click-row" data-code="${q.code}" data-name="${q.name || ''}">
-        <td>${q.code}</td>
-        <td>${q.name || '—'}</td>
-        <td>${q.price ?? '—'}</td>
-        <td class="${clsPct(q.changePct)}">${fmtPct(q.changePct)}</td>
-        <td>${q.ma5 ?? '—'}</td>
-        <td class="${clsPct(q.ma5DistPct)}">${fmtPct(q.ma5DistPct)}</td>
-        <td class="${clsPct(q.fromHighPct)}">${fmtPct(q.fromHighPct)}</td>
-        <td class="${clsPct(q.fromLowPct)}">${fmtPct(q.fromLowPct)}</td>
-        <td><span class="bar"><i style="width:${(pos * 100).toFixed(0)}%"></i></span>${(pos * 100).toFixed(0)}%</td>
-        <td>${actionTag(action, label)} <span class="meta">${q.lowBuyReason || ''}</span></td>
-      </tr>`;
-    })
-    .join('') || `<tr><td colspan="10" class="meta">暂无二三板可判定标的</td></tr>`;
+  body.innerHTML =
+    (data.quotes || [])
+      .map((q) => {
+        const pos = q.dayRangePos == null ? 0 : Math.max(0, Math.min(1, Number(q.dayRangePos)));
+        const action = q.lowBuyStatus === 'ok' ? 'ok' : q.lowBuyStatus === 'chase' ? 'chase' : 'watch';
+        const label = action === 'ok' ? '可买入' : action === 'chase' ? '勿追高' : '观察';
+        return `<tr class="click-row" data-code="${q.code}" data-name="${q.name || ''}">
+          <td>${q.code}</td>
+          <td>${q.name || '—'}</td>
+          <td>${q.price ?? '—'}</td>
+          <td class="${clsPct(q.changePct)}">${fmtPct(q.changePct)}</td>
+          <td>${q.ma5 ?? '—'}</td>
+          <td class="${clsPct(q.ma5DistPct)}">${fmtPct(q.ma5DistPct)}</td>
+          <td class="${clsPct(q.fromHighPct)}">${fmtPct(q.fromHighPct)}</td>
+          <td class="${clsPct(q.fromLowPct)}">${fmtPct(q.fromLowPct)}</td>
+          <td><span class="bar"><i style="width:${(pos * 100).toFixed(0)}%"></i></span>${(pos * 100).toFixed(0)}%</td>
+          <td>${actionTag(action, label)} <span class="meta">${q.lowBuyReason || ''}</span></td>
+        </tr>`;
+      })
+      .join('') || `<tr><td colspan="10" class="meta">观察栏为空</td></tr>`;
   bindStockClicks(body);
 }
 
@@ -115,14 +152,15 @@ function renderBoards(data) {
   const chip = (x) => {
     const action = x.action || 'watch';
     const label = x.actionLabel || (action === 'ok' ? '可买入' : action === 'chase' ? '勿追高' : '观察');
-    return `<button type="button" class="chip clickable" data-code="${x.code}" data-name="${x.name || ''}">
+    return `<div class="chip clickable" data-code="${x.code}" data-name="${x.name || ''}">
       <div class="chip-top">
         <strong>${x.name || x.code}</strong>
         <span class="${clsPct(x.changePct)}">${fmtPct(x.changePct)}</span>
         ${actionTag(action, label)}
+        <button type="button" class="chip-add" data-add="${x.code}" title="加入低吸观察">＋</button>
       </div>
-      <div class="meta">${x.code} · ${x.highDays || (x.boards || '') + '板'} · ${x.reason || ''} · 点击看K线/分时</div>
-    </button>`;
+      <div class="meta">${x.code} · ${x.highDays || (x.boards != null ? x.boards + '板' : '')} · ${x.reason || ''} · 点击看K线</div>
+    </div>`;
   };
 
   $('board2List').innerHTML = (data.focus?.board2 || []).map(chip).join('') || '<div class="meta">暂无二板</div>';
@@ -152,9 +190,38 @@ function renderDrawdown(data) {
       </div>`;
     })
     .join('');
+
+  const ss = data.stockSummary || {};
+  $('ddStockSummary').innerHTML = `
+    <span class="tag chase">硬冻结 ${ss.hard ?? 0}</span>
+    <span class="tag neutral">软冻结 ${ss.soft ?? 0}</span>
+    <span class="tag ok">可操作 ${ss.ok ?? 0}</span>
+    <span class="tag neutral">合计 ${ss.total ?? 0}</span>
+  `;
+
+  const body = $('ddStockBody');
+  body.innerHTML =
+    (data.stocks || [])
+      .map((s) => {
+        const dd = s.drawdown || {};
+        const fr = s.freeze || {};
+        const board = s.boards != null ? `${s.boards}板` : s.from === 'watch' ? '观察' : '—';
+        return `<tr class="click-row" data-code="${s.code}" data-name="${s.name || ''}">
+          <td>${s.code}</td>
+          <td>${s.name || '—'}</td>
+          <td>${board}</td>
+          <td class="${clsPct(s.changePct)}">${fmtPct(s.changePct)}</td>
+          <td class="${clsPct(dd.drawdownPct)}">${fmtPct(dd.drawdownPct)}</td>
+          <td>${dd.peak ?? '—'}<div class="meta">${dd.peakDate || ''}</div></td>
+          <td>${freezeTag(fr.level, fr.label)}</td>
+          <td><span class="meta">${fr.action || ''} · ${fr.reason || ''}</span></td>
+        </tr>`;
+      })
+      .join('') || `<tr><td colspan="8" class="meta">暂无二三板/观察个股回撤数据</td></tr>`;
+  bindStockClicks(body);
 }
 
-/* ---------- Tick Stock Panel (TSP replica) ---------- */
+/* ---------- Tick Stock Panel（仅通达信） ---------- */
 function axisStyle() {
   return {
     axisLine: { lineStyle: { color: '#c5ced8' } },
@@ -168,9 +235,6 @@ function initCharts() {
   if (!state.charts.day) state.charts.day = echarts.init($('dayChart'));
   if (!state.charts.minute) state.charts.minute = echarts.init($('minuteChart'));
   if (!state.charts.intra) state.charts.intra = echarts.init($('intraChart'));
-  window.addEventListener('resize', () => {
-    Object.values(state.charts).forEach((c) => c && c.resize());
-  });
 }
 
 function renderDay(bars) {
@@ -178,99 +242,113 @@ function renderDay(bars) {
   if (!state.charts.day) return;
   const cats = (bars || []).map((b) => b.time || b.date);
   const ax = axisStyle();
-  state.charts.day.setOption({
-    backgroundColor: 'transparent',
-    animation: false,
-    grid: [
-      { left: 48, right: 16, top: 18, height: '58%' },
-      { left: 48, right: 16, top: '78%', height: '14%' },
-    ],
-    xAxis: [
-      { type: 'category', data: cats, ...ax, axisLabel: { show: false } },
-      { type: 'category', data: cats, gridIndex: 1, ...ax, axisLabel: { color: '#5c6775', fontSize: 10 } },
-    ],
-    yAxis: [
-      { scale: true, ...ax },
-      { scale: true, gridIndex: 1, splitNumber: 2, ...ax, axisLabel: { show: false } },
-    ],
-    dataZoom: [{ type: 'inside', xAxisIndex: [0, 1], start: 55, end: 100 }],
-    series: [
-      {
-        type: 'candlestick',
-        data: (bars || []).map((b) => [b.open, b.close, b.low, b.high]),
-        itemStyle: { color: '#c62828', color0: '#1b7f4b', borderColor: '#c62828', borderColor0: '#1b7f4b' },
-      },
-      { type: 'bar', data: (bars || []).map((b) => b.volume), xAxisIndex: 1, yAxisIndex: 1, itemStyle: { color: '#9bb7ad' } },
-    ],
-  });
+  state.charts.day.setOption(
+    {
+      backgroundColor: 'transparent',
+      animation: false,
+      grid: [
+        { left: 48, right: 16, top: 18, height: '58%' },
+        { left: 48, right: 16, top: '78%', height: '14%' },
+      ],
+      xAxis: [
+        { type: 'category', data: cats, ...ax, axisLabel: { show: false } },
+        { type: 'category', data: cats, gridIndex: 1, ...ax, axisLabel: { color: '#5c6775', fontSize: 10 } },
+      ],
+      yAxis: [
+        { scale: true, ...ax },
+        { scale: true, gridIndex: 1, splitNumber: 2, ...ax, axisLabel: { show: false } },
+      ],
+      dataZoom: [{ type: 'inside', xAxisIndex: [0, 1], start: 55, end: 100 }],
+      series: [
+        {
+          type: 'candlestick',
+          data: (bars || []).map((b) => [b.open, b.close, b.low, b.high]),
+          itemStyle: { color: '#c0392b', color0: '#0f6b5c', borderColor: '#c0392b', borderColor0: '#0f6b5c' },
+        },
+        {
+          type: 'bar',
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: (bars || []).map((b) => b.volume),
+          itemStyle: { color: '#9bb7ad' },
+        },
+      ],
+    },
+    true,
+  );
 }
 
 function renderMinute(minute) {
   initCharts();
   if (!state.charts.minute) return;
   const points = minute?.points || [];
-  const pre = Number(minute?.pre_close || (points[0] && points[0].price) || 0);
-  const times = points.map((p) => p.time);
+  const pre = Number(minute?.pre_close || minute?.preClose) || 0;
   const ax = axisStyle();
-  state.charts.minute.setOption({
-    backgroundColor: 'transparent',
-    animation: false,
-    grid: [
-      { left: 48, right: 16, top: 20, height: '58%' },
-      { left: 48, right: 16, top: '78%', height: '14%' },
-    ],
-    xAxis: [
-      { type: 'category', data: times, boundaryGap: false, ...ax, axisLabel: { show: false } },
-      { type: 'category', data: times, gridIndex: 1, ...ax, axisLabel: { color: '#5c6775', fontSize: 10 } },
-    ],
-    yAxis: [
-      { scale: true, ...ax, axisLabel: { color: '#5c6775', formatter: (v) => Number(v).toFixed(2) } },
-      { scale: true, gridIndex: 1, ...ax, axisLabel: { show: false } },
-    ],
-    series: [
-      {
-        type: 'line',
-        data: points.map((p) => p.price),
-        showSymbol: false,
-        lineStyle: { width: 1.5, color: '#1c2430' },
-        areaStyle: { color: 'rgba(15,107,92,0.08)' },
-        markLine: pre
-          ? { symbol: 'none', label: { show: false }, data: [{ yAxis: pre }], lineStyle: { type: 'dashed', color: '#2a6f97' } }
-          : undefined,
-      },
-      { type: 'line', data: points.map((p) => p.avg), showSymbol: false, lineStyle: { width: 1, color: '#2a6f97' } },
-      { type: 'bar', data: points.map((p) => p.volume), xAxisIndex: 1, yAxisIndex: 1, itemStyle: { color: '#9bb7ad' } },
-    ],
-  });
+  state.charts.minute.setOption(
+    {
+      backgroundColor: 'transparent',
+      animation: false,
+      grid: [
+        { left: 48, right: 16, top: 18, height: '62%' },
+        { left: 48, right: 16, top: '78%', height: '14%' },
+      ],
+      xAxis: [
+        { type: 'category', data: points.map((p) => p.time), ...ax, axisLabel: { show: false } },
+        { type: 'category', data: points.map((p) => p.time), gridIndex: 1, ...ax, axisLabel: { show: false } },
+      ],
+      yAxis: [
+        { scale: true, ...ax },
+        { scale: true, gridIndex: 1, ...ax, axisLabel: { show: false } },
+      ],
+      series: [
+        {
+          type: 'line',
+          data: points.map((p) => p.price),
+          showSymbol: false,
+          lineStyle: { width: 1.5, color: '#1c2430' },
+          areaStyle: { color: 'rgba(15,107,92,0.08)' },
+          markLine: pre
+            ? { symbol: 'none', label: { show: false }, data: [{ yAxis: pre }], lineStyle: { type: 'dashed', color: '#2a6f97' } }
+            : undefined,
+        },
+        { type: 'line', data: points.map((p) => p.avg), showSymbol: false, lineStyle: { width: 1, color: '#2a6f97' } },
+        { type: 'bar', data: points.map((p) => p.volume), xAxisIndex: 1, yAxisIndex: 1, itemStyle: { color: '#9bb7ad' } },
+      ],
+    },
+    true,
+  );
 }
 
 function renderIntra(bars) {
   initCharts();
   if (!state.charts.intra) return;
   const ax = axisStyle();
-  state.charts.intra.setOption({
-    backgroundColor: 'transparent',
-    animation: false,
-    grid: { left: 48, right: 16, top: 18, bottom: 28 },
-    xAxis: { type: 'category', data: (bars || []).map((b) => String(b.time || '').slice(5)), ...ax },
-    yAxis: { scale: true, ...ax },
-    series: [
-      {
-        type: 'line',
-        data: (bars || []).map((b) => b.close),
-        showSymbol: false,
-        lineStyle: { width: 1.4, color: '#0f6b5c' },
-        areaStyle: { color: 'rgba(15,107,92,0.1)' },
-      },
-    ],
-  });
+  state.charts.intra.setOption(
+    {
+      backgroundColor: 'transparent',
+      animation: false,
+      grid: { left: 48, right: 16, top: 18, bottom: 28 },
+      xAxis: { type: 'category', data: (bars || []).map((b) => String(b.time || '').slice(5)), ...ax },
+      yAxis: { scale: true, ...ax },
+      series: [
+        {
+          type: 'line',
+          data: (bars || []).map((b) => b.close),
+          showSymbol: false,
+          lineStyle: { width: 1.4, color: '#0f6b5c' },
+          areaStyle: { color: 'rgba(15,107,92,0.1)' },
+        },
+      ],
+    },
+    true,
+  );
 }
 
 function renderDepth(depth) {
   const asks = [...(depth?.asks || [])].reverse();
   const bids = depth?.bids || [];
   $('depthBox').innerHTML = `
-    <div class="depth-meta">最新 ${fmtNum(depth?.price)} · 昨收 ${fmtNum(depth?.pre_close)} · ${depth?.source || ''}${depth?.tdx_host ? ' · ' + depth.tdx_host : ''}</div>
+    <div class="depth-meta">最新 ${fmtNum(depth?.price)} · 昨收 ${fmtNum(depth?.pre_close ?? depth?.preClose)} · 通达信${depth?.tdx_host || depth?.tdxHost ? ' · ' + (depth.tdx_host || depth.tdxHost) : ''}</div>
     <div class="depth-side">${
       asks.map((x, i) => `<div class="depth-row ask"><span>卖${asks.length - i}</span><span>${fmtNum(x.price)} / ${fmtNum(x.volume, 0)}</span></div>`).join('') ||
       "<div class='depth-row'>无卖档</div>"
@@ -286,66 +364,74 @@ async function openPanel(code, name) {
   $('tspMask').classList.remove('hidden');
   $('tspPanel').classList.remove('hidden');
   $('tspTitle').textContent = `${name || ''} ${code}`;
-  $('tspSub').textContent = '加载 Tick Stock Panel…';
-  const source = $('tspChartSource').value || 'tdx';
+  $('tspSub').textContent = '加载通达信 Tick Stock Panel…';
   try {
-    const data = await api(`/api/panel/${code}?source=${encodeURIComponent(source)}`);
+    const data = await api(`/api/panel/${code}?source=tdx`);
     state.panel = { ...data, code, name };
-    const conn = data.tdxConnected ? 'TDX已连通' : 'TDX未连通·已回退';
-    $('tspSub').textContent = `Tick Stock Panel · ${data.daySource || source} · ${conn}${data.errors?.length ? ' · 部分降级' : ''}`;
+    const host = data.tdxHost || data.tdx_host || '';
+    const conn = data.tdxConnected ? 'TDX已连通' : 'TDX未连通';
+    $('tspSub').textContent = `Tick Stock Panel · 通达信 TCP ${host} · ${conn}${data.errors?.length ? ' · 部分降级' : ''}`;
     renderDay(data.day || []);
     renderMinute(data.minute || { points: [] });
     renderIntra((state.intraPeriod === '5min' ? data.m5 : data.m1) || []);
     renderDepth(data.depth || {});
     setTimeout(() => Object.values(state.charts).forEach((c) => c && c.resize()), 40);
   } catch (err) {
-    $('tspSub').textContent = `加载失败：${err.message}`;
+    state.panel = { code, name };
+    $('tspSub').textContent = `通达信加载失败：${err.message}`;
   }
 }
 
 function closePanel() {
   $('tspMask').classList.add('hidden');
   $('tspPanel').classList.add('hidden');
+  state.panel = null;
 }
 
 async function loadDates() {
   const data = await api('/api/dates?limit=40');
   const sel = $('dateSelect');
-  sel.innerHTML = (data.dates || [])
-    .map((d) => `<option value="${d.date}">${d.label}</option>`)
-    .join('');
+  sel.innerHTML = (data.dates || []).map((d) => `<option value="${d.date}">${d.label}</option>`).join('');
   const preferred = state.date && [...sel.options].some((o) => o.value === state.date) ? state.date : data.default;
-  sel.value = preferred;
+  sel.value = preferred || '';
   state.date = sel.value;
 }
 
 async function loadSources() {
   const data = await api('/api/sources');
   const sel = $('source');
-  sel.innerHTML = data.sources.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+  sel.innerHTML = (data.sources || []).map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
   sel.value = state.source;
   $('soft').value = state.soft;
   $('hard').value = state.hard;
+  if (state.codes) $('codes').value = state.codes;
   $('sourceNote').textContent = data.note || '';
 }
 
 async function refresh() {
+  if (state.refreshing) return;
+  if (state.panel && !$('tspPanel').classList.contains('hidden')) return;
+
   const source = $('source').value;
   const soft = $('soft').value;
   const hard = $('hard').value;
   const date = $('dateSelect').value;
+  const codes = $('codes').value.trim();
   state.source = source;
   state.soft = soft;
   state.hard = hard;
   state.date = date;
-  localStorage.setItem('discipline_source', source);
-  localStorage.setItem('discipline_soft', soft);
-  localStorage.setItem('discipline_hard', hard);
-  localStorage.setItem('discipline_date', date);
+  state.codes = codes;
+  localStorage.setItem('td_source', source);
+  localStorage.setItem('td_soft', soft);
+  localStorage.setItem('td_hard', hard);
+  localStorage.setItem('td_date', date);
+  localStorage.setItem('td_codes', codes);
 
-  const q = new URLSearchParams({ source, date });
-  const dq = new URLSearchParams({ source, soft, hard });
+  const q = new URLSearchParams({ source, date, codes });
+  const dq = new URLSearchParams({ source, soft, hard, codes });
 
+  state.refreshing = true;
   $('btnRefresh').disabled = true;
   try {
     const [lowBuy, boards, drawdown] = await Promise.all([
@@ -357,12 +443,13 @@ async function refresh() {
     renderBoards(boards);
     renderDrawdown(drawdown);
     const used = [lowBuy.sourceLabel, boards.sourceLabel].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' / ');
-    $('sourceNote').textContent = `当前：${used} · 复盘 ${date}`;
+    $('sourceNote').textContent = `当前：${used || source} · 复盘 ${date || '今日'}`;
     $('updatedAt').textContent = `更新 ${new Date().toLocaleTimeString('zh-CN', { hour12: false })}`;
   } catch (e) {
     toast(`刷新失败：${e.message}`);
   } finally {
     $('btnRefresh').disabled = false;
+    state.refreshing = false;
   }
 }
 
@@ -403,21 +490,27 @@ async function shotPanel() {
 
 function startAuto() {
   clearInterval(state.timer);
-  state.timer = setInterval(refresh, 15000);
+  state.timer = setInterval(refresh, 30000);
 }
 
-$('btnRefresh').addEventListener('click', refresh);
+$('btnRefresh').addEventListener('click', () => {
+  const was = state.panel;
+  if (was) state.panel = null;
+  refresh().finally(() => {
+    if (was && !$('tspPanel').classList.contains('hidden')) state.panel = was;
+  });
+});
 $('btnShot').addEventListener('click', screenshot);
 $('source').addEventListener('change', refresh);
 $('dateSelect').addEventListener('change', refresh);
 $('soft').addEventListener('change', refresh);
 $('hard').addEventListener('change', refresh);
+$('codes').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') refresh();
+});
 $('tspClose').addEventListener('click', closePanel);
 $('tspMask').addEventListener('click', closePanel);
 $('tspShot').addEventListener('click', shotPanel);
-$('tspChartSource').addEventListener('change', () => {
-  if (state.panel?.code) openPanel(state.panel.code, state.panel.name || '');
-});
 document.querySelectorAll('.mini-tab').forEach((btn) => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.mini-tab').forEach((b) => b.classList.remove('active'));
@@ -425,6 +518,9 @@ document.querySelectorAll('.mini-tab').forEach((btn) => {
     state.intraPeriod = btn.dataset.period;
     if (state.panel) renderIntra((state.intraPeriod === '5min' ? state.panel.m5 : state.panel.m1) || []);
   });
+});
+window.addEventListener('resize', () => {
+  Object.values(state.charts).forEach((c) => c && c.resize());
 });
 
 await loadSources();
