@@ -1,0 +1,11 @@
+dist/
+.DS_Store
+.env
+*.log
+node_modules/
+.npm/
+.pack-node-modules/
+*.pyc
+__pycache__/
+.venv/
+.wrangler/

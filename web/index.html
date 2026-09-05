@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>三条纪律看板 · 低吸 / 二三板 / 回撤</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/vendor/echarts.min.js"></script>
+  <script src="/vendor/html2canvas.min.js" defer></script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">三</div>
+        <div>
+          <h1>三条纪律看板</h1>
+          <p class="sub">低吸纪律 · 二三板节奏 · 回撤不乱动</p>
+        </div>
+      </div>
+      <nav class="nav-controls">
+        <label class="field">
+          <span>复盘日期</span>
+          <select id="dateSelect"></select>
+        </label>
+        <label class="field">
+          <span>数据源</span>
+          <select id="source"></select>
+        </label>
+        <label class="field grow">
+          <span>低吸观察栏</span>
+          <input id="codes" type="text" value="600519,000001,300750,002594,600900" placeholder="代码逗号分隔，点二三板可加入" />
+        </label>
+        <label class="field">
+          <span>软冻结%</span>
+          <input id="soft" type="number" value="-3" step="0.5" />
+        </label>
+        <label class="field">
+          <span>硬冻结%</span>
+          <input id="hard" type="number" value="-5" step="0.5" />
+        </label>
+        <div class="btn-group">
+          <button id="btnRefresh" class="btn primary" type="button">刷新</button>
+          <button id="btnShot" class="btn" type="button">截图</button>
+        </div>
+      </nav>
+    </header>
+
+    <section class="meta-row">
+      <div id="sourceNote" class="pill">数据源加载中…</div>
+      <div id="updatedAt" class="pill muted">—</div>
+      <div id="autoHint" class="pill muted">每 30 秒自动刷新 · 点击个股开浮窗 · 二三板「＋」加入观察</div>
+    </section>
+
+    <main id="captureRoot" class="grid">
+      <section class="panel" id="panelLowBuy">
+        <header class="panel-head">
+          <div>
+            <h2>① 低吸纪律</h2>
+            <p class="panel-desc">观察栏个股：可买入 / 观察 / 勿追高（点击行打开行情浮窗）</p>
+          </div>
+          <div id="lowBuySummary" class="badge-row"></div>
+        </header>
+        <ul id="lowBuyRules" class="rules"></ul>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>代码</th>
+                <th>名称</th>
+                <th>现价</th>
+                <th>涨跌</th>
+                <th>MA5</th>
+                <th>距MA5</th>
+                <th>距高</th>
+                <th>距低</th>
+                <th>日内位置</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="lowBuyBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="panelBoards">
+        <header class="panel-head">
+          <div>
+            <h2>② 二三板节奏</h2>
+            <p class="panel-desc">涨停梯队 · 可买入/观察标签 · 点击开浮窗 ·「＋」加入低吸观察</p>
+          </div>
+          <div id="rhythmBadge" class="status-chip">—</div>
+        </header>
+        <p id="rhythmReason" class="panel-desc" style="margin-top:-4px;margin-bottom:10px"></p>
+        <ul id="boardRules" class="rules"></ul>
+        <div id="boardStats" class="stat-bars"></div>
+        <div class="split">
+          <div>
+            <h3>二板（关键）</h3>
+            <div id="board2List" class="stock-chips"></div>
+          </div>
+          <div>
+            <h3>三板（关键）</h3>
+            <div id="board3List" class="stock-chips"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panelDrawdown">
+        <header class="panel-head">
+          <div>
+            <h2>③ 回撤时别乱动</h2>
+            <p class="panel-desc">指数 + 二三板/观察个股相对近高点回撤；冻结就别乱动</p>
+          </div>
+          <div id="freezeBadge" class="status-chip">—</div>
+        </header>
+        <p id="freezeReason" class="panel-desc" style="margin-top:-4px;margin-bottom:10px"></p>
+        <ul id="ddRules" class="rules"></ul>
+        <div id="ddCards" class="dd-cards"></div>
+        <div class="dd-stock-head">
+          <h3>个股回撤（二三板 + 观察栏）</h3>
+          <div id="ddStockSummary" class="badge-row"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>代码</th>
+                <th>名称</th>
+                <th>板</th>
+                <th>涨跌</th>
+                <th>回撤</th>
+                <th>近高</th>
+                <th>冻结</th>
+                <th>建议</th>
+              </tr>
+            </thead>
+            <tbody id="ddStockBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>看板行情可切换：东方财富 / 同花顺 / 通达信。浮窗强制通达信 TCP（115.238.90.165:7709）。</span>
+      <span>仅供纪律可视化，不构成投资建议。</span>
+    </footer>
+  </div>
+
+  <!-- Tick Stock Panel 浮窗（复刻 TSP · 仅通达信） -->
+  <div id="tspMask" class="tsp-mask hidden"></div>
+  <div id="tspPanel" class="tsp-panel hidden" role="dialog" aria-modal="true">
+    <div class="tsp-head">
+      <div>
+        <div id="tspTitle" class="tsp-title">—</div>
+        <div id="tspSub" class="tsp-sub">Tick Stock Panel · 通达信 TCP · 日K / 分时 / 1m·5m / 五档</div>
+      </div>
+      <div class="tsp-actions">
+        <span class="pill muted" id="tspSourceLock">通达信 TCP</span>
+        <button id="tspShot" class="btn" type="button">截图面板</button>
+        <button id="tspClose" class="btn" type="button">关闭</button>
+      </div>
+    </div>
+    <div class="tsp-body" id="tspCapture">
+      <div class="tsp-left">
+        <div class="tsp-card">
+          <div class="tsp-card-title">日K</div>
+          <div id="dayChart" class="chart"></div>
+        </div>
+        <div class="tsp-card">
+          <div class="tsp-card-title">1分钟 / 5分钟</div>
+          <div class="mini-tabs">
+            <button type="button" class="mini-tab active" data-period="1min">1m</button>
+            <button type="button" class="mini-tab" data-period="5min">5m</button>
+          </div>
+          <div id="intraChart" class="chart short"></div>
+        </div>
+      </div>
+      <div class="tsp-right">
+        <div class="tsp-card">
+          <div class="tsp-card-title">分时</div>
+          <div id="minuteChart" class="chart tall"></div>
+        </div>
+        <div class="tsp-card depth-card">
+          <div class="tsp-card-title">五档盘口</div>
+          <div id="depthBox" class="depth"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" hidden></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
