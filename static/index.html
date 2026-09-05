@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10秒定龙头 · 盘中跟 / 盘后盯</title>
+  <style>
+    :root {
+      --bg: #ffffff; --panel: #ffffff; --line: #e5e7eb; --text: #1a1d26;
+      --muted: #6b7280; --gold: #a16207; --cyan: #0f766e; --red: #dc2626;
+      --green: #15803d; --warn: #c2410c; --purple: #6d28d9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background: #ffffff;
+      color: var(--text);
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+      padding: 18px 24px 12px; border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0; font-size: 22px; }
+    h1 span { color: var(--gold); }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .meta { text-align: right; font-size: 13px; color: var(--muted); }
+    .meta b { color: var(--cyan); }
+    .wrap { padding: 16px 24px 40px; display: grid; gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .card.watch { border-color: #86efac; }
+    .card.hat-loco { border-color: #99f6e4; }
+    .card.hat-sent { border-color: #fde68a; }
+    .card.hat-height { border-color: #ddd6fe; }
+    .card.on { box-shadow: inset 0 0 0 1px rgba(161,98,7,.35); }
+    .kicker { font-size: 12px; color: var(--muted); }
+    .name { font-size: 26px; margin: 6px 0 4px; }
+    .name.mid { font-size: 20px; }
+    .name small { color: var(--muted); font-size: 14px; margin-left: 8px; }
+    .action { color: var(--gold); font-size: 14px; }
+    .why { font-size: 12px; color: #374151; line-height: 1.55; }
+    .steps { display: grid; gap: 8px; }
+    .step { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: 0; }
+    .ok { color: var(--green); font-weight: 700; }
+    .no { color: var(--red); font-weight: 700; }
+    .two { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; }
+    .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-weight: 500; }
+    th.sort { cursor: pointer; user-select: none; }
+    th.sort:hover { color: var(--text); }
+    th.sort.on { color: var(--cyan); font-weight: 700; }
+    tr.pass td { background: #f0fdf4; }
+    tr.side td { color: #6b7280; }
+    .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
+    .tag.pass { background: #dcfce7; color: var(--green); }
+    .tag.side { background: #ede9fe; color: var(--purple); }
+    .tag.kill { background: #fee2e2; color: var(--red); }
+    .tag.gold { background: #fef3c7; color: var(--gold); }
+    .tag.cyan { background: #ccfbf1; color: var(--cyan); }
+    .tag.ths { background: #fae8ff; color: #86198f; }
+    button, input, select {
+      background: #ffffff; color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 6px 10px;
+    }
+    button { cursor: pointer; }
+    button.shot { background: #fef3c7; border-color: #f59e0b; color: var(--gold); }
+    .tools { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+    .warns { color: var(--warn); font-size: 12px; }
+    .notes { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: #374151; }
+    .defs b { color: var(--gold); }
+    details.card summary { cursor: pointer; color: var(--muted); }
+    .stk { color: var(--cyan); cursor: pointer; text-decoration: underline; }
+    .stk:hover { color: var(--gold); }
+    .mask {
+      display: none; position: fixed; inset: 0; background: rgba(17,24,39,.35);
+      z-index: 40; align-items: center; justify-content: center; padding: 20px;
+    }
+    .mask.show { display: flex; }
+    .pop {
+      width: min(920px, 96vw); max-height: 92vh; overflow: auto;
+      background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
+    }
+    .pop-hd { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .tabs { display: flex; gap: 6px; margin: 10px 0; }
+    .tabs button.on { background: #ccfbf1; border-color: #0f766e; color: #0f766e; }
+    .depth { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+    .depth .up { color: var(--red); }
+    .depth .dn { color: var(--green); }
+    .chart-box { width: 100%; height: 360px; }
+    .chart-box canvas { width: 100%; height: 100%; display: block; }
+    @media (max-width: 1100px) { .two, .three, header, .defs { display: block; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>10秒定龙头 · <span>三路对照，盯一只</span></h1>
+      <div class="sub">先定板块。火车头管带动，情绪龙头管人气，空间高标管高度。盘中跟、盘后盯同一只。</div>
+    </div>
+    <div>
+      <div class="tools">
+        <select id="mode">
+          <option value="">自动（按时段）</option>
+          <option value="盘中">盘中跟</option>
+          <option value="盘后">盘后复盘</option>
+        </select>
+        <input id="date" placeholder="复盘日 20260904" maxlength="8" />
+        <button id="go">加载</button>
+        <button id="refresh">刷新</button>
+        <button id="live">实时</button>
+        <button id="shot" class="shot">截屏</button>
+      </div>
+      <div class="meta" id="meta">正在拉行情…</div>
+    </div>
+  </header>
+  <div class="wrap" id="shotRoot">
+    <div id="warns" class="warns"></div>
+    <div class="card" id="srcBar"></div>
+    <div class="card watch" id="watchCard"></div>
+    <div class="three" id="hats"></div>
+    <div class="two">
+      <div class="card">
+        <div class="kicker">6 步清单（盘中盘后同一套）</div>
+        <div class="steps" id="steps"></div>
+      </div>
+      <div class="card">
+        <div class="kicker">主线封板序 · 谁先封、谁封得死（一字/爆量/烂板会跳过）</div>
+        <div style="overflow:auto;max-height:420px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th>序</th><th>名称</th>
+                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封</th>
+                <th class="sort" data-table="main" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
+                <th class="sort" data-table="main" data-key="seal" data-label="封单">封单</th>
+                <th>炸</th><th>板</th>
+                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿</th>
+                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气</th>
+                <th>量能</th><th>帽子</th>
+              </tr>
+            </thead>
+            <tbody id="mainboard"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card">
+        <div class="kicker">主题通道 · 主线定火车头，次主线/支线高标留下对照</div>
+        <div style="overflow:auto;max-height:360px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th>通道</th><th>主题</th>
+                <th class="sort" data-table="themes" data-key="count" data-label="板块涨停">板块涨停</th>
+                <th>额亿</th><th>最高板</th>
+                <th class="sort" data-table="themes" data-key="first_time" data-label="先封">先封</th>
+              </tr>
+            </thead>
+            <tbody id="themes"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">全市场对照</div>
+        <div style="overflow:auto;max-height:360px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th>通道</th><th>名称</th><th>主题</th><th>板</th>
+                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封</th>
+                <th class="sort" data-table="all" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
+                <th class="sort" data-table="all" data-key="seal" data-label="封单">封单</th>
+                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿</th>
+                <th>炸</th>
+                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气</th>
+                <th>角色</th>
+              </tr>
+            </thead>
+            <tbody id="all"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <details class="card">
+      <summary>定义（先问这是什么，再问盯谁）</summary>
+      <div class="defs" id="defs" style="margin-top:10px"></div>
+    </details>
+  </div>
+  <div class="mask" id="mask">
+    <div class="pop" id="pop">
+      <div class="pop-hd">
+        <div>
+          <div class="kicker" id="popSrc">通达信 7709</div>
+          <div class="name mid" id="popName">—</div>
+          <div class="why" id="popQuote"></div>
+        </div>
+        <button id="popClose">关闭</button>
+      </div>
+      <div class="depth" id="popDepth"></div>
+      <div class="tabs">
+        <button data-tab="minute" class="on">分时</button>
+        <button data-tab="day">日K</button>
+        <button data-tab="1m">1分</button>
+        <button data-tab="5m">5分</button>
+      </div>
+      <div class="chart-box"><canvas id="chart" width="880" height="360"></canvas></div>
+    </div>
+  </div>
+<script src="/static/vendor/html2canvas.min.js"></script>
+<script src="/static/chart.js"></script>
+<script>
+let currentDate = "", currentMode = "", lastSnap = null, loading = false;
+const sorts = { main: null, all: null, themes: null };
+
+function missingValue(row, key) {
+  if (key === "first_seal") return !(Number(row.first_seal_raw || 0) > 0);
+  if (key === "pop") return !(Number(row.pop_rank) > 0);
+  if (key === "first_time") {
+    const raw = row.first_seal || row.first_time || "";
+    return !String(raw).replace(/\D/g, "");
+  }
+  return false;
+}
+function sortValue(row, key) {
+  if (key === "first_seal") return Number(row.first_seal_raw || 0);
+  if (key === "peer_zt") return Number(row.peer_zt || 0);
+  if (key === "seal") return Number(row.seal_fund_yi || 0);
+  if (key === "turnover") return Number(row.turnover || 0);
+  if (key === "amount") return Number(row.amount_yi || 0);
+  if (key === "pop") return Number(row.pop_rank || 0);
+  if (key === "count") return Number(row.count || 0);
+  if (key === "first_time") {
+    if (typeof row.first_seal === "number") return row.first_seal;
+    return Number(String(row.first_time || row.first_seal || "").replace(/\D/g, "")) || 0;
+  }
+  return 0;
+}
+function sortedRows(rows, spec) {
+  if (!spec || !spec.key) return rows.slice();
+  const dir = spec.dir === -1 ? -1 : 1;
+  return rows.slice().sort((a, b) => {
+    const am = missingValue(a, spec.key);
+    const bm = missingValue(b, spec.key);
+    if (am !== bm) return am ? 1 : -1;
+    const d = (sortValue(a, spec.key) - sortValue(b, spec.key)) * dir;
+    if (d !== 0) return d;
+    return String(a.code || a.theme || "").localeCompare(String(b.code || b.theme || ""));
+  });
+}
+function cycleSort(table, key) {
+  const cur = sorts[table];
+  if (!cur || cur.key !== key) sorts[table] = { key, dir: 1 };
+  else if (cur.dir === 1) sorts[table] = { key, dir: -1 };
+  else sorts[table] = null;
+}
+function markSortHeaders() {
+  document.querySelectorAll("th.sort").forEach((th) => {
+    const cur = sorts[th.dataset.table];
+    const on = !!(cur && cur.key === th.dataset.key);
+    th.classList.toggle("on", on);
+    th.textContent = on ? `${th.dataset.label} ${cur.dir === 1 ? "↑" : "↓"}` : th.dataset.label;
+    th.title = "点一下升序，再点降序，第三次回到默认";
+  });
+}
+function hatsOf(r) { return (r && r.hats) || []; }
+function tagClass(role, lane) {
+  if (["情绪龙头","火车头"].includes(role)) return "tag gold";
+  if (role === "空间高标" || role === "空间龙") return "tag cyan";
+  if (["高度锚","独立票","见顶观察"].includes(role)) return "tag kill";
+  if (lane === "主线") return "tag pass";
+  return "tag side";
+}
+function stk(code, name) {
+  return `<span class="stk" data-code="${code}" data-name="${name || ""}">${name || code}</span>`;
+}
+function mini(p, empty) {
+  if (!p) return `<div class="why">${empty}</div>`;
+  const hats = (p.hats || []).join(" / ") || p.role;
+  return `
+    <div class="name mid">${stk(p.code, p.name)}<small>${p.code} · ${p.boards}板 · ${p.theme}</small></div>
+    <div class="why">${hats} · 人气${p.pop_rank ?? "-"} · 换手${p.turnover}% · 成交${p.amount_yi}亿 · 炸${p.open_count} · 首封${p.first_seal}</div>
+    <div class="why">${p.status || ""}</div>`;
+}
+function render(s) {
+  lastSnap = s;
+  const sess = s.session || {};
+  const ml = s.mainline;
+  const sec = s.secondary;
+  const mood = s.mood || {};
+  const lanes = (s.source && s.source.lanes) || {};
+  const moodBits = [];
+  if (mood.strong != null) moodBits.push(`情绪${mood.strong}`);
+  if (mood.zt != null) moodBits.push(`涨停${mood.zt}`);
+  else moodBits.push(`涨停${s.stats?.zt || 0}`);
+  if (mood.height != null) moodBits.push(`最高${mood.height}板`);
+  const ladderTxt = (s.ladder || []).map(x => `${x.boards}板${x.count}`).join(" · ");
+  const hotTxt = (s.hot_top || []).slice(0, 8).map(x => `${x.rank}${x.name}`).join(" · ");
+  function laneCls(src) {
+    if (src === "tonghuashun") return "ths";
+    if (src === "kaipanla") return "cyan";
+    if (src === "tdx" || src === "tencent") return "gold";
+    return "pass";
+  }
+  document.getElementById("meta").innerHTML =
+    `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b>` +
+    (s.cached ? " · 缓存" : "");
+  document.getElementById("srcBar").innerHTML =
+    `<div class="kicker">数据源 · ${s.source?.name || ""} · ${moodBits.join(" · ")}` +
+    (ladderTxt ? ` · 连板 ${ladderTxt}` : "") + `</div>` +
+    `<div style="margin-top:8px">${Object.entries(lanes).map(([k, v]) =>
+      `<span class="tag ${laneCls(v.src)}">${k} · ${v.name || ""}${v.note ? " · " + v.note : ""}</span>`
+    ).join(" ")}</div>` +
+    (hotTxt ? `<div class="why" style="margin-top:8px">同花顺热榜 ${hotTxt}</div>` : "");
+  document.getElementById("warns").textContent = (s.warnings || []).join("；");
+  const w = s.watch;
+  const hat = s.watch_hat || "";
+  const notes = (s.notes || []).map(n => `· ${n}`).join("<br/>");
+  const watchHtml = w ? `
+    <div class="kicker">${s.mode === "盘中" ? "盘中跟 · 只盯这一只" : "盘后复盘 · 明天开盘只盯这一只"} · ${hat}</div>
+    <div class="name">${stk(w.code, w.name)}<small>${w.code} · ${w.boards}板 · ${w.theme} · 人气${w.pop_rank ?? "-"}</small></div>
+    <div class="action">${s.action || ""}</div>
+    <div class="why">${s.reason || w.why}</div>
+    <div class="why">换手${w.turnover}% · 成交${w.amount_yi}亿 · 量比${w.volume_ratio ?? "-"} · 炸${w.open_count}次 · 首封${w.first_seal}</div>
+    ${notes ? `<div class="notes">${notes}</div>` : ""}
+  ` : `<div class="kicker">盯1只</div><div class="name">今日无龙</div><div class="why">${s.reason || "主线不够，或只剩一字/爆量/烂板。"}</div>`;
+  const laneHtml = ml
+    ? `<div class="why" style="margin-top:10px">主线 <b>${ml.theme}</b>：涨停${ml.count}只 / ${ml.amount_yi}亿 / 最高${ml.max_boards}板` +
+      (sec ? ` · 次主线 <b>${sec.theme}</b> ${sec.count}只/${sec.max_boards}板` : "") + `</div>`
+    : `<div class="why" style="margin-top:10px">今天没有主线，只看空间和情绪。</div>`;
+  document.getElementById("watchCard").innerHTML = watchHtml + laneHtml;
+
+  const p = s.picks || {};
+  const watchCode = w && w.code;
+  document.getElementById("hats").innerHTML = [
+    { key: "locomotive", title: "火车头", cls: "hat-loco", empty: "主线没有能买的先封", hint: "主线里最早封的能买的板" },
+    { key: "sentiment", title: "情绪龙头", cls: "hat-sent", empty: "没有叫得出来的情绪", hint: "人气和辨识度，不一定先封" },
+    { key: "height", title: "空间高标", cls: "hat-height", empty: "没有非一字高标", hint: "全市场非一字最高板" },
+  ].map(item => {
+    const stock = p[item.key];
+    const on = stock && stock.code === watchCode;
+    return `<div class="card ${item.cls} ${on ? "on" : ""}">
+      <div class="kicker">${item.title}${on ? " · 就是盯的这只" : ""} · ${item.hint}</div>
+      ${mini(stock, item.empty)}
+    </div>`;
+  }).join("");
+
+  document.getElementById("steps").innerHTML = (s.steps || []).map(st => `
+    <div class="step">
+      <div class="${st.pass ? "ok" : "no"}">${st.step} ${st.pass ? "过" : "否"}</div>
+      <div><b>${st.title}</b><div class="why">${st.detail}</div></div>
+    </div>`).join("");
+  paintThemes();
+  paintBoards();
+  document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
+    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#6b7280">${d.use}</span></div>`
+  ).join("");
+}
+function paintThemes() {
+  const s = lastSnap;
+  if (!s) return;
+  const themes = sortedRows(s.themes || [], sorts.themes);
+  document.getElementById("themes").innerHTML = themes.map(t => `
+    <tr class="${t.lane === "主线" ? "pass" : "side"}">
+      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
+      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
+    </tr>`).join("");
+}
+function paintBoards() {
+  const s = lastSnap;
+  if (!s) return;
+  const w = s.watch;
+  const main = sortedRows((s.board || []).filter(r => r.lane === "主线" || r.in_mainline), sorts.main);
+  document.getElementById("mainboard").innerHTML = main.map((r, i) => `
+    <tr class="${r.code === w?.code ? "pass" : ""}">
+      <td>${i+1}</td><td>${stk(r.code, r.name)}</td>
+      <td>${r.first_seal}</td><td>${r.peer_zt ?? "-"}</td><td>${r.seal_fund_yi ?? "-"}</td>
+      <td>${r.open_count}</td><td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
+      <td>${(hatsOf(r).length ? hatsOf(r) : [r.role]).map(h => `<span class="${tagClass(h, r.lane)}">${h}</span>`).join("")}</td>
+    </tr>`).join("");
+  const all = sortedRows(s.board || [], sorts.all);
+  document.getElementById("all").innerHTML = all.map(r => `
+    <tr class="${r.code===w?.code?"pass": (r.lane==="主线"?"":"side")}">
+      <td>${r.lane || ""}</td><td>${stk(r.code, r.name)}</td><td>${r.theme}</td>
+      <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.peer_zt ?? "-"}</td><td>${r.seal_fund_yi ?? "-"}</td>
+      <td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
+      <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
+    </tr>`).join("");
+  markSortHeaders();
+}
+async function load(force) {
+  if (loading) return;
+  loading = true;
+  const btn = document.getElementById("refresh");
+  const old = btn.textContent;
+  btn.textContent = "刷新中…";
+  btn.disabled = true;
+  try {
+    const q = new URLSearchParams();
+    if (currentDate) q.set("date", currentDate);
+    if (currentMode) q.set("mode", currentMode);
+    const qs = q.toString() ? "?" + q.toString() : "";
+    const r = await fetch(force ? "/api/refresh" + qs : "/api/snapshot" + qs, {
+      method: force ? "POST" : "GET",
+    });
+    render(await r.json());
+  } finally {
+    loading = false;
+    btn.textContent = old;
+    btn.disabled = false;
+  }
+}
+document.getElementById("go").onclick = () => {
+  currentDate = document.getElementById("date").value.trim();
+  currentMode = document.getElementById("mode").value;
+  load(true);
+};
+document.getElementById("refresh").onclick = () => load(true);
+document.getElementById("live").onclick = () => {
+  currentDate = ""; currentMode = "";
+  document.getElementById("date").value = "";
+  document.getElementById("mode").value = "";
+  load(true);
+};
+function shotQuery() {
+  const q = new URLSearchParams();
+  if (currentDate) q.set("date", currentDate);
+  if (currentMode) q.set("mode", currentMode);
+  return q.toString();
+}
+async function downloadShot() {
+  const btn = document.getElementById("shot");
+  const old = btn.textContent;
+  btn.textContent = "截屏中…";
+  try {
+    if (window.html2canvas) {
+      const canvas = await html2canvas(document.getElementById("shotRoot"), {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const a = document.createElement("a");
+      const date = (lastSnap && lastSnap.date) || currentDate || "live";
+      const name = (lastSnap && lastSnap.watch && lastSnap.watch.name) || "无龙";
+      a.download = `定龙头-${date}-${name}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+      return;
+    }
+    const q = shotQuery();
+    window.location.href = "/api/shot.png" + (q ? "?" + q : "");
+  } catch (err) {
+    const q = shotQuery();
+    window.location.href = "/api/shot.png" + (q ? "?" + q : "");
+  } finally {
+    btn.textContent = old;
+  }
+}
+document.getElementById("shot").onclick = downloadShot;
+
+let chartState = { code: "", name: "", tab: "minute", bundle: null, extra: {} };
+function renderDepth(q) {
+  if (!q) { document.getElementById("popDepth").innerHTML = ""; return; }
+  const asks = (q.asks || []).slice().reverse();
+  const bids = q.bids || [];
+  const askHtml = asks.map((lv, i) =>
+    `<div class="up">卖${asks.length - i} ${lv.price || "-"} / ${lv.volume || 0}</div>`
+  ).join("");
+  const bidHtml = bids.map((lv, i) =>
+    `<div class="dn">买${i + 1} ${lv.price || "-"} / ${lv.volume || 0}</div>`
+  ).join("");
+  document.getElementById("popDepth").innerHTML = `<div>${askHtml}</div><div>${bidHtml}</div>`;
+}
+function paintChart() {
+  const canvas = document.getElementById("chart");
+  const tab = chartState.tab;
+  const b = chartState.bundle;
+  if (!b) return;
+  if (tab === "minute") {
+    drawTimeshare(canvas, b.minute);
+    return;
+  }
+  if (tab === "day") {
+    drawKline(canvas, (b.kline && b.kline.bars) || []);
+    return;
+  }
+  const extra = chartState.extra[tab];
+  if (extra && extra.bars) drawKline(canvas, extra.bars);
+}
+async function loadExtra(period) {
+  if (chartState.extra[period]) { paintChart(); return; }
+  const r = await fetch(`/api/kline?code=${encodeURIComponent(chartState.code)}&period=${period}&count=${period === "1m" ? 240 : 200}`);
+  chartState.extra[period] = await r.json();
+  paintChart();
+}
+async function openChart(code, name) {
+  chartState = { code, name, tab: "minute", bundle: null, extra: {} };
+  document.getElementById("mask").classList.add("show");
+  document.getElementById("popName").innerHTML = `${name || code} <small>${code}</small>`;
+  document.getElementById("popQuote").textContent = "正在连通达信 7709…";
+  document.getElementById("popDepth").innerHTML = "";
+  document.querySelectorAll(".tabs button").forEach(btn => btn.classList.toggle("on", btn.dataset.tab === "minute"));
+  const q = new URLSearchParams({ code });
+  if (currentDate) q.set("date", currentDate);
+  try {
+    const r = await fetch("/api/chart?" + q.toString());
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || "行情失败");
+    chartState.bundle = data;
+    const qq = data.quote || {};
+    const pct = qq.change_pct == null ? "-" : (qq.change_pct > 0 ? "+" + qq.change_pct : qq.change_pct) + "%";
+    document.getElementById("popSrc").textContent = `通达信 ${data.host || ""} · ${data.tdx_code || ""}`;
+    document.getElementById("popQuote").textContent =
+      `现价${qq.last ?? "-"}  ${pct}  开${qq.open ?? "-"}  高${qq.high ?? "-"}  低${qq.low ?? "-"}  额${((qq.amount || 0)/1e8).toFixed(2)}亿`;
+    renderDepth(qq);
+    paintChart();
+  } catch (err) {
+    document.getElementById("popQuote").textContent = "拉行情失败：" + err.message;
+  }
+}
+function closeChart() { document.getElementById("mask").classList.remove("show"); }
+document.addEventListener("click", (e) => {
+  const head = e.target.closest("th.sort");
+  if (head) {
+    cycleSort(head.dataset.table, head.dataset.key);
+    paintThemes();
+    paintBoards();
+    return;
+  }
+  const hit = e.target.closest(".stk");
+  if (hit) {
+    e.preventDefault();
+    openChart(hit.dataset.code, hit.dataset.name);
+  }
+});
+document.getElementById("popClose").onclick = closeChart;
+document.getElementById("mask").addEventListener("click", (e) => {
+  if (e.target.id === "mask") closeChart();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeChart(); });
+document.querySelectorAll(".tabs button").forEach((btn) => {
+  btn.onclick = () => {
+    chartState.tab = btn.dataset.tab;
+    document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b === btn));
+    if (chartState.tab === "1m" || chartState.tab === "5m") loadExtra(chartState.tab);
+    else paintChart();
+  };
+});
+load(false);
+</script>
+</body>
+</html>
