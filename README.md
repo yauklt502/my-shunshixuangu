@@ -9,26 +9,36 @@
 
 ## 一键启动（推荐）
 
-### Windows
-1. 解压 ZIP  
-2. **双击** `一键启动.bat`  
-3. 浏览器自动打开 http://127.0.0.1:5173  
-4. 停止：双击 `一键停止.bat`
+解压后，**双击对应文件即可**，浏览器会自动打开页面。
 
-### macOS
-1. 解压 ZIP  
-2. 首次若提示无执行：在终端运行 `chmod +x 一键启动.command 一键启动.sh`  
-3. **双击** `一键启动.command`（或终端执行 `./一键启动.sh`）  
-4. Ctrl+C 停止
+| 系统 | 双击这个 | 停止 |
+|---|---|---|
+| **Windows** | `一键启动.bat` | `一键停止.bat` |
+| **macOS** | `一键启动.command` | 终端 `./一键停止.sh` 或启动窗口 Ctrl+C |
+| **Linux** | `./一键启动.sh` | `./一键停止.sh` |
 
-### Linux
+> 首次会自动装依赖（几分钟）。需要本机已装：**Python 3.10+**、**Node.js 18+**。
+
+### 已装 Docker？更省事
+
+| 系统 | 命令 / 双击 |
+|---|---|
+| Windows | 双击 `Docker一键启动.bat` |
+| macOS / Linux | `chmod +x Docker一键启动.sh && ./Docker一键启动.sh` |
+| 任意 | `docker compose up --build` |
+
+打开 http://127.0.0.1:5173 ；停止：`docker compose down`
+
+### macOS 首次提示「无法打开」
+
+终端执行一次：
+
 ```bash
-chmod +x 一键启动.sh
-./一键启动.sh
+chmod +x 一键启动.command 一键启动.sh 一键停止.sh
+xattr -d com.apple.quarantine 一键启动.command 2>/dev/null || true
 ```
 
-> 首次启动会自动创建 Python 虚拟环境并 `npm install`，可能需要几分钟。  
-> 环境要求：Python 3.10+、Node.js 18+。
+然后再双击 `一键启动.command`。
 
 ## 手动启动（可选）
 
