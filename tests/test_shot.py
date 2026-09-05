@@ -2,6 +2,8 @@ import unittest
 import zipfile
 from io import BytesIO
 
+from PIL import Image
+
 from dragon.engine import analyze
 from dragon.pack import build_zip
 from dragon.shot import render_png
@@ -38,6 +40,8 @@ class ShotTest(unittest.TestCase):
         self.assertGreater(len(raw), 8000)
         self.assertIn("600108", fname)
         self.assertIn("亚盛", fname)
+        img = Image.open(BytesIO(raw))
+        self.assertEqual(img.getpixel((2, 2)), (255, 255, 255))
 
     def test_empty_watch_still_png(self):
         raw, fname = render_png({"date": "20260905", "mode": "盘后", "reason": "今日无龙", "stats": {"zt": 0}})

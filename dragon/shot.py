@@ -19,15 +19,15 @@ FONTS = [
     Path("/Library/Fonts/Arial Unicode.ttf"),
 ]
 
-BG = (11, 16, 32)
-PANEL = (20, 27, 46)
-LINE = (36, 48, 73)
-TEXT = (232, 237, 247)
-MUTED = (139, 151, 179)
-GOLD = (240, 180, 41)
-CYAN = (62, 224, 198)
-GREEN = (61, 214, 140)
-RED = (255, 93, 115)
+BG = (255, 255, 255)
+PANEL = (255, 255, 255)
+LINE = (229, 231, 235)
+TEXT = (26, 29, 38)
+MUTED = (107, 114, 128)
+GOLD = (161, 98, 7)
+CYAN = (15, 118, 110)
+GREEN = (21, 128, 61)
+RED = (220, 38, 38)
 
 
 def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -93,7 +93,7 @@ def render_png(snap: dict[str, Any]) -> tuple[bytes, str]:
     d.text((40, 28), "10秒定龙头", font=title_f, fill=GOLD)
     d.text((280, 40), f"{date}  {mode}  涨停{(snap.get('stats') or {}).get('zt', '-')}只", font=body_f, fill=MUTED)
 
-    d.rounded_rectangle((40, 90, w - 40, 320), radius=16, fill=PANEL, outline=(61, 77, 40), width=2)
+    d.rounded_rectangle((40, 90, w - 40, 320), radius=16, fill=PANEL, outline=(134, 239, 172), width=2)
     if watch:
         d.text((64, 110), f"盯1只 · {hat}", font=small_f, fill=MUTED)
         d.text((64, 142), f"{watch.get('name', '')}", font=name_f, fill=TEXT)

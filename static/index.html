@@ -6,15 +6,15 @@
   <title>10秒定龙头 · 盘中跟 / 盘后盯</title>
   <style>
     :root {
-      --bg: #0b1020; --panel: #141b2e; --line: #243049; --text: #e8edf7;
-      --muted: #8b97b3; --gold: #f0b429; --cyan: #3ee0c6; --red: #ff5d73;
-      --green: #3dd68c; --warn: #ff8a4c; --purple: #b7a9d9;
+      --bg: #ffffff; --panel: #ffffff; --line: #e5e7eb; --text: #1a1d26;
+      --muted: #6b7280; --gold: #a16207; --cyan: #0f766e; --red: #dc2626;
+      --green: #15803d; --warn: #c2410c; --purple: #6d28d9;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(1200px 600px at 10% -10%, #1a2744 0%, var(--bg) 50%);
+      background: #ffffff;
       color: var(--text);
     }
     header {
@@ -28,17 +28,17 @@
     .meta b { color: var(--cyan); }
     .wrap { padding: 16px 24px 40px; display: grid; gap: 14px; }
     .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
-    .card.watch { border-color: #3d4d28; }
-    .card.hat-loco { border-color: #2a4a5a; }
-    .card.hat-sent { border-color: #5a4a22; }
-    .card.hat-height { border-color: #3a2a55; }
-    .card.on { box-shadow: inset 0 0 0 1px rgba(240,180,41,.35); }
+    .card.watch { border-color: #86efac; }
+    .card.hat-loco { border-color: #99f6e4; }
+    .card.hat-sent { border-color: #fde68a; }
+    .card.hat-height { border-color: #ddd6fe; }
+    .card.on { box-shadow: inset 0 0 0 1px rgba(161,98,7,.35); }
     .kicker { font-size: 12px; color: var(--muted); }
     .name { font-size: 26px; margin: 6px 0 4px; }
     .name.mid { font-size: 20px; }
     .name small { color: var(--muted); font-size: 14px; margin-left: 8px; }
     .action { color: var(--gold); font-size: 14px; }
-    .why { font-size: 12px; color: #c9d3e7; line-height: 1.55; }
+    .why { font-size: 12px; color: #374151; line-height: 1.55; }
     .steps { display: grid; gap: 8px; }
     .step { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
     .step:last-child { border-bottom: 0; }
@@ -49,24 +49,24 @@
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
     th { color: var(--muted); font-weight: 500; }
-    tr.pass td { background: rgba(61, 214, 140, 0.06); }
-    tr.side td { color: #8e98b0; }
+    tr.pass td { background: #f0fdf4; }
+    tr.side td { color: #6b7280; }
     .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
-    .tag.pass { background: #163427; color: var(--green); }
-    .tag.side { background: #2a2438; color: var(--purple); }
-    .tag.kill { background: #3a1d24; color: var(--red); }
-    .tag.gold { background: #3a2f12; color: var(--gold); }
-    .tag.cyan { background: #16343a; color: var(--cyan); }
+    .tag.pass { background: #dcfce7; color: var(--green); }
+    .tag.side { background: #ede9fe; color: var(--purple); }
+    .tag.kill { background: #fee2e2; color: var(--red); }
+    .tag.gold { background: #fef3c7; color: var(--gold); }
+    .tag.cyan { background: #ccfbf1; color: var(--cyan); }
     button, input, select {
-      background: #1c2540; color: var(--text); border: 1px solid var(--line);
+      background: #ffffff; color: var(--text); border: 1px solid var(--line);
       border-radius: 8px; padding: 6px 10px;
     }
     button { cursor: pointer; }
-    button.shot { background: #3a2f12; border-color: #6b5420; color: var(--gold); }
+    button.shot { background: #fef3c7; border-color: #f59e0b; color: var(--gold); }
     .tools { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
     .warns { color: var(--warn); font-size: 12px; }
     .notes { font-size: 12px; color: var(--muted); margin-top: 8px; }
-    .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: #c9d3e7; }
+    .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: #374151; }
     .defs b { color: var(--gold); }
     details.card summary { cursor: pointer; color: var(--muted); }
     @media (max-width: 1100px) { .two, .three, header, .defs { display: block; } }
@@ -227,7 +227,7 @@ function render(s) {
       <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
     </tr>`).join("");
   document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
-    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#8b97b3">${d.use}</span></div>`
+    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#6b7280">${d.use}</span></div>`
   ).join("");
 }
 async function load() {
@@ -265,7 +265,7 @@ async function downloadShot() {
   try {
     if (window.html2canvas) {
       const canvas = await html2canvas(document.getElementById("shotRoot"), {
-        backgroundColor: "#0b1020",
+        backgroundColor: "#ffffff",
         scale: 2,
         useCORS: true,
         logging: false,
