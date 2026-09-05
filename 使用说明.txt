@@ -1,39 +1,26 @@
 三条纪律看板 · 本地完整包
 ========================
 
-下载后请先「解压」，再进入文件夹。
+请先解压，再进入文件夹。
 
-【推荐】双击 START.bat
-也可以双击 启动.bat
+【推荐启动】双击 START.bat
+或双击 start.cmd
+（若「启动.bat」无反应，请用上面两个英文名）
 
-窗口会显示启动过程，并停住方便看报错。
+顶部可切换：
+- 复盘日期（看历史涨停梯队）
+- 数据源：东方财富 / 同花顺 / 通达信
 
-有 Python：
-  [1/4] Creating / checking venv ...
-  [2/4] Installing dependencies (first run 1-3 min) ...
-  [3/4] Starting server ...
-  [4/4] Browser will open automatically when ready.
+点击任意个股 → 弹出 Tick Stock Panel：
+日K / 分时 / 1m·5m / 五档（优先通达信 TCP，失败回退东财）
 
-没有 Python、有 Node：
-  自动改用 Node（也可直接双击 start-node.cmd）
+二三板个股右侧直接显示：可买入 / 观察 / 勿追高
+（已取消「加入观察栏」）
 
-浏览器地址：http://127.0.0.1:5177/
+浏览器：http://127.0.0.1:5177/
 
-本机需要二选一：
-- Python 3.10+（安装时勾选 Add python.exe to PATH）
-  https://www.python.org/downloads/windows/
-- 或 Node.js LTS
-  https://nodejs.org/
-
-打不开时：
-1. 必须先解压，不要在压缩包里双击
-2. 优先双击 START.bat（英文名，最稳）
-3. 看黑窗口报错，不要立刻关掉
-4. 若 Python 失败：删掉目录里的 .venv 再开
-5. 或双击 start-node.cmd
+本机需要 Python 3.10+ 或 Node.js。
+通达信 TCP 默认：115.238.90.165:7709 （可用环境变量 TDX_HOST 覆盖）
 
 下载：
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
-
-不要直接双击 web\index.html。
-仅供纪律可视化，不构成投资建议。

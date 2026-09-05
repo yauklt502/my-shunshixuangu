@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
+  <script src="/vendor/echarts.min.js"></script>
   <script src="/vendor/html2canvas.min.js" defer></script>
 </head>
 <body>
@@ -20,14 +21,14 @@
           <p class="sub">低吸纪律 · 二三板节奏 · 回撤不乱动</p>
         </div>
       </div>
-      <div class="controls">
+      <nav class="nav-controls">
+        <label class="field">
+          <span>复盘日期</span>
+          <select id="dateSelect"></select>
+        </label>
         <label class="field">
           <span>数据源</span>
           <select id="source"></select>
-        </label>
-        <label class="field grow">
-          <span>低吸观察票（点二三板可加入）</span>
-          <input id="codes" type="text" value="600519,000001,300750,002594,600900" placeholder="代码逗号分隔" />
         </label>
         <label class="field">
           <span>软冻结%</span>
@@ -39,14 +40,14 @@
         </label>
         <button id="btnRefresh" class="btn primary" type="button">刷新</button>
         <button id="btnShot" class="btn" type="button">一键截图</button>
-        <a class="btn" id="btnDownload" href="/download/three-discipline-local.zip" download>⬇ 本地完整包</a>
-      </div>
+        <a class="btn" id="btnDownload" href="/download/three-discipline-local.zip" download>⬇ 本地包</a>
+      </nav>
     </header>
 
     <section class="meta-row">
       <div id="sourceNote" class="pill">数据源加载中…</div>
       <div id="updatedAt" class="pill muted">—</div>
-      <div id="autoHint" class="pill muted">每 15 秒自动刷新</div>
+      <div id="autoHint" class="pill muted">每 15 秒自动刷新 · 点击个股开 K线/分时浮窗</div>
     </section>
 
     <main id="captureRoot" class="grid">
@@ -54,7 +55,7 @@
         <header class="panel-head">
           <div>
             <h2>① 低吸纪律</h2>
-            <p class="panel-desc">真实体现：日内位置 + 回踩 MA5</p>
+            <p class="panel-desc">直接看二三板个股：可买入 / 观察 / 勿追高（点击行打开行情浮窗）</p>
           </div>
           <div id="lowBuySummary" class="badge-row"></div>
         </header>
@@ -72,7 +73,7 @@
                 <th>距高</th>
                 <th>距低</th>
                 <th>日内位置</th>
-                <th>纪律判定</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody id="lowBuyBody"></tbody>
@@ -84,7 +85,7 @@
         <header class="panel-head">
           <div>
             <h2>② 二三板节奏</h2>
-            <p class="panel-desc">真实体现：今日涨停梯队 · 点击股票加入低吸观察</p>
+            <p class="panel-desc">涨停梯队 · 个股右侧直接标「可买入/观察」· 点击开浮窗</p>
           </div>
           <div id="rhythmBadge" class="status-chip">—</div>
         </header>
@@ -107,7 +108,7 @@
         <header class="panel-head">
           <div>
             <h2>③ 回撤时别乱动</h2>
-            <p class="panel-desc">真实体现：指数离阶段高点多远</p>
+            <p class="panel-desc">指数离阶段高点多远</p>
           </div>
           <div id="freezeBadge" class="status-chip">—</div>
         </header>
@@ -118,10 +119,57 @@
     </main>
 
     <footer class="foot">
-      <span>免费行情：东方财富 / 同花顺 / 通达信兼容（腾讯财经）。失败自动回退。支持 Cloudflare Workers 部署。</span>
+      <span>免费行情：东方财富 / 同花顺 / 通达信（腾讯+可选 TCP 115.238.90.165:7709）。失败自动回退。</span>
       <span>仅供纪律可视化，不构成投资建议。</span>
     </footer>
   </div>
+
+  <!-- Tick Stock Panel 浮窗（复刻 TSP） -->
+  <div id="tspMask" class="tsp-mask hidden"></div>
+  <div id="tspPanel" class="tsp-panel hidden" role="dialog" aria-modal="true">
+    <div class="tsp-head">
+      <div>
+        <div id="tspTitle" class="tsp-title">—</div>
+        <div id="tspSub" class="tsp-sub">Tick Stock Panel · 日K / 分时 / 1m·5m / 五档</div>
+      </div>
+      <div class="tsp-actions">
+        <select id="tspChartSource">
+          <option value="tdx">通达信 TCP</option>
+          <option value="eastmoney">东方财富</option>
+          <option value="tonghuashun">同花顺</option>
+        </select>
+        <button id="tspShot" class="btn" type="button">截图面板</button>
+        <button id="tspClose" class="btn" type="button">关闭</button>
+      </div>
+    </div>
+    <div class="tsp-body" id="tspCapture">
+      <div class="tsp-left">
+        <div class="tsp-card">
+          <div class="tsp-card-title">日K</div>
+          <div id="dayChart" class="chart"></div>
+        </div>
+        <div class="tsp-card">
+          <div class="tsp-card-title">1分钟 / 5分钟</div>
+          <div class="mini-tabs">
+            <button type="button" class="mini-tab active" data-period="1min">1m</button>
+            <button type="button" class="mini-tab" data-period="5min">5m</button>
+          </div>
+          <div id="intraChart" class="chart short"></div>
+        </div>
+      </div>
+      <div class="tsp-right">
+        <div class="tsp-card">
+          <div class="tsp-card-title">分时</div>
+          <div id="minuteChart" class="chart tall"></div>
+        </div>
+        <div class="tsp-card depth-card">
+          <div class="tsp-card-title">五档盘口</div>
+          <div id="depthBox" class="depth"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" hidden></div>
   <script type="module" src="/app.js"></script>
 </body>

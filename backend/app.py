@@ -281,11 +281,12 @@ def em_kline(code: str, lmt: int = 60) -> list[dict]:
     return out
 
 
-def em_limit_up() -> list[dict]:
+def em_limit_up(trade_date: str | None = None) -> list[dict]:
+    day = trade_date or today_ymd()
     url = (
         "https://push2ex.eastmoney.com/getTopicZTPool"
         "?ut=7eea3edcaed734bea9cbfc24410557a5&dpt=wz.ztzt"
-        f"&Pageindex=0&pagesize=200&sort=fbt:asc&date={today_ymd()}&_={int(time.time()*1000)}"
+        f"&Pageindex=0&pagesize=200&sort=fbt:asc&date={day}&_={int(time.time()*1000)}"
     )
     data = http_json(url, {"Referer": "https://quote.eastmoney.com/ztb/detail"})
     pool = (data.get("data") or {}).get("pool") or []
@@ -561,7 +562,20 @@ def low_buy(
     codes: Annotated[str, Query()] = "",
 ):
     primary = source if source in SOURCES else "tongdaxin"
-    data, used, label, errors = with_fallback(primary, "quotes", parse_codes(codes))
+    code_list = parse_codes(codes)
+    # 无观察栏：默认用当日二三板个股做低吸判定
+    if not codes.strip():
+        try:
+            pool, _, _, _ = with_fallback(primary, "limit_up")
+            focus = []
+            for x in pool:
+                b = int(x.get("boards") or parse_boards(x.get("highDays")))
+                if b in (2, 3):
+                    focus.append(str(x.get("code")))
+            code_list = focus[:30] or code_list
+        except Exception:
+            pass
+    data, used, label, errors = with_fallback(primary, "quotes", code_list)
     with_ma = attach_ma5(data, used)
     summary = {
         "ok": sum(1 for x in with_ma if x["lowBuyStatus"] == "ok"),
@@ -588,9 +602,21 @@ def low_buy(
 
 
 @app.get("/api/discipline/boards")
-def boards(source: Annotated[str, Query()] = "tongdaxin"):
+def boards(
+    source: Annotated[str, Query()] = "tongdaxin",
+    date: Annotated[str, Query()] = "",
+):
     primary = source if source in SOURCES else "tongdaxin"
-    data, used, label, errors = with_fallback(primary, "limit_up")
+    trade_date = date.strip() if date and len(date.strip()) == 8 else None
+    try:
+        if primary == "eastmoney" and trade_date:
+            data, used, label, errors = em_limit_up(trade_date), "eastmoney", SOURCES["eastmoney"]["label"], []
+        else:
+            data, used, label, errors = with_fallback(primary, "limit_up")
+            if trade_date and used == "eastmoney":
+                data = em_limit_up(trade_date)
+    except Exception:
+        data, used, label, errors = with_fallback(primary, "limit_up")
     enriched = []
     for x in data:
         b = int(x.get("boards") or parse_boards(x.get("highDays")))
@@ -610,9 +636,47 @@ def boards(source: Annotated[str, Query()] = "tongdaxin"):
         code, lab, reason = "weak", "高度不足", "首板占比过高、二三板稀缺，节奏偏弱"
     elif len(b4) >= 2 and len(b2) <= 1:
         code, lab, reason = "fragile", "高位独苗", "高位板多但二三板断层，龙头容易核"
+    # 给二三板个股打上可买入/观察标签（直接体现在列表上）
+    focus_codes = [x["code"] for x in (b2[:20] + b3[:20]) if x.get("code")]
+    action_map: dict[str, dict] = {}
+    if focus_codes:
+        try:
+            qdata, qused, _, _ = with_fallback(primary, "quotes", focus_codes)
+            qdata = attach_ma5(qdata, qused)
+            for q in qdata:
+                st = q.get("lowBuyStatus") or "neutral"
+                if st == "ok":
+                    tag, tag_label = "ok", "可买入"
+                elif st == "chase":
+                    tag, tag_label = "chase", "勿追高"
+                else:
+                    tag, tag_label = "watch", "观察"
+                action_map[str(q["code"])] = {
+                    "action": tag,
+                    "actionLabel": tag_label,
+                    "actionReason": q.get("lowBuyReason") or "",
+                    "ma5": q.get("ma5"),
+                    "ma5DistPct": q.get("ma5DistPct"),
+                    "dayRangePos": q.get("dayRangePos"),
+                    "changePct": q.get("changePct"),
+                    "price": q.get("price"),
+                }
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"stage": "action_tag", "message": str(exc)})
+
+    def _tag(rows: list[dict]) -> list[dict]:
+        out = []
+        for x in rows:
+            info = action_map.get(str(x.get("code")), {})
+            out.append({**x, **info, "action": info.get("action") or "watch", "actionLabel": info.get("actionLabel") or "观察"})
+        return out
+
+    b2, b3 = _tag(b2), _tag(b3)
+
     return {
         "source": used,
         "sourceLabel": label,
+        "date": trade_date or today_ymd(),
         "rule": {
             "title": "二三板节奏",
             "bullets": [
@@ -689,6 +753,36 @@ def drawdown(
         "fallbackErrors": errors,
         "updatedAt": now_iso(),
     }
+
+
+
+@app.get("/api/dates")
+def api_dates(limit: Annotated[int, Query(ge=1, le=120)] = 40):
+    from backend import panel_data as pd
+
+    items = pd.recent_trade_dates(limit)
+    return {
+        "dates": items,
+        "today": today_ymd(),
+        "default": items[0]["date"] if items else today_ymd(),
+    }
+
+
+@app.get("/api/panel/{code}")
+def api_panel(
+    code: str,
+    source: Annotated[str, Query()] = "tdx",
+):
+    """Tick Stock Panel：日K / 分时 / 1m·5m / 五档（TDX TCP 优先，失败回退东财）。"""
+    from backend import panel_data as pd
+
+    data = pd.build_panel(code, source=source)
+    # normalize keys for frontend
+    data["tdxHost"] = data.get("tdx_host") or pd.TDX_HOST
+    data["tdxConnected"] = bool(data.get("tdxConnected") or pd.tdx_available())
+    data["daySource"] = data.get("daySource") or data.get("day_source") or source
+    data["errors"] = data.get("errors") or []
+    return data
 
 
 @app.get("/")

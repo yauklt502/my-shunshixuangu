@@ -15,6 +15,7 @@ ARTIFACT = "/opt/cursor/artifacts/three-discipline-local.zip"
 ROOT_FILES = [
     "START.bat",
     "启动.bat",
+    "启动.cmd",
     "start.cmd",
     "start-node.cmd",
     "deploy-local.bat",
