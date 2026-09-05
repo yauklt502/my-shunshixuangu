@@ -4,9 +4,13 @@
     source: "eastmoney",
     panel: null,
     intraPeriod: "1min",
+    listView: "leaders",
+    screen: null,
     charts: { day: null, minute: null, intra: null },
   };
+
   const $ = (id) => document.getElementById(id);
+
   const fmtPct = (v) => {
     const n = Number(v || 0);
     return `<span class="${n >= 0 ? "up" : "down"}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
@@ -15,88 +19,170 @@
     const n = Number(v);
     return Number.isFinite(n) ? n.toFixed(d) : "—";
   };
+
   async function api(path) {
     const r = await fetch(path);
     if (!r.ok) throw new Error(`${path} HTTP ${r.status}`);
     return r.json();
   }
-  function axis() {
+
+  function axisStyle() {
     return {
       axisLine: { lineStyle: { color: "#c5ced8" } },
       axisLabel: { color: "#5c6775" },
       splitLine: { lineStyle: { color: "#e8eef4" } },
     };
   }
+
   function initCharts() {
     state.charts.day = echarts.init($("dayChart"));
     state.charts.minute = echarts.init($("minuteChart"));
     state.charts.intra = echarts.init($("intraChart"));
-    window.addEventListener("resize", () => Object.values(state.charts).forEach((c) => c && c.resize()));
+    window.addEventListener("resize", () => {
+      Object.values(state.charts).forEach((c) => c && c.resize());
+    });
   }
+
   async function loadDates() {
     const data = await api("/api/dates?limit=40");
-    $("dateSelect").innerHTML = (data.dates || []).map((d) => `<option value="${d.date}">${d.label}</option>`).join("");
+    $("dateSelect").innerHTML = (data.dates || [])
+      .map((d) => `<option value="${d.date}">${d.label}</option>`)
+      .join("");
     state.date = data.default || data.today;
     $("dateSelect").value = state.date;
   }
+
   async function loadSources() {
     try {
       const data = await api("/api/sources");
-      if (data.sources?.length) {
-        $("sourceSelect").innerHTML = data.sources.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
+      if (data.sources && data.sources.length) {
+        $("sourceSelect").innerHTML = data.sources
+          .map((s) => `<option value="${s.id}">${s.name}</option>`)
+          .join("");
         state.source = data.default || data.sources[0].id;
         $("sourceSelect").value = state.source;
       }
     } catch (_) {}
   }
+
   function bindRows(tbody) {
+    if (!tbody) return;
     tbody.querySelectorAll("tr[data-code]").forEach((tr) => {
       tr.onclick = () => openPanel(tr.dataset.code, tr.dataset.name);
     });
   }
+
   function renderHot(boards) {
-    $("hotBoards").innerHTML = boards?.length
+    $("hotBoards").innerHTML = boards && boards.length
       ? boards.slice(0, 12).map((b) => `<div class="chip">${b.name || b.code}<strong>${fmtNum(b.change_pct)}%</strong></div>`).join("")
       : `<div class="chip">暂无足够强的启动赛道</div>`;
   }
+
   function renderTables(data) {
+    state.screen = data;
+
     $("leaderBody").innerHTML =
       (data.leaders || [])
-        .map(
-          (x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
+        .map((x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
           <td>${x.code}</td><td>${x.name || ""}</td><td>${x.industry || "—"}</td>
           <td>${fmtNum(x.price)}</td><td>${fmtPct(x.change_pct)}</td>
           <td>${x.boards ?? "—"}</td><td>${x.open_count ?? "—"}</td>
           <td>${fmtNum(x.score_xian, 1)}</td><td>${fmtNum(x.score_bi, 1)}</td><td>${fmtNum(x.score_du, 1)}</td>
           <td><strong>${fmtNum(x.score, 1)}</strong></td>
-          <td class="notes">${(x.notes || []).slice(0, 3).join(" · ")}</td></tr>`
-        )
+          <td class="notes">${(x.notes || []).slice(0, 3).join(" · ")}</td></tr>`)
         .join("") || `<tr><td colspan="12">暂无核心领涨</td></tr>`;
+
     $("anchorBody").innerHTML =
       (data.anchors || [])
-        .map(
-          (x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
+        .map((x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
           <td>${x.code}</td><td>${x.name || ""}</td><td>${x.boards ?? "—"}</td>
-          <td>${x.industry || "—"}</td><td>${fmtNum(x.score, 1)}</td></tr>`
-        )
+          <td>${x.industry || "—"}</td><td>${fmtNum(x.score, 1)}</td></tr>`)
         .join("") || `<tr><td colspan="5">无</td></tr>`;
+
     $("watchBody").innerHTML =
       (data.watch || [])
-        .map(
-          (x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
+        .map((x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
           <td>${x.code}</td><td>${x.name || ""}</td><td>${fmtPct(x.change_pct)}</td>
           <td>${x.boards ?? "—"}</td><td>${fmtNum(x.score, 1)}</td>
-          <td class="notes">${(x.notes || []).slice(0, 2).join(" · ")}</td></tr>`
-        )
+          <td class="notes">${(x.notes || []).slice(0, 2).join(" · ")}</td></tr>`)
         .join("") || `<tr><td colspan="6">无</td></tr>`;
+
+    const nLead = (data.leaders || []).length;
+    const nWatch = (data.watch || []).length;
+    const nLimit = (data.stats && data.stats.limit_up != null) ? data.stats.limit_up : ((data.all || []).length || "—");
     $("leaderSummary").innerHTML = `
-      <span class="badge">领涨 ${data.leaders?.length || 0}</span>
-      <span class="badge">观察 ${data.watch?.length || 0}</span>
-      <span class="badge">涨停 ${data.stats?.limit_up ?? "—"}</span>`;
+      <button type="button" class="badge clickable${state.listView === "leaders" ? " active" : ""}" data-view="leaders">领涨 ${nLead}</button>
+      <button type="button" class="badge clickable${state.listView === "watch" ? " active" : ""}" data-view="watch">观察 ${nWatch}</button>
+      <button type="button" class="badge clickable${state.listView === "limit_up" ? " active" : ""}" data-view="limit_up">涨停 ${nLimit}</button>`;
+
+    $("leaderSummary").querySelectorAll("button.badge").forEach((btn) => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        openCategory(btn.dataset.view);
+      };
+    });
+
     bindRows($("leaderBody"));
     bindRows($("anchorBody"));
     bindRows($("watchBody"));
   }
+
+  function flashSection(id) {
+    const el = $(id);
+    if (!el) return;
+    el.classList.add("flash");
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => el.classList.remove("flash"), 1200);
+  }
+
+  function openCategory(view) {
+    state.listView = view;
+    const box = $("leaderSummary");
+    if (box) {
+      box.querySelectorAll("button.badge").forEach((b) => {
+        b.classList.toggle("active", b.dataset.view === view);
+      });
+    }
+    if (view === "leaders") {
+      closeListModal();
+      flashSection("sectionLeaders");
+      return;
+    }
+    if (view === "watch") {
+      closeListModal();
+      flashSection("sectionWatch");
+      return;
+    }
+    if (view === "limit_up") openLimitUpList();
+  }
+
+  function openLimitUpList() {
+    const rows = [...((state.screen && state.screen.all) || [])].sort(
+      (a, b) => Number(b.score || 0) - Number(a.score || 0)
+    );
+    $("listModalTitle").textContent = `涨停池 · ${rows.length} 只（点击行看行情）`;
+    $("listModalBody").innerHTML =
+      rows
+        .map((x) => `<tr data-code="${x.code}" data-name="${x.name || ""}">
+          <td>${x.code}</td><td>${x.name || ""}</td><td>${x.industry || "—"}</td>
+          <td>${fmtNum(x.price)}</td><td>${fmtPct(x.change_pct)}</td>
+          <td>${x.boards ?? "—"}</td><td>${x.open_count ?? "—"}</td>
+          <td>${x.role || "—"}</td>
+          <td><strong>${fmtNum(x.score, 1)}</strong></td>
+          <td class="notes">${(x.notes || []).slice(0, 2).join(" · ")}</td></tr>`)
+        .join("") || `<tr><td colspan="10">暂无涨停数据</td></tr>`;
+    bindRows($("listModalBody"));
+    $("listMask").classList.remove("hidden");
+    $("listModal").classList.remove("hidden");
+  }
+
+  function closeListModal() {
+    const m = $("listMask");
+    const d = $("listModal");
+    if (m) m.classList.add("hidden");
+    if (d) d.classList.add("hidden");
+  }
+
   async function refresh() {
     state.date = $("dateSelect").value || state.date;
     state.source = $("sourceSelect").value || state.source;
@@ -109,24 +195,29 @@
       const t = data.theory || {};
       $("theoryPill").textContent = t.xian ? `${t.xian} ｜ ${t.bi} ｜ ${t.du}` : "先 / 比 / 独";
       $("updatedPill").textContent = `更新 ${data.updated_at || ""}`;
-      if (data.warnings?.length) $("statusPill").textContent += ` · ${data.warnings[0]}`;
+      if (data.warnings && data.warnings.length) $("statusPill").textContent += ` · ${data.warnings[0]}`;
     } catch (err) {
       $("statusPill").textContent = `加载失败：${err.message}`;
     }
   }
+
   function renderDay(bars) {
     const cats = bars.map((b) => b.time);
+    const ax = axisStyle();
     state.charts.day.setOption({
       backgroundColor: "transparent",
       animation: false,
-      grid: [{ left: 48, right: 16, top: 18, height: "58%" }, { left: 48, right: 16, top: "78%", height: "14%" }],
+      grid: [
+        { left: 48, right: 16, top: 18, height: "58%" },
+        { left: 48, right: 16, top: "78%", height: "14%" },
+      ],
       xAxis: [
-        { type: "category", data: cats, ...axis(), axisLabel: { show: false } },
-        { type: "category", data: cats, gridIndex: 1, ...axis(), axisLabel: { color: "#5c6775", fontSize: 10 } },
+        { type: "category", data: cats, ...ax, axisLabel: { show: false } },
+        { type: "category", data: cats, gridIndex: 1, ...ax, axisLabel: { color: "#5c6775", fontSize: 10 } },
       ],
       yAxis: [
-        { scale: true, ...axis() },
-        { scale: true, gridIndex: 1, splitNumber: 2, ...axis(), axisLabel: { show: false } },
+        { scale: true, ...ax },
+        { scale: true, gridIndex: 1, splitNumber: 2, ...ax, axisLabel: { show: false } },
       ],
       dataZoom: [{ type: "inside", xAxisIndex: [0, 1], start: 55, end: 100 }],
       series: [
@@ -139,21 +230,26 @@
       ],
     });
   }
+
   function renderMinute(minute) {
     const points = minute.points || [];
-    const pre = Number(minute.pre_close || points[0]?.price || 0);
+    const pre = Number(minute.pre_close || (points[0] && points[0].price) || 0);
     const times = points.map((p) => p.time);
+    const ax = axisStyle();
     state.charts.minute.setOption({
       backgroundColor: "transparent",
       animation: false,
-      grid: [{ left: 48, right: 16, top: 20, height: "58%" }, { left: 48, right: 16, top: "78%", height: "14%" }],
+      grid: [
+        { left: 48, right: 16, top: 20, height: "58%" },
+        { left: 48, right: 16, top: "78%", height: "14%" },
+      ],
       xAxis: [
-        { type: "category", data: times, boundaryGap: false, ...axis(), axisLabel: { show: false } },
-        { type: "category", data: times, gridIndex: 1, ...axis(), axisLabel: { color: "#5c6775", fontSize: 10 } },
+        { type: "category", data: times, boundaryGap: false, ...ax, axisLabel: { show: false } },
+        { type: "category", data: times, gridIndex: 1, ...ax, axisLabel: { color: "#5c6775", fontSize: 10 } },
       ],
       yAxis: [
-        { scale: true, ...axis(), axisLabel: { color: "#5c6775", formatter: (v) => Number(v).toFixed(2) } },
-        { scale: true, gridIndex: 1, ...axis(), axisLabel: { show: false } },
+        { scale: true, ...ax, axisLabel: { color: "#5c6775", formatter: (v) => Number(v).toFixed(2) } },
+        { scale: true, gridIndex: 1, ...ax, axisLabel: { show: false } },
       ],
       series: [
         {
@@ -171,13 +267,15 @@
       ],
     });
   }
+
   function renderIntra(bars) {
+    const ax = axisStyle();
     state.charts.intra.setOption({
       backgroundColor: "transparent",
       animation: false,
       grid: { left: 48, right: 16, top: 18, bottom: 28 },
-      xAxis: { type: "category", data: bars.map((b) => String(b.time || "").slice(5)), ...axis() },
-      yAxis: { scale: true, ...axis() },
+      xAxis: { type: "category", data: bars.map((b) => String(b.time || "").slice(5)), ...ax },
+      yAxis: { scale: true, ...ax },
       series: [
         {
           type: "line",
@@ -189,6 +287,7 @@
       ],
     });
   }
+
   function renderDepth(depth) {
     const asks = [...(depth.asks || [])].reverse();
     const bids = depth.bids || [];
@@ -203,6 +302,7 @@
         "<div class='depth-row'>无买档</div>"
       }</div>`;
   }
+
   async function openPanel(code, name) {
     $("tspMask").classList.remove("hidden");
     $("tspPanel").classList.remove("hidden");
@@ -212,7 +312,7 @@
     try {
       const data = await api(`/api/panel/${code}?source=${encodeURIComponent(source)}`);
       state.panel = { ...data, code };
-      $("tspSub").textContent = `Tick Stock Panel · ${data.source || source}${data.errors?.length ? " · 部分降级" : ""}`;
+      $("tspSub").textContent = `Tick Stock Panel · ${data.source || source}${data.errors && data.errors.length ? " · 部分降级" : ""}`;
       renderDay(data.day || []);
       renderMinute(data.minute || { points: [] });
       renderIntra((state.intraPeriod === "5min" ? data.m5 : data.m1) || []);
@@ -222,18 +322,25 @@
       $("tspSub").textContent = `加载失败：${err.message}`;
     }
   }
+
   function closePanel() {
     $("tspMask").classList.add("hidden");
     $("tspPanel").classList.add("hidden");
   }
+
   async function shot(el, filename) {
     if (!window.html2canvas) return alert("截图组件未加载");
-    const canvas = await html2canvas(el, { backgroundColor: "#eef3f1", scale: window.devicePixelRatio > 1 ? 2 : 1, useCORS: true });
+    const canvas = await html2canvas(el, {
+      backgroundColor: "#eef3f1",
+      scale: window.devicePixelRatio > 1 ? 2 : 1,
+      useCORS: true,
+    });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = filename;
     a.click();
   }
+
   function bind() {
     $("btnRefresh").onclick = refresh;
     $("dateSelect").onchange = refresh;
@@ -243,17 +350,22 @@
     $("tspMask").onclick = closePanel;
     $("tspShot").onclick = () => shot($("tspCapture"), `tsp_${Date.now()}.png`);
     $("tspChartSource").onchange = () => {
-      if (state.panel?.code) openPanel(state.panel.code, $("tspTitle").textContent);
+      if (state.panel && state.panel.code) openPanel(state.panel.code, $("tspTitle").textContent);
     };
+    $("listClose").onclick = closeListModal;
+    $("listMask").onclick = closeListModal;
     document.querySelectorAll(".mini-tab").forEach((btn) => {
       btn.onclick = () => {
         document.querySelectorAll(".mini-tab").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         state.intraPeriod = btn.dataset.period;
-        if (state.panel) renderIntra((state.intraPeriod === "5min" ? state.panel.m5 : state.panel.m1) || []);
+        if (state.panel) {
+          renderIntra((state.intraPeriod === "5min" ? state.panel.m5 : state.panel.m1) || []);
+        }
       };
     });
   }
+
   async function boot() {
     initCharts();
     bind();
@@ -261,5 +373,6 @@
     await loadDates();
     await refresh();
   }
+
   boot();
 })();
