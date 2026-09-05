@@ -51,16 +51,7 @@
     th { color: var(--muted); font-weight: 500; }
     th.sort { cursor: pointer; user-select: none; }
     th.sort:hover { color: var(--text); }
-    th.sort.on { color: var(--cyan); }
-    th.sort .dirs { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
-    th.sort .dir {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 22px; min-height: 22px; padding: 0 5px;
-      border: 1px solid var(--line); border-radius: 6px;
-      color: #6b7280; font-weight: 700; line-height: 1; background: #f9fafb;
-    }
-    th.sort .dir:hover { color: var(--text); background: #e5e7eb; }
-    th.sort .dir.on { color: #fff; background: var(--cyan); border-color: var(--cyan); }
+    th.sort.on { color: var(--cyan); font-weight: 700; }
     tr.pass td { background: #f0fdf4; }
     tr.side td { color: #6b7280; }
     .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
@@ -142,13 +133,13 @@
             <thead>
               <tr>
                 <th>序</th><th>名称</th>
-                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封</th>
                 <th class="sort" data-table="main" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
                 <th class="sort" data-table="main" data-key="seal" data-label="封单">封单</th>
                 <th>炸</th><th>板</th>
-                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手% <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
-                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
-                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿</th>
+                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气</th>
                 <th>量能</th><th>帽子</th>
               </tr>
             </thead>
@@ -181,13 +172,13 @@
             <thead>
               <tr>
                 <th>通道</th><th>名称</th><th>主题</th><th>板</th>
-                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封</th>
                 <th class="sort" data-table="all" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
                 <th class="sort" data-table="all" data-key="seal" data-label="封单">封单</th>
-                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手% <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
-                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿</th>
                 <th>炸</th>
-                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气</th>
                 <th>角色</th>
               </tr>
             </thead>
@@ -273,15 +264,8 @@ function markSortHeaders() {
     const cur = sorts[th.dataset.table];
     const on = !!(cur && cur.key === th.dataset.key);
     th.classList.toggle("on", on);
-    const arrows = th.querySelectorAll(".dir");
-    if (arrows.length) {
-      arrows.forEach((el) => {
-        el.classList.toggle("on", on && Number(el.dataset.dir) === cur.dir);
-      });
-    } else {
-      th.textContent = on ? `${th.dataset.label} ${cur.dir === 1 ? "↑" : "↓"}` : th.dataset.label;
-    }
-    th.title = "点 ↑ 升序，点 ↓ 降序，再点一次取消";
+    th.textContent = on ? `${th.dataset.label} ${cur.dir === 1 ? "↑" : "↓"}` : th.dataset.label;
+    th.title = "点一下升序，再点降序，第三次回到默认";
   });
 }
 function hatsOf(r) { return (r && r.hats) || []; }
@@ -534,17 +518,7 @@ async function openChart(code, name) {
 }
 function closeChart() { document.getElementById("mask").classList.remove("show"); }
 document.addEventListener("click", (e) => {
-  const arrow = e.target.closest("th.sort .dir");
   const head = e.target.closest("th.sort");
-  if (arrow && head) {
-    const dir = Number(arrow.dataset.dir);
-    const cur = sorts[head.dataset.table];
-    if (cur && cur.key === head.dataset.key && cur.dir === dir) sorts[head.dataset.table] = null;
-    else sorts[head.dataset.table] = { key: head.dataset.key, dir };
-    paintThemes();
-    paintBoards();
-    return;
-  }
   if (head) {
     cycleSort(head.dataset.table, head.dataset.key);
     paintThemes();
