@@ -114,6 +114,7 @@
   </header>
   <div class="wrap" id="shotRoot">
     <div id="warns" class="warns"></div>
+    <div class="card" id="srcBar"></div>
     <div class="card watch" id="watchCard"></div>
     <div class="three" id="hats"></div>
     <div class="two">
@@ -209,19 +210,20 @@ function render(s) {
   const ml = s.mainline;
   const sec = s.secondary;
   const mood = s.mood || {};
-  const expr = s.expression || {};
   const lanes = (s.source && s.source.lanes) || {};
-  const laneTxt = Object.entries(lanes).map(([k, v]) => `${k}${v.name || ""}`).join(" · ");
-  const moodTxt = mood.strong != null
-    ? ` · 情绪${mood.strong} · 涨停${mood.zt ?? s.stats?.zt ?? 0} · 最高${mood.height ?? "-"}板`
-    : ` · 涨停 ${s.stats?.zt || 0}`;
-  const exprTxt = expr.broken_rate != null
-    ? ` · 2板晋级${Number(expr.promote2).toFixed(1)}% · 破板率${Number(expr.broken_rate).toFixed(1)}%`
-    : "";
+  const moodBits = [];
+  if (mood.strong != null) moodBits.push(`情绪${mood.strong}`);
+  if (mood.zt != null) moodBits.push(`涨停${mood.zt}`);
+  else moodBits.push(`涨停${s.stats?.zt || 0}`);
+  if (mood.height != null) moodBits.push(`最高${mood.height}板`);
   document.getElementById("meta").innerHTML =
-    `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b><br/>` +
-    `数据源 ${s.source?.name || ""}` + moodTxt + exprTxt + (s.cached ? " · 缓存" : "") +
-    (laneTxt ? `<br/>各路 ${laneTxt}` : "");
+    `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b>` +
+    (s.cached ? " · 缓存" : "");
+  document.getElementById("srcBar").innerHTML =
+    `<div class="kicker">数据源 · ${s.source?.name || ""} · ${moodBits.join(" · ")}</div>` +
+    `<div style="margin-top:8px">${Object.entries(lanes).map(([k, v]) =>
+      `<span class="tag ${v.src === "kaipanla" ? "cyan" : (v.src === "tdx" ? "gold" : "pass")}">${k} · ${v.name || ""}</span>`
+    ).join(" ")}</div>`;
   document.getElementById("warns").textContent = (s.warnings || []).join("；");
   const w = s.watch;
   const hat = s.watch_hat || "";
