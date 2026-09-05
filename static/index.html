@@ -109,6 +109,7 @@
         </select>
         <input id="date" placeholder="复盘日 20260904" maxlength="8" />
         <button id="go">加载</button>
+        <button id="refresh">刷新</button>
         <button id="live">实时</button>
         <button id="shot" class="shot">截屏</button>
       </div>
@@ -203,7 +204,7 @@
 <script src="/static/vendor/html2canvas.min.js"></script>
 <script src="/static/chart.js"></script>
 <script>
-let timer = null, currentDate = "", currentMode = "", lastSnap = null;
+let currentDate = "", currentMode = "", lastSnap = null, loading = false;
 const sorts = { main: null, all: null };
 
 function sortValue(row, key) {
@@ -343,27 +344,39 @@ function paintBoards() {
     </tr>`).join("");
   markSortHeaders();
 }
-async function load() {
-  const q = new URLSearchParams();
-  if (currentDate) q.set("date", currentDate);
-  if (currentMode) q.set("mode", currentMode);
-  const r = await fetch("/api/snapshot" + (q.toString() ? "?" + q.toString() : ""));
-  render(await r.json());
-}
-function startPoll() {
-  if (timer) clearInterval(timer);
-  timer = setInterval(load, 8000);
+async function load(force) {
+  if (loading) return;
+  loading = true;
+  const btn = document.getElementById("refresh");
+  const old = btn.textContent;
+  btn.textContent = "刷新中…";
+  btn.disabled = true;
+  try {
+    const q = new URLSearchParams();
+    if (currentDate) q.set("date", currentDate);
+    if (currentMode) q.set("mode", currentMode);
+    const qs = q.toString() ? "?" + q.toString() : "";
+    const r = await fetch(force ? "/api/refresh" + qs : "/api/snapshot" + qs, {
+      method: force ? "POST" : "GET",
+    });
+    render(await r.json());
+  } finally {
+    loading = false;
+    btn.textContent = old;
+    btn.disabled = false;
+  }
 }
 document.getElementById("go").onclick = () => {
   currentDate = document.getElementById("date").value.trim();
   currentMode = document.getElementById("mode").value;
-  load();
+  load(true);
 };
+document.getElementById("refresh").onclick = () => load(true);
 document.getElementById("live").onclick = () => {
   currentDate = ""; currentMode = "";
   document.getElementById("date").value = "";
   document.getElementById("mode").value = "";
-  load();
+  load(true);
 };
 function shotQuery() {
   const q = new URLSearchParams();
@@ -491,8 +504,7 @@ document.querySelectorAll(".tabs button").forEach((btn) => {
     else paintChart();
   };
 });
-load();
-startPoll();
+load(false);
 </script>
 </body>
 </html>
