@@ -49,6 +49,9 @@
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
     th { color: var(--muted); font-weight: 500; }
+    th.sort { cursor: pointer; user-select: none; }
+    th.sort:hover { color: var(--text); }
+    th.sort.on { color: var(--cyan); font-weight: 700; }
     tr.pass td { background: #f0fdf4; }
     tr.side td { color: #6b7280; }
     .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
@@ -127,7 +130,15 @@
         <div style="overflow:auto;max-height:420px;margin-top:8px;">
           <table>
             <thead>
-              <tr><th>序</th><th>名称</th><th>首封</th><th>炸</th><th>板</th><th>换手%</th><th>成交亿</th><th>人气</th><th>量能</th><th>帽子</th></tr>
+              <tr>
+                <th>序</th><th>名称</th>
+                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封</th>
+                <th>炸</th><th>板</th>
+                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿</th>
+                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气</th>
+                <th>量能</th><th>帽子</th>
+              </tr>
             </thead>
             <tbody id="mainboard"></tbody>
           </table>
@@ -149,7 +160,15 @@
         <div style="overflow:auto;max-height:360px;margin-top:8px;">
           <table>
             <thead>
-              <tr><th>通道</th><th>名称</th><th>主题</th><th>板</th><th>首封</th><th>换手%</th><th>成交亿</th><th>炸</th><th>人气</th><th>角色</th></tr>
+              <tr>
+                <th>通道</th><th>名称</th><th>主题</th><th>板</th>
+                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封</th>
+                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手%</th>
+                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿</th>
+                <th>炸</th>
+                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气</th>
+                <th>角色</th>
+              </tr>
             </thead>
             <tbody id="all"></tbody>
           </table>
@@ -185,6 +204,36 @@
 <script src="/static/chart.js"></script>
 <script>
 let timer = null, currentDate = "", currentMode = "", lastSnap = null;
+const sorts = { main: null, all: null };
+
+function sortValue(row, key) {
+  if (key === "first_seal") {
+    const n = Number(row.first_seal_raw || 0);
+    return n > 0 ? n : 1e9;
+  }
+  if (key === "turnover") return Number(row.turnover || 0);
+  if (key === "amount") return Number(row.amount_yi || 0);
+  if (key === "pop") {
+    const n = Number(row.pop_rank);
+    return Number.isFinite(n) && n > 0 ? n : 1e9;
+  }
+  return 0;
+}
+function sortedRows(rows, key) {
+  if (!key) return rows.slice();
+  return rows.slice().sort((a, b) => {
+    const d = sortValue(a, key) - sortValue(b, key);
+    if (d !== 0) return d;
+    return String(a.code || "").localeCompare(String(b.code || ""));
+  });
+}
+function markSortHeaders() {
+  document.querySelectorAll("th.sort").forEach((th) => {
+    const on = sorts[th.dataset.table] === th.dataset.key;
+    th.classList.toggle("on", on);
+    th.textContent = on ? `${th.dataset.label} ↑` : th.dataset.label;
+  });
+}
 function hatsOf(r) { return (r && r.hats) || []; }
 function tagClass(role, lane) {
   if (["情绪龙头","火车头"].includes(role)) return "tag gold";
@@ -262,7 +311,21 @@ function render(s) {
       <div class="${st.pass ? "ok" : "no"}">${st.step} ${st.pass ? "过" : "否"}</div>
       <div><b>${st.title}</b><div class="why">${st.detail}</div></div>
     </div>`).join("");
-  const main = (s.board || []).filter(r => r.lane === "主线" || r.in_mainline);
+  document.getElementById("themes").innerHTML = (s.themes || []).map(t => `
+    <tr class="${t.lane === "主线" ? "pass" : "side"}">
+      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
+      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
+    </tr>`).join("");
+  paintBoards();
+  document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
+    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#6b7280">${d.use}</span></div>`
+  ).join("");
+}
+function paintBoards() {
+  const s = lastSnap;
+  if (!s) return;
+  const w = s.watch;
+  const main = sortedRows((s.board || []).filter(r => r.lane === "主线" || r.in_mainline), sorts.main);
   document.getElementById("mainboard").innerHTML = main.map((r, i) => `
     <tr class="${r.code === w?.code ? "pass" : ""}">
       <td>${i+1}</td><td>${stk(r.code, r.name)}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
@@ -270,21 +333,15 @@ function render(s) {
       <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
       <td>${(hatsOf(r).length ? hatsOf(r) : [r.role]).map(h => `<span class="${tagClass(h, r.lane)}">${h}</span>`).join("")}</td>
     </tr>`).join("");
-  document.getElementById("themes").innerHTML = (s.themes || []).map(t => `
-    <tr class="${t.lane === "主线" ? "pass" : "side"}">
-      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
-      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
-    </tr>`).join("");
-  document.getElementById("all").innerHTML = (s.board || []).map(r => `
+  const all = sortedRows(s.board || [], sorts.all);
+  document.getElementById("all").innerHTML = all.map(r => `
     <tr class="${r.code===w?.code?"pass": (r.lane==="主线"?"":"side")}">
       <td>${r.lane || ""}</td><td>${stk(r.code, r.name)}</td><td>${r.theme}</td>
       <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
       <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
     </tr>`).join("");
-  document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
-    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#6b7280">${d.use}</span></div>`
-  ).join("");
+  markSortHeaders();
 }
 async function load() {
   const q = new URLSearchParams();
@@ -407,6 +464,14 @@ async function openChart(code, name) {
 }
 function closeChart() { document.getElementById("mask").classList.remove("show"); }
 document.addEventListener("click", (e) => {
+  const head = e.target.closest("th.sort");
+  if (head) {
+    const table = head.dataset.table;
+    const key = head.dataset.key;
+    sorts[table] = sorts[table] === key ? null : key;
+    paintBoards();
+    return;
+  }
   const hit = e.target.closest(".stk");
   if (hit) {
     e.preventDefault();
