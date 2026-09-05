@@ -7,8 +7,21 @@ from typing import Any
 
 import httpx
 
-from dragon.themes import theme_of
+from dragon.kpl import (
+    client_kwargs as kpl_client_kwargs,
+    fetch_kpl,
+    kpl_row_to_zt,
+    plates_as_concepts,
+    probe_tianti,
+)
+from dragon.themes import plate_theme, theme_of
 from dragon.timeutil import recent_weekdays, yyyymmdd
+
+LANE_NAMES = {
+    "eastmoney": "东财",
+    "kaipanla": "开盘啦",
+    "tdx": "通达信",
+}
 
 UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -273,16 +286,153 @@ def concept_index(concepts: list[dict]) -> dict[str, dict]:
     return out
 
 
-async def resolve_trading_date(client: httpx.AsyncClient, override: str | None) -> tuple[str, list[str]]:
+def lane(src: str, n: int | None = None, note: str = "") -> dict[str, Any]:
+    rec: dict[str, Any] = {"src": src, "name": LANE_NAMES.get(src, src)}
+    if n is not None:
+        rec["n"] = n
+    if note:
+        rec["note"] = note
+    return rec
+
+
+def overlay_kpl(row: dict, tianti: dict | None, detail: dict | None) -> dict:
+    """题材/原因走开盘啦；首封、炸次、连板能保住东财的就保住。"""
+    if tianti:
+        plate = str(tianti.get("plate") or "")
+        if plate:
+            row["kpl_theme"] = plate
+            row["theme"] = tianti.get("theme") or plate_theme(plate)
+            row["industry"] = plate
+            row["theme_source"] = "kaipanla"
+        if not int(row.get("first_seal") or 0) and tianti.get("first_seal"):
+            row["first_seal"] = int(tianti["first_seal"])
+        if not int(row.get("boards") or 0) and tianti.get("boards"):
+            row["boards"] = int(tianti["boards"])
+        if not float(row.get("amount") or 0) and tianti.get("amount"):
+            row["amount"] = tianti["amount"]
+    if detail:
+        if detail.get("reason"):
+            row["reason"] = detail["reason"]
+        if not float(row.get("turnover") or 0) and detail.get("turnover"):
+            row["turnover"] = detail["turnover"]
+        if not float(row.get("price") or 0) and detail.get("price"):
+            row["price"] = detail["price"]
+        if not float(row.get("amount") or 0) and detail.get("amount"):
+            row["amount"] = detail["amount"]
+        if not float(row.get("circ_mv") or 0) and detail.get("circ_mv"):
+            row["circ_mv"] = detail["circ_mv"]
+        if not float(row.get("seal_fund") or 0) and detail.get("seal_fund"):
+            row["seal_fund"] = detail["seal_fund"]
+        if not float(row.get("change_pct") or 0) and detail.get("change_pct"):
+            row["change_pct"] = detail["change_pct"]
+    return row
+
+
+def fuse_zt(
+    em_rows: list[dict],
+    kpl: dict[str, Any],
+    quotes: dict[str, dict],
+) -> tuple[list[dict], str | None]:
+    tianti = {x["code"]: x for x in kpl.get("tianti") or []}
+    details = kpl.get("details") or {}
+    if em_rows:
+        out = []
+        for row in em_rows:
+            overlay_kpl(row, tianti.get(row["code"]), details.get(row["code"]))
+            out.append(row)
+        seen = {r["code"] for r in out}
+        for item in kpl.get("tianti") or []:
+            if item["code"] in seen:
+                continue
+            row = merge_quote(kpl_row_to_zt(item, details.get(item["code"])), quotes.get(item["code"]))
+            out.append(row)
+        return out, "eastmoney"
+    if tianti:
+        out = []
+        for item in kpl.get("tianti") or []:
+            row = merge_quote(kpl_row_to_zt(item, details.get(item["code"])), quotes.get(item["code"]))
+            out.append(row)
+        return out, "kaipanla"
+    return [], None
+
+
+def fuse_broken(
+    em_rows: list[dict],
+    kpl: dict[str, Any],
+    quotes: dict[str, dict],
+) -> tuple[list[dict], str | None]:
+    kpl_broken = {x["code"]: x for x in kpl.get("broken") or []}
+    if em_rows:
+        for row in em_rows:
+            hit = kpl_broken.get(row["code"])
+            if hit and hit.get("theme") and hit["theme"] not in {"其他", "ST股", "未知"}:
+                row["theme"] = hit["theme"]
+                row["industry"] = hit.get("themes") or row.get("industry")
+                row["theme_source"] = "kaipanla"
+        return em_rows, "eastmoney"
+    if kpl_broken:
+        out = []
+        for item in kpl.get("broken") or []:
+            row = {
+                "code": item["code"],
+                "name": item.get("name") or "",
+                "industry": item.get("industry") or item.get("themes") or "",
+                "theme": item.get("theme") or plate_theme(item.get("themes")),
+                "price": item.get("price") or 0,
+                "change_pct": item.get("change_pct") or 0,
+                "amount": item.get("amount") or 0,
+                "circ_mv": item.get("circ_mv") or 0,
+                "turnover": item.get("turnover") or 0,
+                "boards": 1,
+                "first_seal": 0,
+                "last_seal": 0,
+                "seal_fund": 0,
+                "open_count": 1,
+                "sealed": False,
+                "theme_source": "kaipanla",
+            }
+            out.append(merge_quote(row, quotes.get(item["code"])))
+        return out, "kaipanla"
+    return [], None
+
+
+def fuse_concepts(em_concepts: list[dict], kpl: dict[str, Any]) -> tuple[list[dict], str | None]:
+    kpl_concepts = plates_as_concepts(kpl.get("plates") or [], kpl.get("zhu") or [])
+    if kpl_concepts and em_concepts:
+        return kpl_concepts + em_concepts, "kaipanla"
+    if kpl_concepts:
+        return kpl_concepts, "kaipanla"
+    if em_concepts:
+        return em_concepts, "eastmoney"
+    return [], None
+
+
+def fuse_indexes(em_indexes: list[dict], kpl: dict[str, Any]) -> tuple[list[dict], str | None]:
+    if em_indexes:
+        return em_indexes, "eastmoney"
+    kpl_idx = kpl.get("indexes") or []
+    if kpl_idx:
+        return kpl_idx, "kaipanla"
+    return [], None
+
+
+async def resolve_trading_date(
+    em: httpx.AsyncClient,
+    kp: httpx.AsyncClient,
+    override: str | None,
+) -> tuple[str, list[str]]:
     warnings: list[str] = []
     if override and len(override) == 8 and override.isdigit():
-        pool = await em_zt_pool(client, override)
-        if not pool:
-            warnings.append(f"{override} 涨停池为空")
+        try:
+            pool = await em_zt_pool(em, override)
+            if not pool:
+                warnings.append(f"{override} 东财涨停池为空，尝试开盘啦补齐")
+        except Exception as e:  # noqa: BLE001
+            warnings.append(f"{override} 东财涨停池失败：{e}，尝试开盘啦补齐")
         return override, warnings
     for date in recent_weekdays(8):
         try:
-            pool = await em_zt_pool(client, date)
+            pool = await em_zt_pool(em, date)
         except Exception as e:  # noqa: BLE001
             warnings.append(f"{date} 涨停池失败：{e}")
             continue
@@ -291,60 +441,95 @@ async def resolve_trading_date(client: httpx.AsyncClient, override: str | None) 
             if date != today:
                 warnings.append(f"今日无有效涨停池，已回退到最近交易日 {date}")
             return date, warnings
+    for date in recent_weekdays(8):
+        try:
+            stocks = await probe_tianti(kp, date)
+        except Exception as e:  # noqa: BLE001
+            warnings.append(f"{date} 开盘啦天梯失败：{e}")
+            continue
+        if stocks:
+            warnings.append(f"东财涨停池为空，已用开盘啦回退到 {date}")
+            return date, warnings
     return yyyymmdd(), warnings + ["未取到任何交易日涨停池"]
 
 
 async def load_market(date: str | None = None) -> dict[str, Any]:
     warnings: list[str] = []
-    async with httpx.AsyncClient(**client_kwargs()) as client:
-        trade_date, date_warns = await resolve_trading_date(client, date)
+    lanes: dict[str, dict[str, Any]] = {"K线": lane("tdx", note="分时/日K/五档")}
+    async with httpx.AsyncClient(**client_kwargs()) as em, httpx.AsyncClient(**kpl_client_kwargs()) as kp:
+        trade_date, date_warns = await resolve_trading_date(em, kp, date)
         warnings.extend(date_warns)
-        yesterday: list[dict] = []
-        today_zt: list[dict] = []
-        zb: list[dict] = []
-        concepts: list[dict] = []
-        popularity: dict[str, int] = {}
+        latest = trade_date == yyyymmdd()
+
+        async def grab(name: str, coro):
+            try:
+                return name, await coro
+            except Exception as exc:  # noqa: BLE001
+                warnings.append(f"{name}失败：{exc}")
+                return name, None
+
+        parts = await asyncio.gather(
+            grab("涨停池", em_zt_pool(em, trade_date)),
+            grab("昨日涨停池", em_yesterday_zt(em, trade_date)),
+            grab("炸板池", em_zb_pool(em, trade_date)),
+            grab("概念板块", em_concepts(em)),
+            grab("人气榜", em_popularity(em)),
+            grab("大盘指数", em_indexes(em)),
+            grab("开盘啦", fetch_kpl(kp, trade_date, latest=latest)),
+        )
+        got = {name: value for name, value in parts}
+        today_zt = got.get("涨停池") or []
+        yesterday = got.get("昨日涨停池") or []
+        zb = got.get("炸板池") or []
+        em_concepts_rows = got.get("概念板块") or []
+        popularity = got.get("人气榜") or {}
+        em_indexes_rows = got.get("大盘指数") or []
+        kpl = got.get("开盘啦") or {}
+        warnings.extend(kpl.get("warnings") or [])
+
+        em_rows = [normalize_zt(x, sealed=True) for x in today_zt]
+        em_broken = [normalize_zt(x, sealed=False) for x in zb]
+        codes = [str(r.get("code") or "") for r in em_rows + em_broken]
+        codes.extend(str(x.get("code") or "") for x in (kpl.get("tianti") or []))
+        codes.extend(str(x.get("code") or "") for x in (kpl.get("broken") or []))
         quotes: dict[str, dict] = {}
-        indexes: list[dict] = []
-
         try:
-            today_zt = await em_zt_pool(client, trade_date)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"涨停池失败：{e}")
-        try:
-            yesterday = await em_yesterday_zt(client, trade_date)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"昨日涨停池失败：{e}")
-        try:
-            zb = await em_zb_pool(client, trade_date)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"炸板池失败：{e}")
-        try:
-            concepts = await em_concepts(client)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"概念板块失败：{e}")
-        try:
-            popularity = await em_popularity(client)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"人气榜失败：{e}（辨识度改用成交额排名）")
-
-        codes = []
-        for item in today_zt + zb:
-            c = str(item.get("c") or "")
-            if c:
-                codes.append(c)
-        try:
-            quotes = await em_quotes(client, codes)
+            quotes = await em_quotes(em, codes)
         except Exception as e:  # noqa: BLE001
             warnings.append(f"实时报价失败：{e}（量能用涨停池成交额/换手）")
-        try:
-            indexes = await em_indexes(client)
-        except Exception as e:  # noqa: BLE001
-            warnings.append(f"大盘指数失败：{e}")
-            indexes = []
+        em_rows = [merge_quote(row, quotes.get(row["code"])) for row in em_rows]
+        em_broken = [merge_quote(row, quotes.get(row["code"])) for row in em_broken]
 
-    rows = [merge_quote(normalize_zt(x, sealed=True), quotes.get(str(x.get("c")))) for x in today_zt]
-    broken = [merge_quote(normalize_zt(x, sealed=False), quotes.get(str(x.get("c")))) for x in zb]
+        rows, zt_src = fuse_zt(em_rows, kpl, quotes)
+        broken, zb_src = fuse_broken(em_broken, kpl, quotes)
+        concepts, bk_src = fuse_concepts(em_concepts_rows, kpl)
+        indexes, idx_src = fuse_indexes(em_indexes_rows, kpl)
+
+        if zt_src:
+            lanes["涨停池"] = lane(zt_src, len(rows))
+        if any(r.get("theme_source") == "kaipanla" for r in rows):
+            top = (kpl.get("zhu") or [{}])[0]
+            lanes["题材主线"] = lane(
+                "kaipanla",
+                top.get("count"),
+                note=f"{top.get('name') or ''}{top.get('count') or ''}家".strip(),
+            )
+        elif rows:
+            lanes["题材主线"] = lane("eastmoney", note="东财行业归并")
+        if zb_src:
+            lanes["炸板"] = lane(zb_src, len(broken))
+        if bk_src:
+            lanes["板块强度"] = lane(bk_src, len(kpl.get("plates") or []) or None)
+        if popularity:
+            lanes["人气"] = lane("eastmoney", len(popularity))
+        if quotes:
+            lanes["报价"] = lane("eastmoney", len(quotes))
+        if kpl.get("mood") or kpl.get("expression"):
+            mood = kpl.get("mood") or {}
+            lanes["情绪"] = lane("kaipanla", note=f"强度{mood.get('strong') or '-'}")
+        if idx_src:
+            lanes["指数"] = lane(idx_src, len(indexes))
+
     return {
         "date": trade_date,
         "zt": rows,
@@ -354,10 +539,14 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         "popularity": popularity,
         "quotes": quotes,
         "indexes": indexes,
+        "mood": kpl.get("mood"),
+        "expression": kpl.get("expression"),
+        "zhu": kpl.get("zhu") or [],
         "warnings": warnings,
         "source": {
-            "id": "eastmoney",
-            "name": "东方财富",
-            "desc": "涨停池 + 炸板池 + 概念领涨 + 人气榜 + 实时量价",
+            "id": "multi",
+            "name": "东财 + 开盘啦 + 通达信",
+            "desc": "涨停/炸板/人气/报价走东财，题材主线和情绪走开盘啦，K线走通达信；一路挂了自动切。",
+            "lanes": lanes,
         },
     }

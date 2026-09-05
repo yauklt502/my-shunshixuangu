@@ -179,6 +179,12 @@ async def build_snapshot(date: str | None = None, mode: str | None = None) -> di
         "session": session,
         "mode": use_mode,
         "source": market["source"],
+        "mood": market.get("mood"),
+        "expression": market.get("expression"),
+        "zhu": [
+            {"name": z.get("name"), "count": z.get("count"), "theme": z.get("theme"), "amount": z.get("amount")}
+            for z in (market.get("zhu") or [])[:8]
+        ],
         "warnings": market["warnings"],
         "indexes": market.get("indexes") or [],
         "stats": {

@@ -44,9 +44,15 @@ http://127.0.0.1:8688/download.zip
 ## 测试
 
 ```bash
-python3 -m unittest tests.test_score tests.test_backtest tests.test_shot -v
+python3 -m unittest tests.test_score tests.test_kpl tests.test_backtest tests.test_shot -v
 ```
 
 ## 数据
 
-东方财富：涨停池、炸板池、概念指数、人气榜、实时换手/成交额/量比、上证/深成/创业板指数。
+多路自动切换，各取所需：
+
+- 东方财富：涨停池、炸板次数、人气榜、实时换手/成交额/量比、大盘指数
+- 开盘啦：题材天梯/主线、涨停原因、情绪强度、晋级/破板率、板块强度
+- 通达信 7709：日K、分时、五档
+
+一路挂了会切到还能用的那路。炸板次数只信东财；开盘啦没有炸次，不拿「是否回封」冒充。

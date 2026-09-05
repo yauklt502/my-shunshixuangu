@@ -26,7 +26,17 @@ async def main() -> None:
     snap = await build_snapshot(date, mode)
     watch = snap.get("watch")
     picks = snap.get("picks") or {}
-    print(f"交易日 {snap['date']}  {snap['session']['phase']}  模式={snap['mode']}  涨停{snap['stats']['zt']}只")
+    src = snap.get("source") or {}
+    mood = snap.get("mood") or {}
+    print(
+        f"交易日 {snap['date']}  {snap['session']['phase']}  模式={snap['mode']}  "
+        f"涨停{snap['stats']['zt']}只  {src.get('name') or ''}"
+    )
+    if mood:
+        print(f"开盘啦情绪 {mood.get('strong')}  涨停{mood.get('zt')}  最高{mood.get('height')}板")
+    lanes = src.get("lanes") or {}
+    if lanes:
+        print("各路 " + " · ".join(f"{k}{v.get('name')}" for k, v in lanes.items()))
     ml = snap.get("mainline")
     sec = snap.get("secondary")
     if ml:
