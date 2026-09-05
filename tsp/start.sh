@@ -1,55 +1,57 @@
 #!/usr/bin/env bash
-# 先比独 · Tick Stock Panel 一键启动
+# XianBiDu Tick Stock Panel one-click start
 set -euo pipefail
 cd "$(dirname "$0")"
 ROOT="$(pwd)"
 PORT="${TSP_PORT:-8765}"
 URL="http://127.0.0.1:${PORT}"
+LOG="$ROOT/startup.log"
 
 echo "========================================"
-echo "  先比独 · Tick Stock Panel 一键启动"
+echo "  XianBiDu / Tick Stock Panel"
+echo "  One-click start"
 echo "========================================"
+echo "Working dir: $ROOT"
+echo
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "[错误] 未找到 python3，请先安装 Python 3.10+"
+  echo "[ERROR] python3 not found. Install Python 3.10+ first."
   exit 1
 fi
 
 if [[ ! -d .venv ]]; then
-  echo "[1/4] 创建虚拟环境…"
+  echo "[1/4] Creating venv..."
   python3 -m venv .venv
 else
-  echo "[1/4] 虚拟环境已存在"
+  echo "[1/4] venv exists"
 fi
 
 # shellcheck disable=SC1091
 source .venv/bin/activate
 
-echo "[2/4] 安装依赖（首次较慢）…"
-pip install -q -U pip
-pip install -q -r requirements.txt
+echo "[2/4] Installing dependencies (first run may take a few minutes)..."
+python -m pip install -U pip | tee -a "$LOG"
+python -m pip install -r requirements.txt | tee -a "$LOG"
 
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export TDX_HOST="${TDX_HOST:-115.238.90.165:7709}"
 
-# 若端口被占用，先尝试结束旧进程（仅本机本端口）
 if command -v lsof >/dev/null 2>&1; then
   OLD_PID="$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
   if [[ -n "${OLD_PID}" ]]; then
-    echo "[提示] 端口 ${PORT} 被占用，结束旧进程 ${OLD_PID}"
+    echo "[INFO] Port ${PORT} busy, killing ${OLD_PID}"
     kill ${OLD_PID} 2>/dev/null || true
     sleep 1
   fi
 fi
 
-echo "[3/4] 启动服务 ${URL}"
-echo "[4/4] 浏览器将自动打开（若未打开请手动访问上面地址）"
-echo "按 Ctrl+C 可停止服务"
+echo "[3/4] Starting ${URL}"
+echo "[4/4] Browser will open when ready"
+echo "Keep this terminal open. Ctrl+C to stop."
 echo "----------------------------------------"
 
-# 后台延迟打开浏览器
 (
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+  for _ in $(seq 1 20); do
     if curl -sf "${URL}/api/health" >/dev/null 2>&1; then
       if command -v xdg-open >/dev/null 2>&1; then
         xdg-open "${URL}" >/dev/null 2>&1 || true

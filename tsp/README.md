@@ -4,17 +4,24 @@
 
 ## 一键启动
 
-### Windows
-双击仓库根目录 **`一键启动.bat`**（或 `tsp/start.bat`）
+### Windows（重要）
+解压后双击根目录 **`START.cmd`**（推荐，英文名，窗口不会一闪就关）。
+
+若闪退 / 报错：
+1. 先双击 **`检查环境.bat`**
+2. 安装 [Python 3.10+](https://www.python.org/downloads/windows/)，勾选 **Add python.exe to PATH**
+3. 再双击 `START.cmd`；失败时同目录会生成 `tsp/startup.log`
+
+也可用 `一键启动.bat`（同样会 `pause` 留住窗口）。
 
 ### macOS / Linux
 ```bash
 chmod +x 一键启动.sh
 ./一键启动.sh
 ```
-或进入 `tsp` 后执行 `./start.sh` / 双击 `一键启动.command`（macOS）
 
-首次会自动建虚拟环境、装依赖，并打开浏览器：http://127.0.0.1:8765
+首次会自动建虚拟环境、装依赖，并打开浏览器：http://127.0.0.1:8765  
+**启动后请勿关闭黑色命令行窗口。**
 
 ## 功能
 
