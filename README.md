@@ -9,24 +9,24 @@
 
 ## 一键启动
 
-解压后**双击**即可打开网页。页面已预构建，**不需要 Node.js**。
+解压后双击 `一键启动.bat`。窗口里会走 4 步：
+
+```
+[1/4] Creating / checking venv ...
+[2/4] Installing dependencies (first run 1-3 min) ...
+[3/4] Starting server ...
+[4/4] Opening browser ...
+```
+
+第一次装依赖要 1–3 分钟，之后再点会显示 `already installed, skip`。装好后**不要关黑窗口**。
 
 | 系统 | 双击启动 | 停止 |
 |---|---|---|
-| **Windows** | `一键启动.bat` | Ctrl+C 或 `一键停止.bat` |
+| **Windows** | `一键启动.bat` | 窗口里 Ctrl+C，或 `一键停止.bat` |
 | **macOS** | `一键启动.command` | Ctrl+C 或 `./一键停止.sh` |
 | **Linux** | `./一键启动.sh` | Ctrl+C 或 `./一键停止.sh` |
 
-地址：**http://127.0.0.1:5173**
-
-- 本机只需安装 **Python 3.10+**（Windows 勾选 Add to PATH）
-- **第一次**会把运行库装到用户目录（Windows：`%LOCALAPPDATA%\shunshi-xuangu`），大约一两分钟
-- **以后再双击、再解压一份 ZIP，都不会重新下载**，直接开网页
-- 保持启动窗口不要关
-
-### 出现「无法访问此网站」？
-
-先双击启动脚本；地址必须带端口 `5173`。日志在 `.run/server.log`。
+地址：**http://127.0.0.1:5173**。本机只需 **Python 3.10+**（Windows 勾选 Add to PATH）。
 
 ### macOS 首次无法打开
 
