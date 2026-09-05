@@ -1,0 +1,25 @@
+# 顺势选股 · Docker 一键启动（可选）
+# 用法：docker compose up --build
+# 打开：http://127.0.0.1:5173
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8010:8010"
+    environment:
+      - PYTHONPATH=/app
+      - SSP_TDX_PROBE=1
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
