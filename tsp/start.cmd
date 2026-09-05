@@ -1,27 +1,40 @@
 @echo off
-REM One-click start for Windows (ASCII only). Auto-opens browser when ready.
+REM Double-click start. Second run onwards: no download, open browser directly.
 setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
-title XianBiDu Tick Stock Panel
-
-echo ========================================
-echo   XianBiDu / Tick Stock Panel
-echo   One-click start
-echo ========================================
-echo.
-echo Working dir: %CD%
-echo.
+title 先比独选股
 
 set "LOG=%CD%\startup.log"
-echo [%DATE% %TIME%] start > "%LOG%"
+set "TSP_PORT=8765"
+if not "%TSP_PORT%"=="" set "TSP_PORT=%TSP_PORT%"
+if "%TDX_HOST%"=="" set "TDX_HOST=115.238.90.165:7709"
+set "URL=http://127.0.0.1:%TSP_PORT%"
+set "VENV_PY=%CD%\.venv\Scripts\python.exe"
 
-REM Prefer 3.12, then 3.11, then default py -3
+echo ========================================
+echo   先比独选股 - 一键启动
+echo ========================================
+echo.
+
+REM ---------- Fast path: already prepared ----------
+if exist "%VENV_PY%" (
+  "%VENV_PY%" -c "import fastapi,uvicorn,httpx,eltdx" >nul 2>&1
+  if not errorlevel 1 (
+    echo 环境已就绪，正在打开网页...
+    goto :run_server
+  )
+)
+
+REM ---------- First-time prepare (only once) ----------
+echo 首次使用，正在自动准备环境（只需一次，请稍等）...
+echo [%DATE% %TIME%] first-time setup > "%LOG%"
+
 set "PYCMD="
 where py >nul 2>&1
 if not errorlevel 1 (
-  py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12" && goto :have_py
-  py -3.11 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.11" && goto :have_py
-  py -3 -c "import sys" >nul 2>&1 && set "PYCMD=py -3" && goto :have_py
+  py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12" && goto :got_py
+  py -3.11 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.11" && goto :got_py
+  py -3 -c "import sys" >nul 2>&1 && set "PYCMD=py -3" && goto :got_py
 )
 where python >nul 2>&1
 if not errorlevel 1 (
@@ -29,63 +42,45 @@ if not errorlevel 1 (
     echo %%I | findstr /i "WindowsApps\\python.exe" >nul
     if errorlevel 1 (
       set "PYCMD=%%I"
-      goto :have_py
+      goto :got_py
     )
   )
 )
 
-echo [ERROR] Python not found.
-echo Install Python 3.10+ from https://www.python.org/downloads/windows/
-echo Check: Add python.exe to PATH
+echo [错误] 未找到 Python。
+echo 请安装 Python 3.10+ ：https://www.python.org/downloads/windows/
+echo 安装时勾选 Add python.exe to PATH
 echo.
 pause
 exit /b 1
 
-:have_py
-echo [OK] Using: %PYCMD%
-%PYCMD% -c "import sys; print('[OK] Python', sys.version.split()[0])"
-echo [%DATE% %TIME%] python=%PYCMD% >> "%LOG%"
-
-if "%TSP_PORT%"=="" set "TSP_PORT=8765"
-if "%TDX_HOST%"=="" set "TDX_HOST=115.238.90.165:7709"
-set "URL=http://127.0.0.1:%TSP_PORT%"
-
+:got_py
+echo 使用 Python: %PYCMD%
 if not exist "requirements.txt" (
-  echo [ERROR] requirements.txt missing. Unzip the FULL package.
+  echo [错误] 缺少 requirements.txt，请解压完整压缩包。
   pause
   exit /b 1
 )
 if not exist "backend\app.py" (
-  echo [ERROR] backend\app.py missing. Run from tsp folder or use root START.cmd
+  echo [错误] 缺少 backend\app.py
   pause
   exit /b 1
 )
 
-echo [1/4] Creating / checking venv ...
-if not exist ".venv\Scripts\python.exe" (
+if not exist "%VENV_PY%" (
   %PYCMD% -m venv .venv >> "%LOG%" 2>&1
   if errorlevel 1 (
-    echo [ERROR] venv create failed. See %LOG%
+    echo [错误] 创建环境失败，详见 startup.log
     type "%LOG%"
     pause
     exit /b 1
   )
-) else (
-  echo       venv already exists
 )
 
-set "VENV_PY=%CD%\.venv\Scripts\python.exe"
-if not exist "%VENV_PY%" (
-  echo [ERROR] %VENV_PY% missing
-  pause
-  exit /b 1
-)
-
-echo [2/4] Installing dependencies (first run 1-3 min) ...
 "%VENV_PY%" -m pip install -U pip >> "%LOG%" 2>&1
 "%VENV_PY%" -m pip install -r requirements.txt >> "%LOG%" 2>&1
 if errorlevel 1 (
-  echo [WARN] pip failed, deleting .venv and retrying once ...
+  echo 安装失败，正在重试一次...
   rmdir /s /q .venv >nul 2>&1
   %PYCMD% -m venv .venv >> "%LOG%" 2>&1
   set "VENV_PY=%CD%\.venv\Scripts\python.exe"
@@ -93,45 +88,41 @@ if errorlevel 1 (
   "%VENV_PY%" -m pip install -r requirements.txt >> "%LOG%" 2>&1
 )
 if errorlevel 1 (
-  echo [ERROR] pip install failed.
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%LOG%' -Tail 60"
-  echo Full log: %LOG%
+  echo [错误] 依赖安装失败。
+  powershell -NoProfile -Command "Get-Content -LiteralPath '%LOG%' -Tail 50"
   pause
   exit /b 1
 )
 
-REM optional; ignore errors on Python ^< 3.12
-if exist "requirements-optional.txt" (
-  "%VENV_PY%" -m pip install -r requirements-optional.txt >> "%LOG%" 2>&1
-)
-
-"%VENV_PY%" -c "import fastapi,uvicorn,httpx,eltdx; print('[OK] deps ready')" >> "%LOG%" 2>&1
+"%VENV_PY%" -c "import fastapi,uvicorn,httpx,eltdx" >nul 2>&1
 if errorlevel 1 (
-  echo [ERROR] Core packages missing after install. Delete .venv and retry.
+  echo [错误] 依赖校验失败，请删除 tsp\.venv 后再试。
   pause
   exit /b 1
 )
 
+echo 准备完成。以后双击将直接打开，不再下载。
+echo.
+
+:run_server
 set "PYTHONPATH=%CD%"
 set "TDX_HOST=%TDX_HOST%"
-echo [3/4] Starting server: %URL%
-echo [4/4] Browser will open automatically when ready.
-echo.
-echo *** KEEP THIS WINDOW OPEN ***
-echo Press Ctrl+C to stop.
-echo ----------------------------------------
-echo [%DATE% %TIME%] uvicorn start >> "%LOG%"
 
-REM Wait for health then open browser; fallback open anyway
-start "" cmd /c "for /l %%i in (1,1,40) do (ping -n 2 127.0.0.1 >nul & curl -sf %URL%/api/health >nul 2>&1 && start %URL% && exit /b 0) & start %URL%"
+REM Open browser as soon as service is up
+start "" cmd /c "for /l %%i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & curl -sf %URL%/api/health >nul 2>&1 && start %URL% && exit /b 0) & start %URL%"
+
+echo 正在启动，浏览器稍后自动打开：
+echo   %URL%
+echo.
+echo 请保持本窗口打开。关闭窗口 = 退出软件。
+echo ----------------------------------------
 
 "%VENV_PY%" -m uvicorn backend.app:app --host 127.0.0.1 --port %TSP_PORT%
 set "ERR=!ERRORLEVEL!"
-echo.
-echo Server stopped. exit=!ERR!
-echo [%DATE% %TIME%] uvicorn exit=!ERR! >> "%LOG%"
 if not "!ERR!"=="0" (
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%LOG%' -Tail 40"
+  echo.
+  echo 启动失败 exit=!ERR!
+  if exist "%LOG%" powershell -NoProfile -Command "Get-Content -LiteralPath '%LOG%' -Tail 40"
   pause
 )
-endlocal & exit /b %ERR%
+exit /b %ERR%
