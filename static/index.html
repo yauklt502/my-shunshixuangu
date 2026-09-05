@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10秒定龙头 · 盘中跟 / 盘后盯</title>
+  <style>
+    :root {
+      --bg: #0b1020; --panel: #141b2e; --line: #243049; --text: #e8edf7;
+      --muted: #8b97b3; --gold: #f0b429; --cyan: #3ee0c6; --red: #ff5d73;
+      --green: #3dd68c; --warn: #ff8a4c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2744 0%, var(--bg) 50%);
+      color: var(--text);
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+      padding: 18px 24px 12px; border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0; font-size: 22px; }
+    h1 span { color: var(--gold); }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .meta { text-align: right; font-size: 13px; color: var(--muted); }
+    .meta b { color: var(--cyan); }
+    .wrap { padding: 16px 24px 40px; display: grid; gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .card.watch { border-color: #3d4d28; }
+    .kicker { font-size: 12px; color: var(--muted); }
+    .name { font-size: 26px; margin: 6px 0 4px; }
+    .name small { color: var(--muted); font-size: 14px; margin-left: 8px; }
+    .action { color: var(--gold); font-size: 14px; }
+    .why { font-size: 12px; color: #c9d3e7; line-height: 1.55; }
+    .steps { display: grid; gap: 8px; }
+    .step { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: 0; }
+    .ok { color: var(--green); font-weight: 700; }
+    .no { color: var(--red); font-weight: 700; }
+    .two { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-weight: 500; }
+    tr.pass td { background: rgba(61, 214, 140, 0.06); }
+    tr.side td { color: #8e98b0; }
+    .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; }
+    .tag.pass { background: #163427; color: var(--green); }
+    .tag.side { background: #2a2438; color: #b7a9d9; }
+    .tag.kill { background: #3a1d24; color: var(--red); }
+    button, input, select {
+      background: #1c2540; color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 6px 10px;
+    }
+    button { cursor: pointer; }
+    .tools { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+    .warns { color: var(--warn); font-size: 12px; }
+    @media (max-width: 1100px) { .two, header { display: block; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>10秒定龙头 · <span>先定板块再定票</span></h1>
+      <div class="sub">盘中跟、盘后盯，同一套顺序。只在主线里比，支线再猛也不进定龙池。</div>
+    </div>
+    <div>
+      <div class="tools">
+        <select id="mode">
+          <option value="">自动（按时段）</option>
+          <option value="盘中">盘中跟</option>
+          <option value="盘后">盘后复盘</option>
+        </select>
+        <input id="date" placeholder="复盘日 20260904" maxlength="8" />
+        <button id="go">加载</button>
+        <button id="live">实时</button>
+        <a href="/backtest" style="color:#3ee0c6;font-size:13px">近3月回测</a>
+      </div>
+      <div class="meta" id="meta">正在拉行情…</div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div id="warns" class="warns"></div>
+    <div class="two">
+      <div class="card watch" id="watchCard"></div>
+      <div class="card">
+        <div class="kicker">6 步清单（盘中盘后同一套）</div>
+        <div class="steps" id="steps"></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card">
+        <div class="kicker">主线封板序 · 谁先封、谁封得死</div>
+        <div style="overflow:auto;max-height:420px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr><th>序</th><th>名称</th><th>首封</th><th>炸</th><th>板</th><th>换手%</th><th>成交亿</th><th>人气</th><th>量能</th><th>角色</th></tr>
+            </thead>
+            <tbody id="mainboard"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">主题强度 · 绿=主线，其余=支线不进池</div>
+        <div style="overflow:auto;max-height:420px;margin-top:8px;">
+          <table>
+            <thead><tr><th></th><th>主题</th><th>涨停</th><th>额亿</th><th>最高板</th><th>先封</th></tr></thead>
+            <tbody id="themes"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="kicker">全市场对照（支线只看不进池）</div>
+      <div style="overflow:auto;max-height:360px;margin-top:8px;">
+        <table>
+          <thead>
+            <tr><th>通道</th><th>名称</th><th>主题</th><th>板</th><th>首封</th><th>换手%</th><th>成交亿</th><th>炸</th><th>人气</th><th>角色</th></tr>
+          </thead>
+          <tbody id="all"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<script>
+let timer = null, currentDate = "", currentMode = "";
+function tagClass(role, inMain) {
+  if (role === "支线") return "tag side";
+  if (["高度锚","独立票","见顶观察"].includes(role)) return "tag kill";
+  if (inMain) return "tag pass";
+  return "tag side";
+}
+function render(s) {
+  const sess = s.session || {};
+  const ml = s.mainline;
+  document.getElementById("meta").innerHTML =
+    `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b><br/>` +
+    `数据源 ${s.source?.name || ""} · 涨停 ${s.stats?.zt || 0}` + (s.cached ? " · 缓存" : "");
+  document.getElementById("warns").textContent = (s.warnings || []).join("；");
+  const w = s.watch;
+  const watchHtml = w ? `
+    <div class="kicker">${s.mode === "盘中" ? "盘中跟 · 只盯这一只" : "盘后复盘 · 明天开盘只盯这一只"}</div>
+    <div class="name">${w.name}<small>${w.code} · ${w.boards}板 · ${w.theme} · 人气${w.pop_rank ?? "-"}</small></div>
+    <div class="action">${s.action || ""}</div>
+    <div class="why">${w.why}<br/>换手${w.turnover}% · 成交${w.amount_yi}亿 · 量比${w.volume_ratio ?? "-"} · 炸${w.open_count}次 · 首封${w.first_seal}</div>
+  ` : `<div class="kicker">盯1只</div><div class="name">今日无龙</div><div class="why">主线不够或量能/炸板不过关。</div>`;
+  const mlHtml = ml ? `<div class="why" style="margin-top:10px">主线 <b>${ml.theme}</b>：涨停${ml.count}只 / ${ml.amount_yi}亿 / 最高${ml.max_boards}板</div>` : "";
+  document.getElementById("watchCard").innerHTML = watchHtml + mlHtml;
+  document.getElementById("steps").innerHTML = (s.steps || []).map(st => `
+    <div class="step">
+      <div class="${st.pass ? "ok" : "no"}">${st.step} ${st.pass ? "过" : "否"}</div>
+      <div><b>${st.title}</b><div class="why">${st.detail}</div></div>
+    </div>`).join("");
+  const main = (s.board || []).filter(r => r.in_mainline);
+  document.getElementById("mainboard").innerHTML = main.map((r, i) => `
+    <tr class="${r.code === w?.code ? "pass" : ""}">
+      <td>${i+1}</td><td>${r.name}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
+      <td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
+      <td><span class="${tagClass(r.role, true)}">${r.role}</span></td>
+    </tr>`).join("");
+  document.getElementById("themes").innerHTML = (s.themes || []).map(t => `
+    <tr class="${t.mainline ? "pass" : "side"}">
+      <td>${t.mainline ? "主线" : "支线"}</td><td>${t.theme}</td><td>${t.count}</td>
+      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
+    </tr>`).join("");
+  document.getElementById("all").innerHTML = (s.board || []).map(r => `
+    <tr class="${r.in_mainline ? (r.code===w?.code?"pass":"") : "side"}">
+      <td>${r.in_mainline ? "主线" : "支线"}</td><td>${r.name}</td><td>${r.theme}</td>
+      <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
+      <td><span class="${tagClass(r.role, r.in_mainline)}">${r.role}</span></td>
+    </tr>`).join("");
+}
+async function load() {
+  const q = new URLSearchParams();
+  if (currentDate) q.set("date", currentDate);
+  if (currentMode) q.set("mode", currentMode);
+  const r = await fetch("/api/snapshot" + (q.toString() ? "?" + q.toString() : ""));
+  render(await r.json());
+}
+function startPoll() {
+  if (timer) clearInterval(timer);
+  timer = setInterval(load, 8000);
+}
+document.getElementById("go").onclick = () => {
+  currentDate = document.getElementById("date").value.trim();
+  currentMode = document.getElementById("mode").value;
+  load();
+};
+document.getElementById("live").onclick = () => {
+  currentDate = ""; currentMode = "";
+  document.getElementById("date").value = "";
+  document.getElementById("mode").value = "";
+  load();
+};
+load();
+startPoll();
+</script>
+</body>
+</html>
