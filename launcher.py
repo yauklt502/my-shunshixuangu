@@ -137,7 +137,7 @@ def start() -> None:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(BACKEND)
     proc = subprocess.Popen(
-        [str(venv_python()), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(PORT)],
+        [str(venv_python()), "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(PORT)],
         cwd=str(BACKEND),
         env=env,
     )
@@ -147,9 +147,13 @@ def start() -> None:
         if proc.poll() is not None:
             print("[ERROR] 服务启动失败")
             raise SystemExit(1)
-        if http_ok(HEALTH):
+        if http_ok(HEALTH) and http_ok(PAGE):
             break
         time.sleep(0.25)
+    else:
+        print("[ERROR] 服务未在端口 5173 就绪")
+        proc.terminate()
+        raise SystemExit(1)
     webbrowser.open(PAGE)
     print()
     print(f"  URL: {PAGE}")

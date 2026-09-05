@@ -26,7 +26,7 @@
 | **macOS** | `一键启动.command` | Ctrl+C 或 `./一键停止.sh` |
 | **Linux** | `./一键启动.sh` | Ctrl+C 或 `./一键停止.sh` |
 
-地址：**http://127.0.0.1:5173**。本机只需 **Python 3.10+**（Windows 勾选 Add to PATH）。
+地址必须是 **http://127.0.0.1:5173**（一定要带 `:5173`）。只打开 `127.0.0.1` 会提示「拒绝连接」。本机只需 **Python 3.10+**（Windows 勾选 Add to PATH）。
 
 ### macOS 首次无法打开
 
