@@ -2,6 +2,20 @@
 
 把「先 / 比 / 独」核心领涨理论做成可切换数据源的选股软件。
 
+## 一键启动
+
+### Windows
+双击仓库根目录 **`一键启动.bat`**（或 `tsp/start.bat`）
+
+### macOS / Linux
+```bash
+chmod +x 一键启动.sh
+./一键启动.sh
+```
+或进入 `tsp` 后执行 `./start.sh` / 双击 `一键启动.command`（macOS）
+
+首次会自动建虚拟环境、装依赖，并打开浏览器：http://127.0.0.1:8765
+
 ## 功能
 
 - **先比独策略**：先锁共识赛道，比结构量价，独抓核心领涨
@@ -11,16 +25,15 @@
 - **一键截图**：主页面与浮窗均可导出 PNG
 - **浅色主题**：避免黑底看不清
 
-## 启动
+## 下载
 
-```bash
-cd tsp
-./start.sh
+完整压缩包（本分支最新代码）：
+
+```
+https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/xianbidu-tsp-33cc.zip
 ```
 
-浏览器打开：http://127.0.0.1:8765
-
-Windows 可双击 `start.bat`。
+解压后运行根目录 `一键启动.bat`（Windows）或 `./一键启动.sh`（Mac/Linux）。
 
 通达信主站默认：`115.238.90.165:7709`（可用环境变量 `TDX_HOST` 覆盖）。
 
