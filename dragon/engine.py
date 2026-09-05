@@ -187,6 +187,7 @@ async def build_snapshot(date: str | None = None, mode: str | None = None) -> di
         ],
         "warnings": market["warnings"],
         "indexes": market.get("indexes") or [],
+        "ladder": market.get("ladder") or [],
         "stats": {
             "zt": len(market["zt"]),
             "broken": len(market["broken"]),

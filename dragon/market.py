@@ -14,6 +14,7 @@ from dragon.kpl import (
     plates_as_concepts,
     probe_tianti,
 )
+from dragon.tencent import board_ladder, qq_indexes, qq_quotes, quote_incomplete
 from dragon.themes import plate_theme, theme_of
 from dragon.timeutil import recent_weekdays, yyyymmdd
 
@@ -21,6 +22,7 @@ LANE_NAMES = {
     "eastmoney": "东财",
     "kaipanla": "开盘啦",
     "tdx": "通达信",
+    "tencent": "腾讯",
 }
 
 UA = (
@@ -496,7 +498,18 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         try:
             quotes = await em_quotes(em, codes)
         except Exception as e:  # noqa: BLE001
-            warnings.append(f"实时报价失败：{e}（量能用涨停池成交额/换手）")
+            warnings.append(f"东财报价失败：{e}，改走腾讯")
+        need = [c for c in codes if c and quote_incomplete(quotes.get(c))]
+        qq_n = 0
+        if need:
+            try:
+                filled = await qq_quotes(em, need)
+                for code, item in filled.items():
+                    if quote_incomplete(quotes.get(code)):
+                        quotes[code] = item
+                        qq_n += 1
+            except Exception as e:  # noqa: BLE001
+                warnings.append(f"腾讯报价失败：{e}（量能用涨停池成交额/换手）")
         em_rows = [merge_quote(row, quotes.get(row["code"])) for row in em_rows]
         em_broken = [merge_quote(row, quotes.get(row["code"])) for row in em_broken]
 
@@ -504,6 +517,13 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         broken, zb_src = fuse_broken(em_broken, kpl, quotes)
         concepts, bk_src = fuse_concepts(em_concepts_rows, kpl)
         indexes, idx_src = fuse_indexes(em_indexes_rows, kpl)
+        if not indexes:
+            try:
+                indexes = await qq_indexes(em)
+                if indexes:
+                    idx_src = "tencent"
+            except Exception as e:  # noqa: BLE001
+                warnings.append(f"腾讯指数失败：{e}")
 
         if zt_src:
             lanes["涨停池"] = lane(zt_src, len(rows))
@@ -522,8 +542,11 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
             lanes["板块强度"] = lane(bk_src, len(kpl.get("plates") or []) or None)
         if popularity:
             lanes["人气"] = lane("eastmoney", len(popularity))
-        if quotes:
-            lanes["报价"] = lane("eastmoney", len(quotes))
+        em_q = sum(1 for q in quotes.values() if q.get("_src") != "tencent")
+        if qq_n and not em_q:
+            lanes["报价"] = lane("tencent", qq_n)
+        elif quotes:
+            lanes["报价"] = lane("eastmoney", em_q or len(quotes), note=f"腾讯补{qq_n}只" if qq_n else "")
         if kpl.get("mood") or kpl.get("expression"):
             mood = kpl.get("mood") or {}
             lanes["情绪"] = lane("kaipanla", note=f"强度{mood.get('strong') or '-'}")
@@ -542,11 +565,12 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         "mood": kpl.get("mood"),
         "expression": kpl.get("expression"),
         "zhu": kpl.get("zhu") or [],
+        "ladder": board_ladder(rows),
         "warnings": warnings,
         "source": {
             "id": "multi",
-            "name": "东财 + 开盘啦 + 通达信",
-            "desc": "涨停/炸板/人气/报价走东财，题材主线和情绪走开盘啦，K线走通达信；一路挂了自动切。",
+            "name": "东财 + 开盘啦 + 通达信 + 腾讯",
+            "desc": "东财只扛独有字段（涨停池炸次、人气）。题材走开盘啦，K线走通达信，报价东财缺了用腾讯补。",
             "lanes": lanes,
         },
     }
