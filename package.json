@@ -2,7 +2,7 @@
   "name": "three-discipline-dashboard",
   "version": "1.2.0",
   "private": true,
-  "description": "低吸纪律 / 二三板节奏 / 回撤不乱动 — 双击启动.bat（venv 四步启动）",
+  "description": "低吸纪律 / 二三板节奏 / 回撤不乱动 — 启动.bat（Python venv 或 Node 备用）",
   "type": "module",
   "scripts": {
     "start": "node server/index.mjs",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack Windows local zip with Python venv launcher (TSP-style [1/4]..[4/4])."""
+"""Pack Windows local zip: Python venv + Node fallback launchers."""
 from __future__ import annotations
 
 import os
@@ -15,13 +15,15 @@ ARTIFACT = "/opt/cursor/artifacts/three-discipline-local.zip"
 ROOT_FILES = [
     "启动.bat",
     "start.cmd",
+    "start-node.cmd",
     "一键部署到本地.bat",
     "一键部署到E盘.bat",
     "使用说明.txt",
     "requirements.txt",
     "README.md",
+    "package.json",
 ]
-DIRS = ["backend", "web"]
+DIRS = ["backend", "web", "server", "src"]
 SKIP = {".git", ".venv", ".wrangler", "download", "__pycache__", "node_modules", ".pack-node-modules"}
 
 

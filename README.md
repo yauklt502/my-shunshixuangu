@@ -16,18 +16,13 @@
 
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
 
-解压后**双击 `启动.bat`**，窗口会按 TSP 同款四步启动：
+**先解压**，进入文件夹，双击 `启动.bat`：
 
-```
-[1/4] Creating / checking venv ...
-[2/4] Installing dependencies (first run 1-3 min) ...
-[3/4] Starting server ...
-[4/4] Browser will open automatically when ready.
-```
+- 有 Python → TSP 同款 `[1/4]…[4/4]` venv 启动（国内清华源装依赖）
+- 无 Python、有 Node → 自动走 Node（无需 npm install）
+- 浏览器打开 http://127.0.0.1:5177/
 
-浏览器自动打开 http://127.0.0.1:5177/
-
-本机需要已安装 **Python 3.10+**（勾选 Add to PATH）。首次装依赖约 1–3 分钟，之后再开就快。
+也可直接双击 `start-node.cmd`（需 Node.js）。
 
 重新打包：
 
@@ -44,13 +39,13 @@ pip install -r requirements.txt
 uvicorn backend.app:app --host 127.0.0.1 --port 5177
 ```
 
+或：
+
+```bash
+npm start
+```
+
 ## Cloudflare Workers 部署
-
-本仓库仍保留 Workers 入口：
-
-- `wrangler.toml`（`name = "my-shunshixuangu"`）
-- `src/worker.js`（`/api/*` 行情逻辑）
-- `web/` 静态前端
 
 ```bash
 npm i

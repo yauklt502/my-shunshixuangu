@@ -6,7 +6,7 @@ title Three Discipline Dashboard
 
 echo ========================================
 echo   Three Discipline Dashboard
-echo   One-click start
+echo   Python venv start
 echo ========================================
 echo.
 echo Working dir: %CD%
@@ -36,6 +36,8 @@ if not errorlevel 1 (
 echo [ERROR] Python not found.
 echo Install Python 3.10+ from https://www.python.org/downloads/windows/
 echo Check: Add python.exe to PATH
+echo.
+echo Or install Node.js and use start-node.cmd
 echo.
 pause
 exit /b 1
@@ -80,15 +82,21 @@ if not exist "%VENV_PY%" (
 )
 
 echo [2/4] Installing dependencies (first run 1-3 min) ...
-"%VENV_PY%" -m pip install -U pip >> "%LOG%" 2>&1
-"%VENV_PY%" -m pip install -r requirements.txt >> "%LOG%" 2>&1
+set "PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple"
+"%VENV_PY%" -m pip install -U pip -i "%PIP_INDEX%" --trusted-host pypi.tuna.tsinghua.edu.cn >> "%LOG%" 2>&1
+"%VENV_PY%" -m pip install -r requirements.txt -i "%PIP_INDEX%" --trusted-host pypi.tuna.tsinghua.edu.cn >> "%LOG%" 2>&1
+if errorlevel 1 (
+  echo [WARN] mirror pip failed, retrying with default PyPI ...
+  "%VENV_PY%" -m pip install -U pip >> "%LOG%" 2>&1
+  "%VENV_PY%" -m pip install -r requirements.txt >> "%LOG%" 2>&1
+)
 if errorlevel 1 (
   echo [WARN] pip failed, deleting .venv and retrying once ...
   rmdir /s /q .venv >nul 2>&1
   %PYCMD% -m venv .venv >> "%LOG%" 2>&1
   set "VENV_PY=%CD%\.venv\Scripts\python.exe"
-  "%VENV_PY%" -m pip install -U pip >> "%LOG%" 2>&1
-  "%VENV_PY%" -m pip install -r requirements.txt >> "%LOG%" 2>&1
+  "%VENV_PY%" -m pip install -U pip -i "%PIP_INDEX%" --trusted-host pypi.tuna.tsinghua.edu.cn >> "%LOG%" 2>&1
+  "%VENV_PY%" -m pip install -r requirements.txt -i "%PIP_INDEX%" --trusted-host pypi.tuna.tsinghua.edu.cn >> "%LOG%" 2>&1
 )
 if errorlevel 1 (
   echo [ERROR] pip install failed.
@@ -96,6 +104,7 @@ if errorlevel 1 (
   echo Full log: %LOG%
   echo.
   echo Tip: delete the .venv folder and run again.
+  echo Tip: check network / try Node fallback: start-node.cmd
   pause
   exit /b 1
 )
@@ -117,6 +126,7 @@ echo Press Ctrl+C to stop.
 echo ----------------------------------------
 echo [%DATE% %TIME%] uvicorn start >> "%LOG%"
 
+REM Wait for health then open browser; always open as fallback (no curl required)
 start "" cmd /c "for /l %%i in (1,1,40) do (ping -n 2 127.0.0.1 >nul & curl -sf %URL%/api/health >nul 2>&1 && start %URL% && exit /b 0) & start %URL%"
 
 "%VENV_PY%" -m uvicorn backend.app:app --host 127.0.0.1 --port %TD_PORT%
