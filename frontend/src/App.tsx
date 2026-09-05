@@ -4,8 +4,20 @@ import { Camera, RefreshCw, X } from 'lucide-react'
 import { api } from './lib/api'
 import { StockPanelModal } from './components/StockPanel'
 
-type Role = 'all' | 'dragon' | 'mid' | 'catchup' | 'follower'
+type Role =
+  | 'all'
+  | 'dragon'
+  | 'chief'
+  | 'sentiment'
+  | 'dragon2'
+  | 'dragon3'
+  | 'theme_dragon'
+  | 'mid'
+  | 'catchup'
+  | 'follower'
 type View = 'stocks' | 'themes'
+
+const DRAGON_FAMILY = new Set(['chief', 'sentiment', 'dragon2', 'dragon3', 'theme_dragon', 'dragon'])
 
 function todayStr() {
   const d = new Date()
@@ -13,7 +25,10 @@ function todayStr() {
 }
 
 function roleClass(role: string) {
-  if (role === 'dragon') return 'role-chip'
+  if (role === 'chief') return 'role-chip chief'
+  if (role === 'sentiment') return 'role-chip sentiment'
+  if (role === 'dragon2' || role === 'dragon' || role === 'theme_dragon') return 'role-chip'
+  if (role === 'dragon3') return 'role-chip dragon3'
   if (role === 'mid') return 'role-chip mid'
   if (role === 'catchup') return 'role-chip catchup'
   return 'role-chip follower'
@@ -23,19 +38,43 @@ function stockCode(s: any) {
   return s.symbol || `${s.market || ''}${s.code}`
 }
 
+function titleKeys(s: any): string[] {
+  return s?.title_keys || (s?.role ? [s.role] : [])
+}
+
+function matchRole(s: any, role: Role) {
+  if (role === 'all') return true
+  const keys = titleKeys(s)
+  if (role === 'dragon') return keys.some((k) => DRAGON_FAMILY.has(k))
+  return keys.includes(role) || s.role === role
+}
+
 const ROLE_LABEL: Record<string, string> = {
   all: '全部',
-  dragon: '龙头',
+  dragon: '龙头家族',
+  chief: '日内总龙头',
+  sentiment: '情绪龙头',
+  dragon2: '龙二',
+  dragon3: '龙三',
+  theme_dragon: '题材龙',
   mid: '中位股',
   catchup: '补涨龙',
   follower: '跟风',
 }
 
+const SEATS: { key: Role; label: string; hint: string }[] = [
+  { key: 'chief', label: '日内总龙头', hint: '全市场最高连板' },
+  { key: 'sentiment', label: '情绪龙头', hint: '主线方向锚' },
+  { key: 'dragon2', label: '龙二', hint: '主线第二辨识' },
+  { key: 'dragon3', label: '龙三', hint: '主线第三梯队' },
+]
+
 function themeRoleCount(t: any, role: string) {
-  if (role === 'dragon') return t.dragon ? 1 : 0
+  const members = t.all || []
+  if (role === 'dragon') return members.filter((s: any) => matchRole(s, 'dragon')).length
   if (role === 'mid') return (t.mid || []).length
   if (role === 'catchup') return (t.catchup || []).length
-  if (role === 'follower') return (t.all || []).filter((s: any) => s.role === 'follower').length
+  if (role === 'follower') return members.filter((s: any) => s.role === 'follower').length
   return t.count || 0
 }
 
@@ -84,11 +123,12 @@ export default function App() {
 
   const allStocks = ladder?.stocks || []
   const allThemes = ladder?.themes || []
+  const dragonLadder = ladder?.dragon_ladder || {}
 
   const stocks = useMemo(() => {
     let list = allStocks
     if (filterTheme) list = list.filter((s: any) => s.theme === filterTheme)
-    if (filterRole !== 'all') list = list.filter((s: any) => s.role === filterRole)
+    if (filterRole !== 'all') list = list.filter((s: any) => matchRole(s, filterRole))
     return list
   }, [allStocks, filterRole, filterTheme])
 
@@ -136,6 +176,7 @@ export default function App() {
   }
 
   function openStock(s: any) {
+    if (!s) return
     setSelected({ code: stockCode(s), name: s.name, meta: s })
   }
 
@@ -155,12 +196,7 @@ export default function App() {
     a.click()
   }
 
-  const contrast = ladder?.contrast || [
-    { role: 'dragon', label: '龙头', timing: '主线初期~高潮', position: '题材最高板', vs_leader: '本身即定价锚', risk: '退潮回撤大' },
-    { role: 'mid', label: '中位股', timing: '主线中期', position: '约3~5板中位开挂', vs_leader: '伴随扩散，非龙头', risk: '龙头弱时先掉队' },
-    { role: 'catchup', label: '补涨龙', timing: '龙头末期/断板前后', position: '低位重新启动', vs_leader: '承接溢出', risk: '鱼尾接力风险大' },
-  ]
-
+  const contrast = ladder?.contrast || []
   const summary = ladder?.summary || {}
   const filterActive = filterRole !== 'all' || !!filterTheme || view === 'themes'
   const resultTitle = view === 'themes'
@@ -174,7 +210,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <strong>顺势选股</strong>
-          <span>龙头 · 中位股 · 补涨龙 实时对照</span>
+          <span>总龙头 · 情绪龙 · 龙二龙三 · 中位 / 补涨</span>
         </div>
         <div className="controls">
           <div className="control">
@@ -208,75 +244,128 @@ export default function App() {
       </header>
 
       <main className="main" ref={captureRef}>
+        <section className="dragon-seats" aria-label="今日龙梯队">
+          {SEATS.map((seat) => {
+            const s = dragonLadder[seat.key]
+            const dual = seat.key === 'chief' && summary.same_chief_sentiment
+            const activeSeat = filterRole === seat.key && view === 'stocks' && !filterTheme
+            return (
+              <article
+                key={seat.key}
+                className={`seat ${seat.key}${activeSeat ? ' active' : ''}${s ? '' : ' empty'}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => showRole(seat.key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    showRole(seat.key)
+                  }
+                }}
+              >
+                <div className="seat-kicker">
+                  <span className={roleClass(seat.key)}>{seat.label}</span>
+                  {dual && <span className="role-chip sentiment">兼任情绪龙</span>}
+                </div>
+                {s ? (
+                  <>
+                    <button
+                      type="button"
+                      className="seat-name"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openStock(s)
+                      }}
+                    >
+                      {s.name}
+                    </button>
+                    <div className="seat-meta">
+                      <b className="up">{s.boards}板</b>
+                      <span>{s.theme || s.industry}</span>
+                      <span>{s.first_time || '--'}</span>
+                    </div>
+                    <p className="seat-reason">{s.reason || seat.hint}</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="seat-name muted">今日未形成</div>
+                    <p className="seat-reason">{seat.hint} · 主线票不足</p>
+                  </>
+                )}
+              </article>
+            )
+          })}
+        </section>
+
+        {dragonLadder.note && (
+          <div className="ladder-note">
+            <b>怎么分的：</b>
+            {dragonLadder.note}
+            {dragonLadder.isolated_height
+              ? `（最高板孤立 ≠ 情绪龙；情绪看 ${dragonLadder.emotion_height} 板主线「${dragonLadder.main_theme}」）`
+              : `（高度连续时，总龙头往往就是情绪龙头）`}
+          </div>
+        )}
+
         <section className="hero-contrast">
-          {contrast.map((c: any) => (
-            <article
-              key={c.role}
-              className={`contrast-card clickable${filterRole === c.role && view === 'stocks' ? ' active' : ''}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => showRole(c.role)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  showRole(c.role)
-                }
-              }}
-            >
-              <span className={roleClass(c.role)}>{c.label}</span>
-              <h3>{c.label}</h3>
-              <p><b>时机：</b>{c.timing}</p>
-              <p><b>位置：</b>{c.position}</p>
-              <p><b>对龙头：</b>{c.vs_leader}</p>
-              <p><b>风险：</b>{c.risk}</p>
-              <p className="card-hint">点击查看{c.label}分类结果</p>
-            </article>
-          ))}
+          {contrast
+            .filter((c: any) => c.role === 'mid' || c.role === 'catchup')
+            .map((c: any) => (
+              <article
+                key={c.role}
+                className={`contrast-card clickable${filterRole === c.role && view === 'stocks' ? ' active' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => showRole(c.role)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    showRole(c.role)
+                  }
+                }}
+              >
+                <span className={roleClass(c.role)}>{c.label}</span>
+                <h3>{c.label}</h3>
+                <p><b>时机：</b>{c.timing}</p>
+                <p><b>位置：</b>{c.position}</p>
+                <p><b>作用：</b>{c.vs_leader}</p>
+                <p><b>风险：</b>{c.risk}</p>
+                <p className="card-hint">点击查看{c.label}</p>
+              </article>
+            ))}
         </section>
 
         <section className="summary-row" aria-label="分类统计">
           <div className="pill">日期 <b>{ladder?.trade_date || date}</b></div>
           <div className="pill">数据源 <b>{ladder?.provider || active}</b></div>
-          <button
-            type="button"
-            className={`pill clickable${view === 'themes' ? ' active' : ''}`}
-            onClick={showThemes}
-          >
+          <button type="button" className={`pill clickable${view === 'themes' ? ' active' : ''}`} onClick={showThemes}>
             题材 <b>{summary.themes ?? '-'}</b>
           </button>
-          <button
-            type="button"
-            className={`pill clickable${view === 'stocks' && filterRole === 'dragon' && !filterTheme ? ' active' : ''}`}
-            onClick={() => showRole('dragon')}
-          >
-            龙头 <b>{summary.dragon ?? '-'}</b>
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'chief' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('chief')}>
+            总龙头 <b>{summary.chief ?? '-'}</b>
           </button>
-          <button
-            type="button"
-            className={`pill clickable${view === 'stocks' && filterRole === 'mid' && !filterTheme ? ' active' : ''}`}
-            onClick={() => showRole('mid')}
-          >
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'sentiment' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('sentiment')}>
+            情绪龙 <b>{summary.sentiment ?? '-'}</b>
+          </button>
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'dragon2' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('dragon2')}>
+            龙二 <b>{summary.dragon2 ?? '-'}</b>
+          </button>
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'dragon3' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('dragon3')}>
+            龙三 <b>{summary.dragon3 ?? '-'}</b>
+          </button>
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'theme_dragon' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('theme_dragon')}>
+            题材龙 <b>{summary.theme_dragon ?? '-'}</b>
+          </button>
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'mid' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('mid')}>
             中位股 <b>{summary.mid ?? '-'}</b>
           </button>
-          <button
-            type="button"
-            className={`pill clickable${view === 'stocks' && filterRole === 'catchup' && !filterTheme ? ' active' : ''}`}
-            onClick={() => showRole('catchup')}
-          >
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'catchup' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('catchup')}>
             补涨龙 <b>{summary.catchup ?? '-'}</b>
           </button>
-          <button
-            type="button"
-            className={`pill clickable${view === 'stocks' && filterRole === 'follower' && !filterTheme ? ' active' : ''}`}
-            onClick={() => showRole('follower')}
-          >
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'follower' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('follower')}>
             跟风 <b>{summary.follower ?? '-'}</b>
           </button>
-          <button
-            type="button"
-            className={`pill clickable${view === 'stocks' && filterRole === 'all' && !filterTheme ? ' active' : ''}`}
-            onClick={() => showRole('all')}
-          >
+          <button type="button" className={`pill clickable${view === 'stocks' && filterRole === 'all' && !filterTheme ? ' active' : ''}`} onClick={() => showRole('all')}>
             涨停池 <b>{summary.total ?? '-'}</b>
           </button>
         </section>
@@ -321,7 +410,10 @@ export default function App() {
                   <tbody>
                     {allThemes.map((t: any) => (
                       <tr key={t.theme} onClick={() => showTheme(t.theme)}>
-                        <td><b>{t.theme}</b></td>
+                        <td>
+                          <b>{t.theme}</b>
+                          {t.is_main && <span className="role-chip sentiment" style={{ marginLeft: 6 }}>主线</span>}
+                        </td>
                         <td className="up">{t.max_boards} 板</td>
                         <td>{t.count}</td>
                         <td>{themeRoleCount(t, 'dragon')}</td>
@@ -341,7 +433,7 @@ export default function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>角色</th>
+                      <th>席位</th>
                       <th>代码</th>
                       <th>名称</th>
                       <th>题材</th>
@@ -354,7 +446,13 @@ export default function App() {
                   <tbody>
                     {stocks.map((s: any) => (
                       <tr key={`${stockCode(s)}-${s.role}`} onClick={() => openStock(s)}>
-                        <td><span className={roleClass(s.role)}>{s.role_label}</span></td>
+                        <td>
+                          <span className="chip-row">
+                            {(s.title_keys || [s.role]).map((k: string) => (
+                              <span key={k} className={roleClass(k)}>{ROLE_LABEL[k] || s.role_label}</span>
+                            ))}
+                          </span>
+                        </td>
                         <td>{s.code}</td>
                         <td>{s.name}</td>
                         <td>
@@ -368,6 +466,7 @@ export default function App() {
                           >
                             {s.theme}
                           </button>
+                          {s.is_main_theme && <span className="muted"> ·主线</span>}
                         </td>
                         <td className="up">{s.boards}</td>
                         <td>{s.position}</td>
@@ -385,9 +484,11 @@ export default function App() {
                                 ? '今日暂无中位股（需题材内存在 3~5 板且非龙头的标的）'
                                 : filterRole === 'catchup'
                                   ? '今日暂无补涨龙（需龙头已到高位且出现低位启动）'
-                                  : filterTheme
-                                    ? `「${filterTheme}」下暂无${ROLE_LABEL[filterRole]}`
-                                    : '暂无数据（可切换历史日期复盘）'}
+                                  : filterRole === 'dragon3'
+                                    ? '今日主线未形成龙三（情绪主线里可排的票不足 3 只）'
+                                    : filterTheme
+                                      ? `「${filterTheme}」下暂无${ROLE_LABEL[filterRole]}`
+                                      : '暂无数据（可切换历史日期复盘）'}
                           </div>
                         </td>
                       </tr>
@@ -401,14 +502,14 @@ export default function App() {
           <div className="panel">
             <div className="panel-hd">
               <h2>题材梯队（点击题材查看全部个股）</h2>
-              <span className="muted">{filterTheme ? filterTheme : '龙头 → 中位 → 补涨 → 跟风'}</span>
+              <span className="muted">{filterTheme ? filterTheme : dragonLadder.main_theme ? `主线 ${dragonLadder.main_theme}` : '总龙 → 情绪龙 → 龙二龙三'}</span>
             </div>
             <div className="panel-bd theme-list">
               {themes.map((t: any) => {
                 const members = t.all || []
                 return (
                   <div
-                    className={`theme-card clickable${filterTheme === t.theme ? ' active' : ''}`}
+                    className={`theme-card clickable${filterTheme === t.theme ? ' active' : ''}${t.is_main ? ' main' : ''}`}
                     key={t.theme}
                     role="button"
                     tabIndex={0}
@@ -421,7 +522,10 @@ export default function App() {
                     }}
                   >
                     <header>
-                      <strong>{t.theme}</strong>
+                      <strong>
+                        {t.theme}
+                        {t.is_main && <span className="role-chip sentiment" style={{ marginLeft: 6 }}>情绪主线</span>}
+                      </strong>
                       <span className="muted">高度 {t.max_boards} 板 · {t.count} 只</span>
                     </header>
                     <div className="theme-meta">
