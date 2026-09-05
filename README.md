@@ -22,7 +22,7 @@
 
 | 系统 | 双击启动 | 停止 |
 |---|---|---|
-| **Windows** | `一键启动.bat` | 窗口里 Ctrl+C，或 `一键停止.bat` |
+| **Windows** | `一键启动.bat` 或 `start.bat` | 窗口里 Ctrl+C，或 `一键停止.bat` |
 | **macOS** | `一键启动.command` | Ctrl+C 或 `./一键停止.sh` |
 | **Linux** | `./一键启动.sh` | Ctrl+C 或 `./一键停止.sh` |
 
