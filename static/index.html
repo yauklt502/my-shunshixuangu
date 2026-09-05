@@ -134,6 +134,8 @@
               <tr>
                 <th>序</th><th>名称</th>
                 <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封</th>
+                <th class="sort" data-table="main" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
+                <th class="sort" data-table="main" data-key="seal" data-label="封单">封单</th>
                 <th>炸</th><th>板</th>
                 <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手%</th>
                 <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿</th>
@@ -151,7 +153,14 @@
         <div class="kicker">主题通道 · 主线定火车头，次主线/支线高标留下对照</div>
         <div style="overflow:auto;max-height:360px;margin-top:8px;">
           <table>
-            <thead><tr><th>通道</th><th>主题</th><th>涨停</th><th>额亿</th><th>最高板</th><th>先封</th></tr></thead>
+            <thead>
+              <tr>
+                <th>通道</th><th>主题</th>
+                <th class="sort" data-table="themes" data-key="count" data-label="板块涨停">板块涨停</th>
+                <th>额亿</th><th>最高板</th>
+                <th class="sort" data-table="themes" data-key="first_time" data-label="先封">先封</th>
+              </tr>
+            </thead>
             <tbody id="themes"></tbody>
           </table>
         </div>
@@ -164,6 +173,8 @@
               <tr>
                 <th>通道</th><th>名称</th><th>主题</th><th>板</th>
                 <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封</th>
+                <th class="sort" data-table="all" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
+                <th class="sort" data-table="all" data-key="seal" data-label="封单">封单</th>
                 <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手%</th>
                 <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿</th>
                 <th>炸</th>
@@ -205,34 +216,56 @@
 <script src="/static/chart.js"></script>
 <script>
 let currentDate = "", currentMode = "", lastSnap = null, loading = false;
-const sorts = { main: null, all: null };
+const sorts = { main: null, all: null, themes: null };
 
-function sortValue(row, key) {
-  if (key === "first_seal") {
-    const n = Number(row.first_seal_raw || 0);
-    return n > 0 ? n : 1e9;
+function missingValue(row, key) {
+  if (key === "first_seal") return !(Number(row.first_seal_raw || 0) > 0);
+  if (key === "pop") return !(Number(row.pop_rank) > 0);
+  if (key === "first_time") {
+    const raw = row.first_seal || row.first_time || "";
+    return !String(raw).replace(/\D/g, "");
   }
+  return false;
+}
+function sortValue(row, key) {
+  if (key === "first_seal") return Number(row.first_seal_raw || 0);
+  if (key === "peer_zt") return Number(row.peer_zt || 0);
+  if (key === "seal") return Number(row.seal_fund_yi || 0);
   if (key === "turnover") return Number(row.turnover || 0);
   if (key === "amount") return Number(row.amount_yi || 0);
-  if (key === "pop") {
-    const n = Number(row.pop_rank);
-    return Number.isFinite(n) && n > 0 ? n : 1e9;
+  if (key === "pop") return Number(row.pop_rank || 0);
+  if (key === "count") return Number(row.count || 0);
+  if (key === "first_time") {
+    if (typeof row.first_seal === "number") return row.first_seal;
+    return Number(String(row.first_time || row.first_seal || "").replace(/\D/g, "")) || 0;
   }
   return 0;
 }
-function sortedRows(rows, key) {
-  if (!key) return rows.slice();
+function sortedRows(rows, spec) {
+  if (!spec || !spec.key) return rows.slice();
+  const dir = spec.dir === -1 ? -1 : 1;
   return rows.slice().sort((a, b) => {
-    const d = sortValue(a, key) - sortValue(b, key);
+    const am = missingValue(a, spec.key);
+    const bm = missingValue(b, spec.key);
+    if (am !== bm) return am ? 1 : -1;
+    const d = (sortValue(a, spec.key) - sortValue(b, spec.key)) * dir;
     if (d !== 0) return d;
-    return String(a.code || "").localeCompare(String(b.code || ""));
+    return String(a.code || a.theme || "").localeCompare(String(b.code || b.theme || ""));
   });
+}
+function cycleSort(table, key) {
+  const cur = sorts[table];
+  if (!cur || cur.key !== key) sorts[table] = { key, dir: 1 };
+  else if (cur.dir === 1) sorts[table] = { key, dir: -1 };
+  else sorts[table] = null;
 }
 function markSortHeaders() {
   document.querySelectorAll("th.sort").forEach((th) => {
-    const on = sorts[th.dataset.table] === th.dataset.key;
+    const cur = sorts[th.dataset.table];
+    const on = !!(cur && cur.key === th.dataset.key);
     th.classList.toggle("on", on);
-    th.textContent = on ? `${th.dataset.label} ↑` : th.dataset.label;
+    th.textContent = on ? `${th.dataset.label} ${cur.dir === 1 ? "↑" : "↓"}` : th.dataset.label;
+    th.title = "点一下升序，再点降序，第三次恢复默认";
   });
 }
 function hatsOf(r) { return (r && r.hats) || []; }
@@ -312,15 +345,21 @@ function render(s) {
       <div class="${st.pass ? "ok" : "no"}">${st.step} ${st.pass ? "过" : "否"}</div>
       <div><b>${st.title}</b><div class="why">${st.detail}</div></div>
     </div>`).join("");
-  document.getElementById("themes").innerHTML = (s.themes || []).map(t => `
-    <tr class="${t.lane === "主线" ? "pass" : "side"}">
-      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
-      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
-    </tr>`).join("");
+  paintThemes();
   paintBoards();
   document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
     `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#6b7280">${d.use}</span></div>`
   ).join("");
+}
+function paintThemes() {
+  const s = lastSnap;
+  if (!s) return;
+  const themes = sortedRows(s.themes || [], sorts.themes);
+  document.getElementById("themes").innerHTML = themes.map(t => `
+    <tr class="${t.lane === "主线" ? "pass" : "side"}">
+      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
+      <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
+    </tr>`).join("");
 }
 function paintBoards() {
   const s = lastSnap;
@@ -329,8 +368,9 @@ function paintBoards() {
   const main = sortedRows((s.board || []).filter(r => r.lane === "主线" || r.in_mainline), sorts.main);
   document.getElementById("mainboard").innerHTML = main.map((r, i) => `
     <tr class="${r.code === w?.code ? "pass" : ""}">
-      <td>${i+1}</td><td>${stk(r.code, r.name)}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
-      <td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${i+1}</td><td>${stk(r.code, r.name)}</td>
+      <td>${r.first_seal}</td><td>${r.peer_zt ?? "-"}</td><td>${r.seal_fund_yi ?? "-"}</td>
+      <td>${r.open_count}</td><td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
       <td>${(hatsOf(r).length ? hatsOf(r) : [r.role]).map(h => `<span class="${tagClass(h, r.lane)}">${h}</span>`).join("")}</td>
     </tr>`).join("");
@@ -338,7 +378,8 @@ function paintBoards() {
   document.getElementById("all").innerHTML = all.map(r => `
     <tr class="${r.code===w?.code?"pass": (r.lane==="主线"?"":"side")}">
       <td>${r.lane || ""}</td><td>${stk(r.code, r.name)}</td><td>${r.theme}</td>
-      <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
+      <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.peer_zt ?? "-"}</td><td>${r.seal_fund_yi ?? "-"}</td>
+      <td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
       <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
     </tr>`).join("");
@@ -481,7 +522,8 @@ document.addEventListener("click", (e) => {
   if (head) {
     const table = head.dataset.table;
     const key = head.dataset.key;
-    sorts[table] = sorts[table] === key ? null : key;
+    cycleSort(table, key);
+    paintThemes();
     paintBoards();
     return;
   }
