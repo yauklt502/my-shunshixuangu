@@ -16,7 +16,7 @@
 
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
 
-**先解压**，进入文件夹，双击 `启动.bat`：
+**先解压**，进入文件夹，双击 `START.bat`（推荐）或 `启动.bat`：
 
 - 有 Python → TSP 同款 `[1/4]…[4/4]` venv 启动（国内清华源装依赖）
 - 无 Python、有 Node → 自动走 Node（无需 npm install）

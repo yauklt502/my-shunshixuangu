@@ -16,18 +16,15 @@ where node >nul 2>&1
 if errorlevel 1 (
   echo [ERROR] Node.js not found.
   echo Install LTS from https://nodejs.org/ and retry.
-  pause
   exit /b 1
 )
 
 if not exist "server\index.mjs" (
   echo [ERROR] server\index.mjs missing. Unzip the FULL package.
-  pause
   exit /b 1
 )
 if not exist "web\index.html" (
   echo [ERROR] web\index.html missing. Unzip the FULL package.
-  pause
   exit /b 1
 )
 
@@ -49,5 +46,4 @@ node server\index.mjs
 set "ERR=%ERRORLEVEL%"
 echo.
 echo Server stopped. exit=%ERR%
-if not "%ERR%"=="0" pause
 endlocal & exit /b %ERR%

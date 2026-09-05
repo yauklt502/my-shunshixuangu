@@ -13,9 +13,12 @@ FOLDER = "三条纪律看板"
 ARTIFACT = "/opt/cursor/artifacts/three-discipline-local.zip"
 
 ROOT_FILES = [
+    "START.bat",
     "启动.bat",
     "start.cmd",
     "start-node.cmd",
+    "deploy-local.bat",
+    "deploy-e.bat",
     "一键部署到本地.bat",
     "一键部署到E盘.bat",
     "使用说明.txt",

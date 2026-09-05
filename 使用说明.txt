@@ -1,48 +1,39 @@
 三条纪律看板 · 本地完整包
 ========================
 
-一、下载
+下载后请先「解压」，再进入文件夹。
 
+【推荐】双击 START.bat
+也可以双击 启动.bat
+
+窗口会显示启动过程，并停住方便看报错。
+
+有 Python：
+  [1/4] Creating / checking venv ...
+  [2/4] Installing dependencies (first run 1-3 min) ...
+  [3/4] Starting server ...
+  [4/4] Browser will open automatically when ready.
+
+没有 Python、有 Node：
+  自动改用 Node（也可直接双击 start-node.cmd）
+
+浏览器地址：http://127.0.0.1:5177/
+
+本机需要二选一：
+- Python 3.10+（安装时勾选 Add python.exe to PATH）
+  https://www.python.org/downloads/windows/
+- 或 Node.js LTS
+  https://nodejs.org/
+
+打不开时：
+1. 必须先解压，不要在压缩包里双击
+2. 优先双击 START.bat（英文名，最稳）
+3. 看黑窗口报错，不要立刻关掉
+4. 若 Python 失败：删掉目录里的 .venv 再开
+5. 或双击 start-node.cmd
+
+下载：
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
-
-二、怎么用（重要）
-
-1. 先「解压」完整包（不要直接在压缩包里双击）
-2. 进入解压后的「三条纪律看板」文件夹
-3. 双击「启动.bat」
-
-有 Python 时窗口显示：
-   [1/4] Creating / checking venv ...
-   [2/4] Installing dependencies (first run 1-3 min) ...
-   [3/4] Starting server ...
-   [4/4] Browser will open automatically when ready.
-
-没有 Python、但有 Node.js 时：自动走 Node 启动（无需 npm install）。
-
-浏览器打开 http://127.0.0.1:5177/
-
-三、本机需要什么
-
-二选一即可：
-- Python 3.10+（https://www.python.org/downloads/windows/ ，务必勾选 Add to PATH）
-- 或 Node.js LTS（https://nodejs.org/）
-
-首次 Python 装依赖约 1–3 分钟；Node 方式几乎秒开。
-
-四、打不开时
-
-1. 确认已经解压，且双击的是文件夹里的「启动.bat」
-2. 看黑色窗口报错（窗口会停住，不要立刻关掉）
-3. 若提示缺 Python/Node：先安装其中一个，再重开
-4. Python 方式失败：删除目录里的 .venv 后重开「启动.bat」
-5. 也可直接双击 start-node.cmd（需已装 Node）
-6. 详细日志：startup.log
-
-五、功能
-
-- 数据源：东方财富 / 同花顺 / 通达信兼容（腾讯）
-- ① 低吸纪律  ② 二三板节奏  ③ 回撤别乱动
-- 「一键截图」导出白底 PNG
 
 不要直接双击 web\index.html。
 仅供纪律可视化，不构成投资建议。
