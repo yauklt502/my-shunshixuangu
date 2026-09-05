@@ -40,11 +40,20 @@ function fmtNum(v, d = 2) {
   return Number.isFinite(n) ? n.toFixed(d) : '—';
 }
 
-async function api(path) {
-  const res = await fetch(path);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || data.detail || res.statusText);
-  return data;
+async function api(path, { timeoutMs = 20000 } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(path, { signal: ctrl.signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || data.detail || res.statusText);
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('请求超时，请稍后重试');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function renderRules(el, bullets = []) {
@@ -433,24 +442,35 @@ async function refresh() {
 
   state.refreshing = true;
   $('btnRefresh').disabled = true;
-  try {
-    const [lowBuy, boards, drawdown] = await Promise.all([
-      api(`/api/discipline/low-buy?${q}`),
-      api(`/api/discipline/boards?${q}`),
-      api(`/api/discipline/drawdown?${dq}`),
-    ]);
-    renderLowBuy(lowBuy);
-    renderBoards(boards);
-    renderDrawdown(drawdown);
-    const used = [lowBuy.sourceLabel, boards.sourceLabel].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' / ');
-    $('sourceNote').textContent = `当前：${used || source} · 复盘 ${date || '今日'}`;
-    $('updatedAt').textContent = `更新 ${new Date().toLocaleTimeString('zh-CN', { hour12: false })}`;
-  } catch (e) {
-    toast(`刷新失败：${e.message}`);
-  } finally {
-    $('btnRefresh').disabled = false;
-    state.refreshing = false;
-  }
+  $('sourceNote').textContent = '刷新中…';
+  const errors = [];
+
+  // 并行请求，但各自独立渲染：谁先回来谁先显示，互不拖死
+  const jobs = [
+    api(`/api/discipline/low-buy?${q}`, { timeoutMs: 12000 })
+      .then((lowBuy) => {
+        renderLowBuy(lowBuy);
+        $('sourceNote').textContent = `当前：${lowBuy.sourceLabel || source} · 复盘 ${date || '今日'}`;
+      })
+      .catch((e) => errors.push(`低吸 ${e.message}`)),
+    api(`/api/discipline/boards?${q}`, { timeoutMs: 15000 })
+      .then((boards) => {
+        renderBoards(boards);
+        if (boards.sourceLabel) {
+          $('sourceNote').textContent = `当前：${boards.sourceLabel} · 复盘 ${date || boards.date || '今日'}`;
+        }
+      })
+      .catch((e) => errors.push(`二三板 ${e.message}`)),
+    api(`/api/discipline/drawdown?${dq}`, { timeoutMs: 15000 })
+      .then((drawdown) => renderDrawdown(drawdown))
+      .catch((e) => errors.push(`回撤 ${e.message}`)),
+  ];
+  await Promise.allSettled(jobs);
+
+  $('updatedAt').textContent = `更新 ${new Date().toLocaleTimeString('zh-CN', { hour12: false })}`;
+  if (errors.length) toast(`部分失败：${errors.join('；')}`);
+  $('btnRefresh').disabled = false;
+  state.refreshing = false;
 }
 
 async function screenshot() {
@@ -523,7 +543,21 @@ window.addEventListener('resize', () => {
   Object.values(state.charts).forEach((c) => c && c.resize());
 });
 
-await loadSources();
-await loadDates();
+try {
+  await loadSources();
+} catch (e) {
+  toast(`数据源加载失败：${e.message}`);
+}
+try {
+  await loadDates();
+} catch (e) {
+  // 日期失败不阻断主行情
+  console.warn(e);
+  if ($('dateSelect') && !$('dateSelect').options.length) {
+    const today = new Date();
+    const ymd = today.toISOString().slice(0, 10).replace(/-/g, '');
+    $('dateSelect').innerHTML = `<option value="${ymd}">${ymd}</option>`;
+  }
+}
 await refresh();
 startAuto();

@@ -206,19 +206,40 @@ def freeze_by_dd(dd, soft=-3.0, hard=-5.0) -> dict:
 
 
 def http_json(url: str, headers: dict | None = None) -> Any:
-    with httpx.Client(timeout=12, headers={"User-Agent": UA}, follow_redirects=True) as c:
+    with httpx.Client(timeout=6.0, headers={"User-Agent": UA}, follow_redirects=True) as c:
         r = c.get(url, headers=headers or {})
         r.raise_for_status()
         return r.json()
 
 
 def http_text(url: str, headers: dict | None = None, encoding: str | None = None) -> str:
-    with httpx.Client(timeout=12, headers={"User-Agent": UA}, follow_redirects=True) as c:
+    with httpx.Client(timeout=6.0, headers={"User-Agent": UA}, follow_redirects=True) as c:
         r = c.get(url, headers=headers or {})
         r.raise_for_status()
         if encoding:
             return r.content.decode(encoding, errors="ignore")
         return r.text
+
+
+# 短缓存：涨停池/观察行情不要每个面板各打一遍
+_CACHE: dict[str, tuple[float, Any]] = {}
+_CACHE_TTL = 45.0
+
+
+def cache_get(key: str):
+    item = _CACHE.get(key)
+    if not item:
+        return None
+    ts, val = item
+    if time.time() - ts > _CACHE_TTL:
+        _CACHE.pop(key, None)
+        return None
+    return val
+
+
+def cache_set(key: str, val: Any) -> Any:
+    _CACHE[key] = (time.time(), val)
+    return val
 
 
 # ---------- 东方财富 ----------
@@ -493,8 +514,9 @@ SOURCES = {
 }
 
 
-def with_fallback(primary: str, method: str, *args):
-    order = [primary, "tongdaxin", "tonghuashun", "eastmoney"]
+def with_fallback(primary: str, method: str, *args, single: bool = False):
+    """single=True 只打主源，避免个股批量时 3 源连环重试把整页拖死。"""
+    order = [primary] if single else [primary, "tongdaxin", "tonghuashun", "eastmoney"]
     seen, errors = set(), []
     for sid in order:
         if sid in seen:
@@ -510,12 +532,23 @@ def with_fallback(primary: str, method: str, *args):
     raise RuntimeError(" | ".join(f"{e['source']}: {e['message']}" for e in errors) or "全部数据源失败")
 
 
-def attach_ma5(quotes: list[dict], used: str) -> list[dict]:
-    """逐票补 MA5；并发拉取，避免串行卡顿。"""
+def cached_limit_up(primary: str):
+    key = f"limit_up:{primary}"
+    hit = cache_get(key)
+    if hit is not None:
+        return hit
+    data, used, label, errors = with_fallback(primary, "limit_up")
+    return cache_set(key, (data, used, label, errors))
+
+
+def attach_ma5(quotes: list[dict], used: str, enabled: bool = False) -> list[dict]:
+    """默认关闭：低吸用日内高低即可判定。开启才会并发补 MA5。"""
+    if not enabled or not quotes:
+        return quotes
 
     def one(q: dict) -> dict:
         try:
-            kl, _, _, _ = with_fallback(used, "kline", q["code"], 30)
+            kl, _, _, _ = with_fallback(used, "kline", q["code"], 30, single=True)
             ma5v = sma([float(k["close"]) for k in kl], 5)
             return make_quote(
                 code=q["code"],
@@ -534,10 +567,8 @@ def attach_ma5(quotes: list[dict], used: str) -> list[dict]:
         except Exception:  # noqa: BLE001
             return q
 
-    if not quotes:
-        return []
     out: list[dict | None] = [None] * len(quotes)
-    with ThreadPoolExecutor(max_workers=min(8, len(quotes))) as pool:
+    with ThreadPoolExecutor(max_workers=min(6, len(quotes))) as pool:
         futs = {pool.submit(one, q): i for i, q in enumerate(quotes)}
         for fut in as_completed(futs):
             out[futs[fut]] = fut.result()
@@ -560,12 +591,12 @@ def parse_codes(raw: str | None) -> list[str]:
     return codes or list(DEFAULT_WATCH)
 
 
-def collect_focus_codes(primary: str, extra: list[str] | None = None, limit: int = 24) -> list[dict]:
-    """二三板 + 观察票，供回撤个股列表。"""
+def collect_focus_codes(primary: str, extra: list[str] | None = None, limit: int = 12) -> list[dict]:
+    """二三板 + 观察票，供回撤个股列表（默认少取，避免拖垮刷新）。"""
     rows: list[dict] = []
     seen: set[str] = set()
     try:
-        pool, _, _, _ = with_fallback(primary, "limit_up")
+        pool, _, _, _ = cached_limit_up(primary)
         for x in pool:
             b = int(x.get("boards") or parse_boards(x.get("highDays")))
             if b not in (2, 3):
@@ -594,7 +625,7 @@ def collect_focus_codes(primary: str, extra: list[str] | None = None, limit: int
             continue
         seen.add(code)
         rows.append({"code": code, "name": code, "boards": None, "from": "watch"})
-        if len(rows) >= limit + 10:
+        if len(rows) >= limit + 6:
             break
     return rows
 
@@ -606,48 +637,66 @@ def stock_drawdown_rows(
     hard: float,
     days: int,
 ) -> list[dict]:
-    """个股相对近 N 日高点回撤 + 冻结建议。"""
-
-    def one(item: dict) -> dict | None:
-        code = item["code"]
+    """个股回撤：优先用批量行情的距高点（快）；不再逐票拉 K 线。"""
+    if not items:
+        return []
+    codes = [it["code"] for it in items]
+    qmap: dict[str, dict] = {}
+    try:
+        quotes, _, _, _ = with_fallback(primary, "quotes", codes, single=True)
+        qmap = {str(q["code"]): q for q in quotes}
+    except Exception:  # noqa: BLE001
         try:
-            kl, used, label, _ = with_fallback(primary, "kline", code, days)
-            dd = drawdown_from_high(kl)
-            fr = freeze_by_dd(dd.get("drawdownPct") if dd else None, soft, hard)
-            name = item.get("name") or code
-            # 用最新行情补名称/涨跌（可选，失败忽略）
-            return {
+            quotes, _, _, _ = with_fallback(primary, "quotes", codes)
+            qmap = {str(q["code"]): q for q in quotes}
+        except Exception:  # noqa: BLE001
+            qmap = {}
+
+    out: list[dict] = []
+    for item in items:
+        code = item["code"]
+        q = qmap.get(str(code), {})
+        # 距日内高 ≈ 回撤代理（看板刷新必须秒出；阶段高点留给浮窗日K）
+        dd_pct = q.get("fromHighPct")
+        if dd_pct is None and q.get("price") is not None and q.get("high"):
+            try:
+                dd_pct = (float(q["price"]) - float(q["high"])) / float(q["high"]) * 100
+            except Exception:  # noqa: BLE001
+                dd_pct = None
+        fr = freeze_by_dd(dd_pct, soft, hard)
+        if dd_pct is not None and fr.get("level") in ("soft", "hard"):
+            fr = {
+                **fr,
+                "reason": f"距日内高点 {dd_pct:.2f}%：" + (
+                    "硬冻结，别乱动" if fr["level"] == "hard" else "软冻结，先观望"
+                ),
+            }
+        elif dd_pct is not None:
+            fr = {
+                **fr,
+                "reason": f"距日内高点 {dd_pct:.2f}%，未触发冻结线（软 {soft}% / 硬 {hard}%）",
+            }
+        out.append(
+            {
                 "code": code,
-                "name": name,
+                "name": q.get("name") or item.get("name") or code,
                 "boards": item.get("boards"),
                 "highDays": item.get("highDays"),
                 "from": item.get("from") or "boards",
-                "source": used,
-                "sourceLabel": label,
-                "drawdown": dd,
+                "source": primary,
+                "sourceLabel": SOURCES.get(primary, {}).get("label", primary),
+                "drawdown": {
+                    "peak": q.get("high"),
+                    "peakDate": "日内",
+                    "price": q.get("price"),
+                    "date": "today",
+                    "drawdownPct": None if dd_pct is None else round(float(dd_pct), 2),
+                },
                 "freeze": fr,
-                "changePct": item.get("changePct"),
+                "changePct": q.get("changePct", item.get("changePct")),
+                "price": q.get("price"),
             }
-        except Exception as exc:  # noqa: BLE001
-            return {
-                "code": code,
-                "name": item.get("name") or code,
-                "boards": item.get("boards"),
-                "from": item.get("from") or "boards",
-                "drawdown": None,
-                "freeze": {"level": "unknown", "label": "无数据", "action": "等待", "reason": str(exc)},
-                "changePct": item.get("changePct"),
-            }
-
-    if not items:
-        return []
-    out: list[dict] = []
-    with ThreadPoolExecutor(max_workers=min(8, len(items))) as pool:
-        futs = [pool.submit(one, it) for it in items]
-        for fut in as_completed(futs):
-            row = fut.result()
-            if row:
-                out.append(row)
+        )
     rank = {"hard": 3, "soft": 2, "ok": 1, "unknown": 0}
     out.sort(
         key=lambda x: (
@@ -655,23 +704,6 @@ def stock_drawdown_rows(
             (x.get("drawdown") or {}).get("drawdownPct") or 0,
         )
     )
-    # 补行情名称/涨跌
-    try:
-        codes = [x["code"] for x in out]
-        quotes, _, _, _ = with_fallback(primary, "quotes", codes)
-        qmap = {str(q["code"]): q for q in quotes}
-        for x in out:
-            q = qmap.get(str(x["code"]))
-            if not q:
-                continue
-            if q.get("name"):
-                x["name"] = q["name"]
-            if q.get("changePct") is not None:
-                x["changePct"] = q["changePct"]
-            if q.get("price") is not None:
-                x["price"] = q["price"]
-    except Exception:  # noqa: BLE001
-        pass
     return out
 
 
@@ -697,11 +729,12 @@ def low_buy(
     primary = source if source in SOURCES else "tongdaxin"
     code_list = parse_codes(codes)
     data, used, label, errors = with_fallback(primary, "quotes", code_list)
-    with_ma = attach_ma5(data, used)
+    # 默认不拉 MA5：日内高低已足够判定，避免每次刷新打一堆 K 线
+    quotes = attach_ma5(data, used, enabled=False)
     summary = {
-        "ok": sum(1 for x in with_ma if x["lowBuyStatus"] == "ok"),
-        "chase": sum(1 for x in with_ma if x["lowBuyStatus"] == "chase"),
-        "neutral": sum(1 for x in with_ma if x["lowBuyStatus"] == "neutral"),
+        "ok": sum(1 for x in quotes if x["lowBuyStatus"] == "ok"),
+        "chase": sum(1 for x in quotes if x["lowBuyStatus"] == "chase"),
+        "neutral": sum(1 for x in quotes if x["lowBuyStatus"] == "neutral"),
     }
     return {
         "source": used,
@@ -709,14 +742,14 @@ def low_buy(
         "rule": {
             "title": "低吸纪律",
             "bullets": [
-                "优先回踩 / 贴近 MA5，而不是追着涨停买",
-                "只买贴近日内低点或均线支撑的位置，不买贴近日内高点的票",
+                "优先回踩 / 贴近支撑，而不是追着涨停买",
+                "只买贴近日内低点的位置，不买贴近日内高点的票",
                 "涨幅已大且价格在日内高位区间 → 追高区，禁止低吸",
                 "一句话：低吸是买「便宜的相对位置」，不是买「便宜的名字」",
             ],
         },
         "summary": summary,
-        "quotes": with_ma,
+        "quotes": quotes,
         "fallbackErrors": errors,
         "updatedAt": now_iso(),
     }
@@ -733,11 +766,11 @@ def boards(
         if primary == "eastmoney" and trade_date:
             data, used, label, errors = em_limit_up(trade_date), "eastmoney", SOURCES["eastmoney"]["label"], []
         else:
-            data, used, label, errors = with_fallback(primary, "limit_up")
+            data, used, label, errors = cached_limit_up(primary)
             if trade_date and used == "eastmoney":
                 data = em_limit_up(trade_date)
     except Exception:
-        data, used, label, errors = with_fallback(primary, "limit_up")
+        data, used, label, errors = cached_limit_up(primary)
     enriched = []
     for x in data:
         b = int(x.get("boards") or parse_boards(x.get("highDays")))
@@ -842,7 +875,7 @@ def drawdown(
     results, errors = [], []
     for tid, name, code in (("sh", "上证指数", INDEXES["sh"]), ("cyb", "创业板指", INDEXES["cyb"])):
         try:
-            kl, used, label, _ = with_fallback(primary, "kline", code, days)
+            kl, used, label, _ = with_fallback(primary, "kline", code, days, single=True)
             dd = drawdown_from_high(kl)
             fr = freeze_by_dd(dd.get("drawdownPct") if dd else None, soft, hard)
             results.append(
@@ -868,7 +901,7 @@ def drawdown(
 
     watch = parse_codes(codes) if codes.strip() else []
     # 默认展示二三板个股回撤；观察栏代码一并并入
-    focus_items = collect_focus_codes(primary, extra=watch, limit=24)
+    focus_items = collect_focus_codes(primary, extra=watch, limit=12)
     stocks = stock_drawdown_rows(focus_items, primary, soft, hard, days)
     stock_summary = {
         "hard": sum(1 for x in stocks if (x.get("freeze") or {}).get("level") == "hard"),
@@ -883,10 +916,10 @@ def drawdown(
         "rule": {
             "title": "回撤时别乱动",
             "bullets": [
-                f"相对近 {days} 日高点回撤 ≤ {soft}%：软冻结——暂停新开仓",
-                f"回撤 ≤ {hard}%：硬冻结——禁止新开仓/加仓，只准防守",
+                f"指数：相对近 {days} 日高点回撤 ≤ {soft}% 软冻结；≤ {hard}% 硬冻结",
+                "个股列表用「距日内高点」快速判定，避免刷板时逐票拉K线卡死",
                 "回撤区最常见亏法：忍不住「补仓摊薄」和「换股乱动」",
-                "个股与指数分开看：指数可操作 ≠ 个股可乱动；个股硬冻结优先守",
+                "指数可操作 ≠ 个股可乱动；个股硬冻结优先守",
             ],
         },
         "thresholds": {"soft": soft, "hard": hard, "days": days},
