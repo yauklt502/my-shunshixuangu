@@ -12,10 +12,11 @@ from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from dragon.config import PORT
+from dragon.config import PORT, TDX_HOST
 from dragon.engine import build_snapshot
 from dragon.pack import build_zip
 from dragon.shot import render_png
+from dragon.tdx import FEED
 from dragon.timeutil import market_session
 
 ROOT = Path(__file__).resolve().parent
@@ -53,7 +54,47 @@ async def backtest_api():
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, **market_session(), "app": "10秒定龙头", "port": PORT}
+    return {
+        "ok": True,
+        **market_session(),
+        "app": "10秒定龙头",
+        "port": PORT,
+        "tdx_host": TDX_HOST,
+    }
+
+
+@app.get("/api/chart")
+async def chart(
+    code: str = Query(..., min_length=4, max_length=12),
+    date: str | None = Query(default=None),
+):
+    try:
+        return await asyncio.to_thread(FEED.bundle, code, date)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "host": TDX_HOST}
+
+
+@app.get("/api/kline")
+async def kline(
+    code: str = Query(..., min_length=4, max_length=12),
+    period: str = Query(default="day"),
+    count: int = Query(default=180, ge=1, le=800),
+):
+    try:
+        return await asyncio.to_thread(FEED.kline, code, period, count)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+@app.get("/api/minute")
+async def minute(
+    code: str = Query(..., min_length=4, max_length=12),
+    date: str | None = Query(default=None),
+):
+    try:
+        return await asyncio.to_thread(FEED.minute, code, date)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 @app.get("/api/snapshot")

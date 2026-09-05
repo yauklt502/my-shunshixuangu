@@ -69,6 +69,25 @@
     .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: #374151; }
     .defs b { color: var(--gold); }
     details.card summary { cursor: pointer; color: var(--muted); }
+    .stk { color: var(--cyan); cursor: pointer; text-decoration: underline; }
+    .stk:hover { color: var(--gold); }
+    .mask {
+      display: none; position: fixed; inset: 0; background: rgba(17,24,39,.35);
+      z-index: 40; align-items: center; justify-content: center; padding: 20px;
+    }
+    .mask.show { display: flex; }
+    .pop {
+      width: min(920px, 96vw); max-height: 92vh; overflow: auto;
+      background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
+    }
+    .pop-hd { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .tabs { display: flex; gap: 6px; margin: 10px 0; }
+    .tabs button.on { background: #ccfbf1; border-color: #0f766e; color: #0f766e; }
+    .depth { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+    .depth .up { color: var(--red); }
+    .depth .dn { color: var(--green); }
+    .chart-box { width: 100%; height: 360px; }
+    .chart-box canvas { width: 100%; height: 100%; display: block; }
     @media (max-width: 1100px) { .two, .three, header, .defs { display: block; } }
   </style>
 </head>
@@ -141,7 +160,28 @@
       <div class="defs" id="defs" style="margin-top:10px"></div>
     </details>
   </div>
+  <div class="mask" id="mask">
+    <div class="pop" id="pop">
+      <div class="pop-hd">
+        <div>
+          <div class="kicker" id="popSrc">通达信 7709</div>
+          <div class="name mid" id="popName">—</div>
+          <div class="why" id="popQuote"></div>
+        </div>
+        <button id="popClose">关闭</button>
+      </div>
+      <div class="depth" id="popDepth"></div>
+      <div class="tabs">
+        <button data-tab="minute" class="on">分时</button>
+        <button data-tab="day">日K</button>
+        <button data-tab="1m">1分</button>
+        <button data-tab="5m">5分</button>
+      </div>
+      <div class="chart-box"><canvas id="chart" width="880" height="360"></canvas></div>
+    </div>
+  </div>
 <script src="/static/vendor/html2canvas.min.js"></script>
+<script src="/static/chart.js"></script>
 <script>
 let timer = null, currentDate = "", currentMode = "", lastSnap = null;
 function hatsOf(r) { return (r && r.hats) || []; }
@@ -152,11 +192,14 @@ function tagClass(role, lane) {
   if (lane === "主线") return "tag pass";
   return "tag side";
 }
+function stk(code, name) {
+  return `<span class="stk" data-code="${code}" data-name="${name || ""}">${name || code}</span>`;
+}
 function mini(p, empty) {
   if (!p) return `<div class="why">${empty}</div>`;
   const hats = (p.hats || []).join(" / ") || p.role;
   return `
-    <div class="name mid">${p.name}<small>${p.code} · ${p.boards}板 · ${p.theme}</small></div>
+    <div class="name mid">${stk(p.code, p.name)}<small>${p.code} · ${p.boards}板 · ${p.theme}</small></div>
     <div class="why">${hats} · 人气${p.pop_rank ?? "-"} · 换手${p.turnover}% · 成交${p.amount_yi}亿 · 炸${p.open_count} · 首封${p.first_seal}</div>
     <div class="why">${p.status || ""}</div>`;
 }
@@ -174,7 +217,7 @@ function render(s) {
   const notes = (s.notes || []).map(n => `· ${n}`).join("<br/>");
   const watchHtml = w ? `
     <div class="kicker">${s.mode === "盘中" ? "盘中跟 · 只盯这一只" : "盘后复盘 · 明天开盘只盯这一只"} · ${hat}</div>
-    <div class="name">${w.name}<small>${w.code} · ${w.boards}板 · ${w.theme} · 人气${w.pop_rank ?? "-"}</small></div>
+    <div class="name">${stk(w.code, w.name)}<small>${w.code} · ${w.boards}板 · ${w.theme} · 人气${w.pop_rank ?? "-"}</small></div>
     <div class="action">${s.action || ""}</div>
     <div class="why">${s.reason || w.why}</div>
     <div class="why">换手${w.turnover}% · 成交${w.amount_yi}亿 · 量比${w.volume_ratio ?? "-"} · 炸${w.open_count}次 · 首封${w.first_seal}</div>
@@ -209,7 +252,7 @@ function render(s) {
   const main = (s.board || []).filter(r => r.lane === "主线" || r.in_mainline);
   document.getElementById("mainboard").innerHTML = main.map((r, i) => `
     <tr class="${r.code === w?.code ? "pass" : ""}">
-      <td>${i+1}</td><td>${r.name}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
+      <td>${i+1}</td><td>${stk(r.code, r.name)}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
       <td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
       <td>${(hatsOf(r).length ? hatsOf(r) : [r.role]).map(h => `<span class="${tagClass(h, r.lane)}">${h}</span>`).join("")}</td>
@@ -221,7 +264,7 @@ function render(s) {
     </tr>`).join("");
   document.getElementById("all").innerHTML = (s.board || []).map(r => `
     <tr class="${r.code===w?.code?"pass": (r.lane==="主线"?"":"side")}">
-      <td>${r.lane || ""}</td><td>${r.name}</td><td>${r.theme}</td>
+      <td>${r.lane || ""}</td><td>${stk(r.code, r.name)}</td><td>${r.theme}</td>
       <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
       <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
@@ -288,6 +331,88 @@ async function downloadShot() {
   }
 }
 document.getElementById("shot").onclick = downloadShot;
+
+let chartState = { code: "", name: "", tab: "minute", bundle: null, extra: {} };
+function renderDepth(q) {
+  if (!q) { document.getElementById("popDepth").innerHTML = ""; return; }
+  const asks = (q.asks || []).slice().reverse();
+  const bids = q.bids || [];
+  const askHtml = asks.map((lv, i) =>
+    `<div class="up">卖${asks.length - i} ${lv.price || "-"} / ${lv.volume || 0}</div>`
+  ).join("");
+  const bidHtml = bids.map((lv, i) =>
+    `<div class="dn">买${i + 1} ${lv.price || "-"} / ${lv.volume || 0}</div>`
+  ).join("");
+  document.getElementById("popDepth").innerHTML = `<div>${askHtml}</div><div>${bidHtml}</div>`;
+}
+function paintChart() {
+  const canvas = document.getElementById("chart");
+  const tab = chartState.tab;
+  const b = chartState.bundle;
+  if (!b) return;
+  if (tab === "minute") {
+    drawTimeshare(canvas, b.minute);
+    return;
+  }
+  if (tab === "day") {
+    drawKline(canvas, (b.kline && b.kline.bars) || []);
+    return;
+  }
+  const extra = chartState.extra[tab];
+  if (extra && extra.bars) drawKline(canvas, extra.bars);
+}
+async function loadExtra(period) {
+  if (chartState.extra[period]) { paintChart(); return; }
+  const r = await fetch(`/api/kline?code=${encodeURIComponent(chartState.code)}&period=${period}&count=${period === "1m" ? 240 : 200}`);
+  chartState.extra[period] = await r.json();
+  paintChart();
+}
+async function openChart(code, name) {
+  chartState = { code, name, tab: "minute", bundle: null, extra: {} };
+  document.getElementById("mask").classList.add("show");
+  document.getElementById("popName").innerHTML = `${name || code} <small>${code}</small>`;
+  document.getElementById("popQuote").textContent = "正在连通达信 7709…";
+  document.getElementById("popDepth").innerHTML = "";
+  document.querySelectorAll(".tabs button").forEach(btn => btn.classList.toggle("on", btn.dataset.tab === "minute"));
+  const q = new URLSearchParams({ code });
+  if (currentDate) q.set("date", currentDate);
+  try {
+    const r = await fetch("/api/chart?" + q.toString());
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || "行情失败");
+    chartState.bundle = data;
+    const qq = data.quote || {};
+    const pct = qq.change_pct == null ? "-" : (qq.change_pct > 0 ? "+" + qq.change_pct : qq.change_pct) + "%";
+    document.getElementById("popSrc").textContent = `通达信 ${data.host || ""} · ${data.tdx_code || ""}`;
+    document.getElementById("popQuote").textContent =
+      `现价${qq.last ?? "-"}  ${pct}  开${qq.open ?? "-"}  高${qq.high ?? "-"}  低${qq.low ?? "-"}  额${((qq.amount || 0)/1e8).toFixed(2)}亿`;
+    renderDepth(qq);
+    paintChart();
+  } catch (err) {
+    document.getElementById("popQuote").textContent = "拉行情失败：" + err.message;
+  }
+}
+function closeChart() { document.getElementById("mask").classList.remove("show"); }
+document.addEventListener("click", (e) => {
+  const hit = e.target.closest(".stk");
+  if (hit) {
+    e.preventDefault();
+    openChart(hit.dataset.code, hit.dataset.name);
+  }
+});
+document.getElementById("popClose").onclick = closeChart;
+document.getElementById("mask").addEventListener("click", (e) => {
+  if (e.target.id === "mask") closeChart();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeChart(); });
+document.querySelectorAll(".tabs button").forEach((btn) => {
+  btn.onclick = () => {
+    chartState.tab = btn.dataset.tab;
+    document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b === btn));
+    if (chartState.tab === "1m" || chartState.tab === "5m") loadExtra(chartState.tab);
+    else paintChart();
+  };
+});
 load();
 startPoll();
 </script>
