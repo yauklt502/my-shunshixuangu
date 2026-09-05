@@ -44,16 +44,17 @@ http://127.0.0.1:8688/download.zip
 ## 测试
 
 ```bash
-python3 -m unittest tests.test_score tests.test_kpl tests.test_backtest tests.test_shot -v
+python3 -m unittest tests.test_score tests.test_kpl tests.test_backtest tests.test_shot tests.test_ths tests.test_tencent -v
 ```
 
 ## 数据
 
-多路自动切换，各取所需。东财只扛独有字段（涨停池炸次、人气），不封 IP 的源优先补洞：
+多路自动切换，各取所需。人气认同花顺热榜（用的人多），东财人气只在热榜整路挂了时顶上，两套名次不混算：
 
-- 东方财富：涨停池、炸板次数、人气榜、实时换手/成交额/量比、大盘指数
+- 同花顺热榜：人气主源（1小时榜，日榜备用）
+- 东方财富：涨停池、炸板次数、实时换手/成交额/量比、大盘指数；人气整榜备用
 - 开盘啦：题材天梯/主线、涨停原因、情绪强度、板块强度
 - 通达信 7709：日K、分时、五档
 - 腾讯行情：东财报价/指数缺了就补（换手、量比、成交额）
 
-连板梯队用当天涨停池自己数，不另接一层。研报、新闻、期权、宏观、筹码 CYQ、龙虎细席不定龙，不接。
+连板梯队用当天涨停池自己数，不另接一层。iwencai 选股、研报、新闻、期权、宏观、筹码 CYQ、龙虎细席不定龙，不接。

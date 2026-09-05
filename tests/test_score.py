@@ -183,6 +183,14 @@ class HumanLaneTest(unittest.TestCase):
         self.assertEqual(result["decision"].watch_hat, "情绪龙头")
         self.assertEqual(result["decision"].locomotive.code, "600108")
 
+    def test_ths_hot1_height_beats_mainline_rank5(self):
+        """同花顺热榜常见序：高标第1、主线火车头第5。人气围着高度转时盯高标。"""
+        result = run(popularity={"605577": 1, "000592": 2, "600108": 5})
+        self.assertEqual(result["decision"].locomotive.code, "600108")
+        self.assertEqual(result["decision"].height.code, "605577")
+        self.assertEqual(result["decision"].sentiment.code, "605577")
+        self.assertEqual(result["watch"].code, "605577")
+
     def test_mode_from_session(self):
         self.assertEqual(resolve_mode({"live": True}), "盘中")
         self.assertEqual(resolve_mode({"live": False}), "盘后")

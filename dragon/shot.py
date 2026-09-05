@@ -145,7 +145,7 @@ def render_png(snap: dict[str, Any]) -> tuple[bytes, str]:
     d.text((40, 804), ml_txt, font=body_f, fill=CYAN)
     action = str(snap.get("action") or "")
     d.text((40, 844), _wrap(small_f, action, 1100)[0], font=small_f, fill=GOLD)
-    src_name = (snap.get("source") or {}).get("name") or "东财 + 开盘啦 + 通达信"
+    src_name = (snap.get("source") or {}).get("name") or "东财 + 开盘啦 + 同花顺 + 通达信"
     d.text((40, 880), f"本地 {PORT}  ·  {src_name}  ·  先定板块，三路对照，盯一只", font=small_f, fill=MUTED)
 
     buf = BytesIO()

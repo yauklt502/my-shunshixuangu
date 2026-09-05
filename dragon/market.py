@@ -1,4 +1,4 @@
-"""东方财富公开行情：涨停池、炸板池、概念、人气榜、实时报价。"""
+"""东方财富公开行情：涨停池、炸板池、概念、实时报价。人气走同花顺热榜。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from dragon.kpl import (
 )
 from dragon.tencent import board_ladder, qq_indexes, qq_quotes, quote_incomplete
 from dragon.themes import plate_theme, theme_of
+from dragon.ths import client_kwargs as ths_client_kwargs
+from dragon.ths import fetch_hot, fuse_popularity
 from dragon.timeutil import recent_weekdays, yyyymmdd
 
 LANE_NAMES = {
@@ -23,6 +25,7 @@ LANE_NAMES = {
     "kaipanla": "开盘啦",
     "tdx": "通达信",
     "tencent": "腾讯",
+    "tonghuashun": "同花顺",
 }
 
 UA = (
@@ -458,7 +461,11 @@ async def resolve_trading_date(
 async def load_market(date: str | None = None) -> dict[str, Any]:
     warnings: list[str] = []
     lanes: dict[str, dict[str, Any]] = {"K线": lane("tdx", note="分时/日K/五档")}
-    async with httpx.AsyncClient(**client_kwargs()) as em, httpx.AsyncClient(**kpl_client_kwargs()) as kp:
+    async with (
+        httpx.AsyncClient(**client_kwargs()) as em,
+        httpx.AsyncClient(**kpl_client_kwargs()) as kp,
+        httpx.AsyncClient(**ths_client_kwargs()) as ths,
+    ):
         trade_date, date_warns = await resolve_trading_date(em, kp, date)
         warnings.extend(date_warns)
         latest = trade_date == yyyymmdd()
@@ -475,7 +482,8 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
             grab("昨日涨停池", em_yesterday_zt(em, trade_date)),
             grab("炸板池", em_zb_pool(em, trade_date)),
             grab("概念板块", em_concepts(em)),
-            grab("人气榜", em_popularity(em)),
+            grab("同花顺热榜", fetch_hot(ths)),
+            grab("东财人气榜", em_popularity(em)),
             grab("大盘指数", em_indexes(em)),
             grab("开盘啦", fetch_kpl(kp, trade_date, latest=latest)),
         )
@@ -484,7 +492,13 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         yesterday = got.get("昨日涨停池") or []
         zb = got.get("炸板池") or []
         em_concepts_rows = got.get("概念板块") or []
-        popularity = got.get("人气榜") or {}
+        ths_pack = got.get("同花顺热榜") or {}
+        ths_ranks = ths_pack.get("ranks") if isinstance(ths_pack, dict) else {}
+        hot_top = (ths_pack.get("rows") or [])[:10] if isinstance(ths_pack, dict) else []
+        em_pop = got.get("东财人气榜") or {}
+        popularity, pop_src = fuse_popularity(ths_ranks, em_pop)
+        if not ths_ranks and em_pop:
+            warnings.append("同花顺热榜空，人气改走东财整榜")
         em_indexes_rows = got.get("大盘指数") or []
         kpl = got.get("开盘啦") or {}
         warnings.extend(kpl.get("warnings") or [])
@@ -540,8 +554,12 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
             lanes["炸板"] = lane(zb_src, len(broken))
         if bk_src:
             lanes["板块强度"] = lane(bk_src, len(kpl.get("plates") or []) or None)
-        if popularity:
-            lanes["人气"] = lane("eastmoney", len(popularity))
+        if popularity and pop_src:
+            kind = ths_pack.get("kind") if isinstance(ths_pack, dict) else ""
+            note = "1小时热榜" if kind == "hour" else ("日榜" if kind == "day" else "")
+            if pop_src == "eastmoney":
+                note = "热榜挂了，东财顶上"
+            lanes["人气"] = lane(pop_src, len(popularity), note=note)
         em_q = sum(1 for q in quotes.values() if q.get("_src") != "tencent")
         if qq_n and not em_q:
             lanes["报价"] = lane("tencent", qq_n)
@@ -560,6 +578,7 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         "yesterday": yesterday,
         "concepts": concepts,
         "popularity": popularity,
+        "hot_top": hot_top,
         "quotes": quotes,
         "indexes": indexes,
         "mood": kpl.get("mood"),
@@ -569,8 +588,8 @@ async def load_market(date: str | None = None) -> dict[str, Any]:
         "warnings": warnings,
         "source": {
             "id": "multi",
-            "name": "东财 + 开盘啦 + 通达信 + 腾讯",
-            "desc": "东财只扛独有字段（涨停池炸次、人气）。题材走开盘啦，K线走通达信，报价东财缺了用腾讯补。",
+            "name": "东财 + 开盘啦 + 同花顺 + 通达信 + 腾讯",
+            "desc": "人气走同花顺热榜，东财只扛涨停池炸次。题材走开盘啦，K线走通达信，报价东财缺了用腾讯补。",
             "lanes": lanes,
         },
     }

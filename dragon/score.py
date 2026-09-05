@@ -201,7 +201,7 @@ def recognition_score(
 ) -> tuple[str, float, list[str]]:
     reasons: list[str] = []
     if pop_rank:
-        reasons.append(f"东财人气榜第{pop_rank}")
+        reasons.append(f"人气榜第{pop_rank}")
     else:
         reasons.append("人气榜未进前100，用人气以外的硬数据")
     reasons.append(f"涨停池成交额第{amount_rank_market}")

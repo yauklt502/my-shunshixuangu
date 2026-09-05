@@ -60,6 +60,7 @@
     .tag.kill { background: #fee2e2; color: var(--red); }
     .tag.gold { background: #fef3c7; color: var(--gold); }
     .tag.cyan { background: #ccfbf1; color: var(--cyan); }
+    .tag.ths { background: #fae8ff; color: #86198f; }
     button, input, select {
       background: #ffffff; color: var(--text); border: 1px solid var(--line);
       border-radius: 8px; padding: 6px 10px;
@@ -300,6 +301,13 @@ function render(s) {
   else moodBits.push(`涨停${s.stats?.zt || 0}`);
   if (mood.height != null) moodBits.push(`最高${mood.height}板`);
   const ladderTxt = (s.ladder || []).map(x => `${x.boards}板${x.count}`).join(" · ");
+  const hotTxt = (s.hot_top || []).slice(0, 8).map(x => `${x.rank}${x.name}`).join(" · ");
+  function laneCls(src) {
+    if (src === "tonghuashun") return "ths";
+    if (src === "kaipanla") return "cyan";
+    if (src === "tdx" || src === "tencent") return "gold";
+    return "pass";
+  }
   document.getElementById("meta").innerHTML =
     `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b>` +
     (s.cached ? " · 缓存" : "");
@@ -307,8 +315,9 @@ function render(s) {
     `<div class="kicker">数据源 · ${s.source?.name || ""} · ${moodBits.join(" · ")}` +
     (ladderTxt ? ` · 连板 ${ladderTxt}` : "") + `</div>` +
     `<div style="margin-top:8px">${Object.entries(lanes).map(([k, v]) =>
-      `<span class="tag ${v.src === "kaipanla" ? "cyan" : (v.src === "tdx" || v.src === "tencent" ? "gold" : "pass")}">${k} · ${v.name || ""}</span>`
-    ).join(" ")}</div>`;
+      `<span class="tag ${laneCls(v.src)}">${k} · ${v.name || ""}${v.note ? " · " + v.note : ""}</span>`
+    ).join(" ")}</div>` +
+    (hotTxt ? `<div class="why" style="margin-top:8px">同花顺热榜 ${hotTxt}</div>` : "");
   document.getElementById("warns").textContent = (s.warnings || []).join("；");
   const w = s.watch;
   const hat = s.watch_hat || "";

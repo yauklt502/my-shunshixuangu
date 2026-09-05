@@ -40,6 +40,9 @@ async def main() -> None:
     lanes = src.get("lanes") or {}
     if lanes:
         print("各路 " + " · ".join(f"{k}{v.get('name')}" for k, v in lanes.items()))
+    hot = snap.get("hot_top") or []
+    if hot:
+        print("同花顺热榜 " + " · ".join(f"{x.get('rank')}{x.get('name')}" for x in hot[:8]))
     ml = snap.get("mainline")
     sec = snap.get("secondary")
     if ml:
