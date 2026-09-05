@@ -9,52 +9,30 @@
 
 ## 一键启动
 
-解压后**双击**对应文件，**保持黑色/终端窗口不要关**，就绪后会自动打开浏览器：
+解压后**双击**即可打开网页。页面已预构建，**不需要 Node.js**。
 
 | 系统 | 双击启动 | 停止 |
 |---|---|---|
-| **Windows** | `一键启动.bat` | 窗口里 Ctrl+C，或双击 `一键停止.bat` |
-| **macOS** | `一键启动.command` | 窗口里 Ctrl+C，或 `./一键停止.sh` |
-| **Linux** | `./一键启动.sh` | Ctrl+C / `./一键停止.sh` |
+| **Windows** | `一键启动.bat` | Ctrl+C 或 `一键停止.bat` |
+| **macOS** | `一键启动.command` | Ctrl+C 或 `./一键停止.sh` |
+| **Linux** | `./一键启动.sh` | Ctrl+C 或 `./一键停止.sh` |
 
-正确地址：**http://127.0.0.1:5173**（必须带端口 `5173`）
+地址：**http://127.0.0.1:5173**
 
-### 出现「无法访问此网站 / ERR_CONNECTION_REFUSED」？
+- 本机只需安装 **Python 3.10+**（Windows 勾选 Add to PATH）
+- **第一次**会把运行库装到用户目录（Windows：`%LOCALAPPDATA%\shunshi-xuangu`），大约一两分钟
+- **以后再双击、再解压一份 ZIP，都不会重新下载**，直接开网页
+- 保持启动窗口不要关
 
-说明本机服务没在跑。按顺序检查：
+### 出现「无法访问此网站」？
 
-1. **先双击启动脚本**，等窗口出现 `前后端均已就绪` 再访问页面  
-2. 地址必须是 `http://127.0.0.1:5173`，不要只写 `127.0.0.1`  
-3. **不要关闭**启动窗口（关掉 = 服务停掉）  
-4. 本机需已安装：
-   - Python 3.10+（Windows 安装时勾选 **Add to PATH**）https://www.python.org/downloads/
-   - Node.js 18+ https://nodejs.org/
-5. 若窗口报错，打开解压目录里的 `.run/backend.log` 和 `.run/frontend.log` 查看原因  
-6. 也可在解压目录打开终端运行：`python launcher.py`（或 `python3 launcher.py`）看完整报错
-
-### Docker（可选）
-
-| 系统 | 方式 |
-|---|---|
-| Windows | 双击 `Docker一键启动.bat`（需 Docker Desktop） |
-| macOS / Linux | `./Docker一键启动.sh` 或 `docker compose up --build` |
+先双击启动脚本；地址必须带端口 `5173`。日志在 `.run/server.log`。
 
 ### macOS 首次无法打开
 
 ```bash
 chmod +x 一键启动.command 一键启动.sh 一键停止.sh launcher.py
 xattr -d com.apple.quarantine 一键启动.command 2>/dev/null || true
-```
-
-## 手动启动（可选）
-
-```bash
-python3 launcher.py
-# 或
-cd backend && python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt && PYTHONPATH=. uvicorn app.main:app --host 127.0.0.1 --port 8010
-# 另开终端
-cd frontend && npm install && npx vite --host 127.0.0.1 --port 5173
 ```
 
 ## 一句话对照

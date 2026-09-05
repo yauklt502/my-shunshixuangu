@@ -1,57 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""顺势选股 · 跨平台一键启动器
+"""顺势选股 · 一键启动
 
-用法:
-  python launcher.py          # 启动（前台保持，Ctrl+C 停止）
-  python launcher.py --stop   # 仅停止
+双击后直接打开网页。依赖装在本机用户目录，换文件夹 / 重新解压 ZIP 不会再下载。
+不需要 Node.js。
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import shutil
 import signal
 import subprocess
 import sys
 import time
-import urllib.error
 import urllib.request
 import webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 BACKEND = ROOT / "backend"
-FRONTEND = ROOT / "frontend"
+WEB = ROOT / "web"
 RUN = ROOT / ".run"
-BACKEND_PORT = int(os.environ.get("BACKEND_PORT", "8010"))
-FRONTEND_PORT = int(os.environ.get("FRONTEND_PORT", "5173"))
-BACKEND_LOG = RUN / "backend.log"
-FRONTEND_LOG = RUN / "frontend.log"
-BACKEND_PID = RUN / "backend.pid"
-FRONTEND_PID = RUN / "frontend.pid"
-
+PORT = int(os.environ.get("SSP_PORT") or os.environ.get("FRONTEND_PORT") or "5173")
+PAGE = f"http://127.0.0.1:{PORT}/"
+HEALTH = f"http://127.0.0.1:{PORT}/api/health"
+LOG = RUN / "server.log"
+PID_FILE = RUN / "server.pid"
 IS_WIN = os.name == "nt"
+APP_NAME = "shunshi-xuangu"
 
 
 def info(msg: str) -> None:
-    print(f"[*] {msg}")
-
-
-def ok(msg: str) -> None:
-    print(f"[OK] {msg}")
-
-
-def warn(msg: str) -> None:
-    print(f"[!] {msg}")
+    print(f"  {msg}", flush=True)
 
 
 def die(msg: str, code: int = 1) -> None:
-    print(f"[ERROR] {msg}", file=sys.stderr)
+    print(f"\n[错误] {msg}", file=sys.stderr)
     raise SystemExit(code)
 
 
-def http_ok(url: str, timeout: float = 1.5) -> bool:
+def http_ok(url: str, timeout: float = 1.2) -> bool:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             return 200 <= getattr(r, "status", 200) < 300
@@ -59,80 +49,109 @@ def http_ok(url: str, timeout: float = 1.5) -> bool:
         return False
 
 
-def which_python() -> str:
-    # Prefer already-created venv later; here find a system Python to bootstrap.
-    candidates = []
+def cache_home() -> Path:
     if IS_WIN:
-        candidates.extend(["py", "python", "python3"])
+        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+        return Path(base) / APP_NAME
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    return Path(xdg) / APP_NAME if xdg else Path.home() / ".cache" / APP_NAME
+
+
+def which_python() -> list[str]:
+    if IS_WIN:
+        py = shutil.which("py")
+        if py:
+            return [py, "-3"]
+        for name in ("python", "python3"):
+            p = shutil.which(name)
+            if p and "WindowsApps" not in p:
+                return [p]
     else:
-        candidates.extend(["python3", "python"])
-    for c in candidates:
-        path = shutil.which(c)
-        if path:
-            # Avoid Windows Store stub that opens Microsoft Store
-            if IS_WIN and "WindowsApps" in path and c != "py":
-                continue
-            return path
+        for name in ("python3", "python"):
+            p = shutil.which(name)
+            if p:
+                return [p]
     die(
-        "未找到 Python。请安装 Python 3.10+，Windows 安装时务必勾选 Add to PATH。\n"
+        "本机没有 Python。请安装 Python 3.10+（Windows 务必勾选 Add python.exe to PATH）\n"
         "下载: https://www.python.org/downloads/"
     )
 
 
-def which_npm() -> str:
-    npm = shutil.which("npm.cmd" if IS_WIN else "npm") or shutil.which("npm")
-    if not npm:
-        die(
-            "未找到 npm。请安装 Node.js 18+。\n"
-            "下载: https://nodejs.org/"
-        )
-    return npm
+def venv_python(venv: Path) -> Path:
+    return venv / ("Scripts/python.exe" if IS_WIN else "bin/python")
 
 
-def venv_python() -> Path:
-    if IS_WIN:
-        return BACKEND / ".venv" / "Scripts" / "python.exe"
-    return BACKEND / ".venv" / "bin" / "python"
+def venv_uvicorn(venv: Path) -> Path:
+    return venv / ("Scripts/uvicorn.exe" if IS_WIN else "bin/uvicorn")
 
 
-def venv_uvicorn() -> Path:
-    if IS_WIN:
-        return BACKEND / ".venv" / "Scripts" / "uvicorn.exe"
-    return BACKEND / ".venv" / "bin" / "uvicorn"
+def req_hash() -> str:
+    return hashlib.sha256((BACKEND / "requirements.txt").read_bytes()).hexdigest()[:16]
 
 
-def ensure_backend_deps(sys_py: str) -> None:
-    py = venv_python()
-    if not py.exists():
-        info("首次创建后端虚拟环境（可能需几分钟）...")
-        subprocess.check_call([sys_py, "-m", "venv", str(BACKEND / ".venv")])
-    # install/upgrade deps if uvicorn missing
+def deps_ready(py: Path, stamp: Path) -> bool:
+    if not py.exists() or not stamp.exists():
+        return False
+    try:
+        if stamp.read_text(encoding="utf-8").strip() != req_hash():
+            return False
+    except Exception:
+        return False
     try:
         subprocess.check_call(
-            [str(py), "-c", "import uvicorn, fastapi, eltdx"],
+            [str(py), "-c", "import uvicorn, fastapi, eltdx, httpx"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        ok("后端依赖已就绪")
-        return
+        return True
     except subprocess.CalledProcessError:
-        pass
-    info("安装后端依赖...")
-    subprocess.check_call([str(py), "-m", "pip", "install", "-U", "pip"])
+        return False
+
+
+def _import_ok(py: Path) -> bool:
+    if not py.exists():
+        return False
+    try:
+        subprocess.check_call(
+            [str(py), "-c", "import uvicorn, fastapi, eltdx, httpx"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def ensure_venv(sys_py: list[str]) -> Path:
+    """依赖放用户目录，不跟着 ZIP 走，避免每次解压都重下。"""
+    home = cache_home()
+    shared = home / "venv"
+    stamp = home / "requirements.sha"
+    home.mkdir(parents=True, exist_ok=True)
+
+    if deps_ready(venv_python(shared), stamp):
+        return shared
+    # 本目录里已经装过，直接用，免得再下一遍
+    local = BACKEND / ".venv"
+    if _import_ok(venv_python(local)):
+        return local
+
+    print("  本机第一次（或依赖有更新），正在准备运行环境…")
+    print("  只做这一次，以后双击、重新解压都不用再下载。")
+    py = venv_python(shared)
+    if not py.exists():
+        subprocess.check_call(sys_py + ["-m", "venv", str(shared)])
+    pip_cache = home / "pip-cache"
+    env = os.environ.copy()
+    env["PIP_CACHE_DIR"] = str(pip_cache)
+    subprocess.check_call([str(py), "-m", "pip", "install", "-U", "pip"], env=env)
     subprocess.check_call(
-        [str(py), "-m", "pip", "install", "-r", str(BACKEND / "requirements.txt")]
+        [str(py), "-m", "pip", "install", "-r", str(BACKEND / "requirements.txt")],
+        env=env,
     )
-    ok("后端依赖安装完成")
-
-
-def ensure_frontend_deps(npm: str) -> None:
-    marker = FRONTEND / "node_modules" / "vite"
-    if marker.exists():
-        ok("前端依赖已就绪")
-        return
-    info("首次 npm install（可能需几分钟）...")
-    subprocess.check_call([npm, "install"], cwd=str(FRONTEND), shell=IS_WIN)
-    ok("前端依赖安装完成")
+    stamp.write_text(req_hash(), encoding="utf-8")
+    print("  准备完成。")
+    return shared
 
 
 def kill_pid(pid: int) -> None:
@@ -166,21 +185,16 @@ def kill_port(port: int) -> None:
             )
         except subprocess.CalledProcessError:
             return
-        pids = set()
         for line in out.splitlines():
             parts = line.split()
-            if parts:
-                pids.add(parts[-1])
-        for pid in pids:
-            if pid.isdigit():
+            if parts and parts[-1].isdigit():
                 subprocess.run(
-                    ["taskkill", "/F", "/PID", pid],
+                    ["taskkill", "/F", "/PID", parts[-1]],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     check=False,
                 )
         return
-    # Unix
     try:
         out = subprocess.check_output(
             ["lsof", f"-tiTCP:{port}", "-sTCP:LISTEN"],
@@ -195,52 +209,18 @@ def kill_port(port: int) -> None:
 
 
 def stop_all() -> None:
-    info("正在停止服务...")
-    for pf in (BACKEND_PID, FRONTEND_PID):
-        if pf.exists():
-            try:
-                kill_pid(int(pf.read_text().strip()))
-            except Exception:
-                pass
-            try:
-                pf.unlink()
-            except Exception:
-                pass
-    kill_port(BACKEND_PORT)
-    kill_port(FRONTEND_PORT)
-    ok(f"已停止（端口 {BACKEND_PORT} / {FRONTEND_PORT}）")
-
-
-def local_bin(name: str) -> Path:
-    """Resolve frontend local binary (vite)."""
-    if IS_WIN:
-        p = FRONTEND / "node_modules" / ".bin" / f"{name}.cmd"
-        if p.exists():
-            return p
-    p = FRONTEND / "node_modules" / ".bin" / name
-    return p
-
-
-def popen(cmd: list[str], cwd: Path, log: Path, env: dict | None = None) -> subprocess.Popen:
-    log.parent.mkdir(parents=True, exist_ok=True)
-    lf = open(log, "w", encoding="utf-8", errors="replace")
-    merged_env = os.environ.copy()
-    if env:
-        merged_env.update(env)
-    kwargs: dict = {
-        "cwd": str(cwd),
-        "stdout": lf,
-        "stderr": subprocess.STDOUT,
-        "env": merged_env,
-    }
-    if IS_WIN:
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
-        # .cmd shims need shell=True on Windows
-        if cmd and str(cmd[0]).lower().endswith(".cmd"):
-            return subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, **kwargs)
-    else:
-        kwargs["start_new_session"] = True
-    return subprocess.Popen(cmd, **kwargs)
+    if PID_FILE.exists():
+        try:
+            kill_pid(int(PID_FILE.read_text().strip()))
+        except Exception:
+            pass
+        try:
+            PID_FILE.unlink()
+        except Exception:
+            pass
+    kill_port(PORT)
+    # 兼容旧版双进程
+    kill_port(8010)
 
 
 def tail(path: Path, n: int = 40) -> str:
@@ -253,129 +233,93 @@ def tail(path: Path, n: int = 40) -> str:
         return f"(读日志失败: {e})"
 
 
+def popen(cmd: list[str], cwd: Path, log: Path, env: dict | None = None) -> subprocess.Popen:
+    log.parent.mkdir(parents=True, exist_ok=True)
+    lf = open(log, "w", encoding="utf-8", errors="replace")
+    merged = os.environ.copy()
+    if env:
+        merged.update(env)
+    kwargs: dict = {"cwd": str(cwd), "stdout": lf, "stderr": subprocess.STDOUT, "env": merged}
+    if IS_WIN:
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
+    else:
+        kwargs["start_new_session"] = True
+    return subprocess.Popen(cmd, **kwargs)
+
+
 def start() -> None:
-    print()
-    print("=" * 44)
-    print("  顺势选股 · Role Ladder 一键启动")
-    print("=" * 44)
-    print()
+    print("\n  顺势选股 · 正在打开…\n", flush=True)
 
     if not (BACKEND / "app" / "main.py").exists():
-        die(f"找不到后端代码，请确认解压完整。当前目录: {ROOT}")
-    if not (FRONTEND / "package.json").exists():
-        die(f"找不到前端代码，请确认解压完整。当前目录: {ROOT}")
+        die(f"解压不完整，找不到后端。当前目录: {ROOT}")
+    if not (WEB / "index.html").exists():
+        die("缺少预构建页面 web/index.html。请重新下载完整 ZIP。")
+
+    # 已经在跑：直接开浏览器，不再装任何东西
+    if http_ok(HEALTH) and http_ok(PAGE):
+        print(f"  已在运行，打开 {PAGE}")
+        webbrowser.open(PAGE)
+        print("  关掉本窗口不会停止服务。要停止请运行「一键停止」。")
+        return
 
     sys_py = which_python()
-    npm = which_npm()
-    info(f"Python: {sys_py}")
-    info(f"npm: {npm}")
+    venv = ensure_venv(sys_py)
+    uv = venv_uvicorn(venv)
+    if not uv.exists():
+        die("运行环境不完整，请删除后重试：\n  " + str(cache_home() / "venv"))
 
     RUN.mkdir(parents=True, exist_ok=True)
     stop_all()
-    time.sleep(0.5)
+    time.sleep(0.2)
 
-    ensure_backend_deps(sys_py)
-    ensure_frontend_deps(npm)
-
-    uv = venv_uvicorn()
-    if not uv.exists():
-        die(f"未找到 uvicorn: {uv}，后端依赖可能安装失败")
-
-    info(f"启动后端 http://127.0.0.1:{BACKEND_PORT}")
-    backend = popen(
-        [str(uv), "app.main:app", "--host", "127.0.0.1", "--port", str(BACKEND_PORT)],
+    server = popen(
+        [str(uv), "app.main:app", "--host", "127.0.0.1", "--port", str(PORT)],
         cwd=BACKEND,
-        log=BACKEND_LOG,
+        log=LOG,
         env={"PYTHONPATH": str(BACKEND)},
     )
-    BACKEND_PID.write_text(str(backend.pid), encoding="utf-8")
+    PID_FILE.write_text(str(server.pid), encoding="utf-8")
 
-    info(f"启动前端 http://127.0.0.1:{FRONTEND_PORT}")
-    vite = local_bin("vite")
-    if not vite.exists():
-        die(f"未找到前端 vite: {vite}，请删除 frontend/node_modules 后重试")
-    front_cmd = [
-        str(vite),
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(FRONTEND_PORT),
-        "--strictPort",
-    ]
-    frontend = popen(front_cmd, cwd=FRONTEND, log=FRONTEND_LOG)
-    FRONTEND_PID.write_text(str(frontend.pid), encoding="utf-8")
-
-    health = f"http://127.0.0.1:{BACKEND_PORT}/api/health"
-    page = f"http://127.0.0.1:{FRONTEND_PORT}/"
-    info("等待服务就绪（最多 90 秒）...")
-
-    ready = False
-    for i in range(90):
-        if backend.poll() is not None:
-            print(tail(BACKEND_LOG))
-            die("后端进程已退出，请根据上方日志排查（常见：端口占用 / 依赖未装全）")
-        if frontend.poll() is not None:
-            print(tail(FRONTEND_LOG))
-            die("前端进程已退出，请根据上方日志排查（常见：Node 版本过低 / 端口占用）")
-        if http_ok(health) and http_ok(page):
-            ready = True
+    for _ in range(40):
+        if server.poll() is not None:
+            print(tail(LOG))
+            die("服务启动失败，请查看上方日志。")
+        if http_ok(HEALTH) and http_ok(PAGE):
             break
-        time.sleep(1)
-        if i in (10, 25, 45, 70):
-            info(f"仍在等待... ({i}s)  后端alive={backend.poll() is None} 前端alive={frontend.poll() is None}")
-
-    if not ready:
-        print("\n----- 后端日志 -----")
-        print(tail(BACKEND_LOG))
-        print("\n----- 前端日志 -----")
-        print(tail(FRONTEND_LOG))
+        time.sleep(0.25)
+    else:
+        print(tail(LOG))
         stop_all()
-        die(
-            "服务未就绪，浏览器不会打开。\n"
-            f"请把 .run/backend.log 和 .run/frontend.log 发给开发者，或自行查看。\n"
-            f"日志目录: {RUN}"
-        )
+        die("服务未就绪。日志: " + str(LOG))
 
-    ok("前后端均已就绪")
+    print(f"  打开 {PAGE}")
+    print("  请保持本窗口打开。按 Ctrl+C 停止。")
     print()
-    print("=" * 44)
-    print(f"  页面: {page}")
-    print(f"  API : {health}")
-    print(f"  日志: {RUN}")
-    print("=" * 44)
-    print()
-    print("请保持本窗口打开。按 Ctrl+C 停止全部服务。")
-    print()
-
     try:
-        webbrowser.open(page)
+        webbrowser.open(PAGE)
     except Exception:
-        warn(f"自动打开浏览器失败，请手动访问: {page}")
+        info("请手动在浏览器打开上述地址")
 
     try:
         while True:
-            if backend.poll() is not None:
-                warn("后端意外退出")
-                print(tail(BACKEND_LOG))
-                break
-            if frontend.poll() is not None:
-                warn("前端意外退出")
-                print(tail(FRONTEND_LOG))
-                break
+            if server.poll() is not None:
+                print(tail(LOG))
+                die("服务意外退出。")
             time.sleep(1)
     except KeyboardInterrupt:
         print()
-        info("收到停止信号")
+        info("正在退出…")
     finally:
         stop_all()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="顺势选股一键启动")
-    parser.add_argument("--stop", action="store_true", help="停止服务")
+    parser.add_argument("--stop", action="store_true")
     args = parser.parse_args()
     if args.stop:
         stop_all()
+        print("  已停止。")
         return
     start()
 

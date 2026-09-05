@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.providers.registry import registry
@@ -142,3 +145,24 @@ def stock_panel(code: str) -> dict[str, Any]:
         "minute_5m": m5,
         "source": getattr(qp, "name", "unknown"),
     }
+
+
+# 预构建前端：单进程同时提供页面和 API，启动不再需要 Node
+_WEB_DIR = Path(__file__).resolve().parents[2] / "web"
+if _WEB_DIR.is_dir():
+    _assets = _WEB_DIR / "assets"
+    if _assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_assets)), name="assets")
+
+    @app.get("/")
+    def spa_index() -> FileResponse:
+        return FileResponse(_WEB_DIR / "index.html")
+
+    @app.get("/{full_path:path}")
+    def spa_fallback(full_path: str) -> FileResponse:
+        if full_path.startswith("api"):
+            raise HTTPException(404, "not found")
+        candidate = _WEB_DIR / full_path
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_WEB_DIR / "index.html")
