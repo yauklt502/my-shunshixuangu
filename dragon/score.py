@@ -5,8 +5,24 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from dragon.defs import is_climax, is_rotten, is_yizi
 from dragon.themes import theme_of
 from dragon.timeutil import fmt_hhmmss
+
+# 给旧测试和回测对照留别名，定义以 dragon.defs 为准。
+__all__ = [
+    "Dimension",
+    "ScoredStock",
+    "WEIGHTS",
+    "drive_score",
+    "height_score",
+    "is_yizi",
+    "num",
+    "recognition_score",
+    "resilience_score",
+    "score_stock",
+    "volume_verdict",
+]
 
 
 def num(v: Any, default: float = 0.0) -> float:
@@ -16,15 +32,6 @@ def num(v: Any, default: float = 0.0) -> float:
         return float(v)
     except (TypeError, ValueError):
         return default
-
-
-def is_yizi(first_seal: int, open_count: int, turnover: float) -> bool:
-    """9:25 附近封死、未开板、换手极低 = 一字无量，不能当可交易龙头。"""
-    if open_count > 0:
-        return False
-    if first_seal <= 0:
-        return False
-    return first_seal <= 92505 and turnover < 3.0
 
 
 def volume_verdict(
@@ -46,11 +53,11 @@ def volume_verdict(
     if yizi:
         return "一字无量", 8.0, reasons + ["9:25锁死且换手<3%，没有交换，不能定龙"]
 
-    if hs >= 35.0 or (hs >= 28.0 and open_count >= 8):
+    if is_climax(hs, open_count):
         score = 18.0
         if amount_yi >= 10:
             score += 4.0
-        return "爆量见顶", score, reasons + ["换手过大或烂板爆量，按见顶信号降权"]
+        return "爆量见顶", score, reasons + ["换手≥35%，或≥28%且已开板，按见顶降权"]
 
     if 5.0 <= hs <= 22.0 and amount_yi >= 1.5:
         score = 88.0
@@ -95,7 +102,7 @@ def drive_score(
         reasons.append(f"东财概念领涨（板块涨{concept_pct or 0:.2f}% / 上涨{concept_up}家）")
 
     if peer_zt <= 1 and not concept_lead:
-        return "独立板", 16.0, reasons + ["板块没有跟风，高度再高也只是独立票"]
+        return "独立板", 16.0, reasons + ["板块没有跟风：低板是独立票，4板以上先当总龙/高度看"]
 
     if peer_zt <= 1 and concept_lead and concept_up >= 5:
         return "概念领涨", 62.0, reasons + ["行业池里是孤板，但概念指数有跟风"]
@@ -299,6 +306,12 @@ class ScoredStock:
     why: str = ""
     pass_leader: bool = False
     in_mainline: bool = False
+    lane: str = ""
+    tags: list[str] = field(default_factory=list)
+    tradable: bool = False
+    climax: bool = False
+    rotten: bool = False
+    hats: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -401,20 +414,51 @@ def score_stock(
         + dims["height"].score * WEIGHTS["height"]
     )
 
-    # 硬规则：独立/一字/爆量不能靠总分混进定龙
     isolated = peer_zt <= 1
+    climax = vol_v == "爆量见顶" or is_climax(turnover, open_count)
+    rotten = is_rotten(open_count, turnover) or res_v in {"放量烂板", "烂板"}
+    tradable = bool(sealed and not yizi and not climax and not rotten)
+    tags: list[str] = []
+    if yizi:
+        tags.append("一字")
+    if climax:
+        tags.append("爆量")
+    if rotten:
+        tags.append("烂板")
+    if vol_v == "健康换手":
+        tags.append("健康换手")
+    elif vol_v == "换手偏瘦":
+        tags.append("偏瘦")
+    elif vol_v == "换手偏大":
+        tags.append("偏大")
+    if isolated and boards < 4:
+        tags.append("独立")
+    elif isolated and boards >= 4:
+        tags.append("总龙观察")
+    if pop_rank and pop_rank <= 3:
+        tags.append("人气前三")
+    elif pop_rank and pop_rank <= 10:
+        tags.append("人气前十")
+    if boards >= 4 and not yizi:
+        tags.append("高标")
+
+    # 角色先按票本身定性，通道（主线/支线）和帽子（火车头/情绪/空间）后面再戴。
     if yizi:
         role, status, ok = "高度锚", "一字无量 · 只看高度，不当交易龙", False
         total = min(total, 35.0)
-    elif vol_v == "爆量见顶":
+    elif climax:
         role, status, ok = "见顶观察", "量能见顶 · 不予定龙", False
         total = min(total, 48.0)
     elif isolated and boards < 4:
-        role, status, ok = "独立票", "同行业没有跟风涨停 · 排除定龙", False
+        role, status, ok = "独立票", "同主题没有跟风 · 游资热点，不当情绪龙", False
         total = min(total, 42.0)
     elif drv_v == "独立板" and boards < 4:
-        role, status, ok = "独立票", "带不动板块 · 排除定龙", False
+        role, status, ok = "独立票", "带不动板块 · 不当情绪龙", False
         total = min(total, 42.0)
+    elif isolated and boards >= 4:
+        role, status, ok = "空间龙", "板块没跟风，先当总龙/高度看", tradable
+        if not tradable:
+            status = "高度在，但量或板已经散了"
     elif drv_v == "跟风板":
         role, status, ok = "跟风", "身位或封板顺序落后", False
         total = min(total, 58.0)
@@ -423,14 +467,13 @@ def score_stock(
     else:
         has_drive = drv_v in {"火车头", "有带动", "概念领涨", "龙二"}
         healthy = vol_v in {"健康换手", "换手偏大", "换手偏瘦"}
-        rotten = res_v in {"放量烂板", "烂板", "跟跌/掉队", "冲板未确认"}
-        ok = has_drive and healthy and boards >= 1 and not rotten
+        ok = has_drive and healthy and boards >= 1 and tradable
         if boards >= 4 and has_drive and vol_v == "健康换手":
             role, status = "空间龙", "高度 + 带动 + 健康换手"
         elif drv_v == "火车头" and boards >= 2:
-            role, status = "主线龙", "主题火车头，量能对得上"
+            role, status = "主线龙", "主题里先起来的，量能对得上"
         elif drv_v in {"火车头", "有带动", "概念领涨"} and boards == 1:
-            role, status = "先锋", "首板火车头，先观察晋级"
+            role, status = "先锋", "首板先起来，先看能不能晋级"
         elif has_drive:
             role, status = "龙头候选", "五维过线"
         else:
@@ -474,24 +517,8 @@ def score_stock(
         status=status,
         why=" · ".join(why_parts),
         pass_leader=ok,
+        tags=tags,
+        tradable=tradable,
+        climax=climax,
+        rotten=rotten,
     )
-
-
-def pick_roles(rows: list[ScoredStock]) -> dict[str, ScoredStock | None]:
-    """只在主线里定龙；高度/量能焦点可以展示支线，但会标出来。"""
-    tradable = [r for r in rows if r.sealed and not r.yizi]
-    leaders = [r for r in tradable if r.pass_leader and r.in_mainline]
-    leaders_sorted = sorted(leaders, key=lambda r: (-r.total, -r.boards, r.open_count, -r.amount_yi))
-    height_pool = sorted(
-        [r for r in tradable if r.in_mainline],
-        key=lambda r: (-r.boards, -r.total, r.open_count),
-    )
-    volume_pool = sorted(
-        [r for r in tradable if r.in_mainline],
-        key=lambda r: (-r.amount_yi, -r.total),
-    )
-
-    mainline = leaders_sorted[0] if leaders_sorted else None
-    height = height_pool[0] if height_pool else None
-    volume = volume_pool[0] if volume_pool else None
-    return {"mainline": mainline, "height": height, "volume": volume}

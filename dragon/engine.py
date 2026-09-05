@@ -3,15 +3,17 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from dragon.decide import decide
+from dragon.defs import DEFINITIONS
 from dragon.market import concept_index, load_market
 from dragon.pipeline import (
-    apply_mainline_lane,
+    apply_lanes,
     build_steps,
     pick_mainline,
-    pick_watch,
+    pick_secondary,
     rank_themes,
 )
-from dragon.score import ScoredStock, pick_roles, score_stock
+from dragon.score import ScoredStock, score_stock
 from dragon.timeutil import market_session
 
 
@@ -68,10 +70,12 @@ def theme_table(scored: list[ScoredStock], mainline: str | None) -> list[dict[st
     for theme, xs in groups.items():
         xs = sorted(xs, key=lambda i: (i.first_seal_raw or 999999, i.open_count, -i.boards))
         head = xs[0]
+        lane = xs[0].lane or ("主线" if theme == mainline else "支线")
         out.append(
             {
                 "theme": theme,
-                "mainline": theme == mainline,
+                "lane": lane,
+                "mainline": lane == "主线",
                 "count": len(xs),
                 "amount_yi": round(sum(i.amount_yi for i in xs), 2),
                 "max_boards": max(i.boards for i in xs),
@@ -96,7 +100,8 @@ def theme_table(scored: list[ScoredStock], mainline: str | None) -> list[dict[st
                 ],
             }
         )
-    out.sort(key=lambda g: (0 if g["mainline"] else 1, -g["count"], -g["amount_yi"]))
+    order = {"主线": 0, "次主线": 1, "支线": 2, "独立": 3}
+    out.sort(key=lambda g: (order.get(g["lane"], 9), -g["count"], -g["amount_yi"]))
     return out
 
 
@@ -116,29 +121,38 @@ def analyze(
     scored = score_universe(zt_rows, popularity=popularity, concepts=concepts)
     ranked = rank_themes(zt_rows)
     mainline = pick_mainline(ranked)
+    secondary = pick_secondary(ranked, mainline)
     main_name = mainline["theme"] if mainline else None
-    apply_mainline_lane(scored, main_name)
-    scored.sort(key=lambda s: (0 if s.in_mainline else 1, -s.pass_leader, s.first_seal_raw or 999999, s.open_count))
-    watch = pick_watch([s for s in scored if s.in_mainline])
+    apply_lanes(scored, ranked, mainline, secondary)
+    decision = decide(scored, mainline_name=main_name, mode=mode)
+    scored.sort(
+        key=lambda s: (
+            0 if s.hats else 1,
+            0 if s.lane == "主线" else 1,
+            s.first_seal_raw or 999999,
+            s.open_count,
+        )
+    )
     steps, action = build_steps(
         mode=mode,
         mainline=mainline,
+        secondary=secondary,
         ranked=ranked,
         scored=scored,
         broken=broken or [],
         concepts=concepts,
         indexes=indexes or [],
-        watch=watch,
+        decision=decision,
     )
-    roles = pick_roles(scored)
     return {
         "scored": scored,
         "ranked": ranked,
         "mainline": mainline,
-        "watch": watch,
+        "secondary": secondary,
+        "decision": decision,
+        "watch": decision.watch,
         "steps": steps,
         "action": action,
-        "roles": roles,
         "themes": theme_table(scored, main_name),
     }
 
@@ -156,6 +170,9 @@ async def build_snapshot(date: str | None = None, mode: str | None = None) -> di
         mode=use_mode,
     )
     scored = result["scored"]
+    decision = result["decision"]
+    watch = result["watch"]
+    leaders = [s for s in scored if s.hats or (s.pass_leader and s.lane == "主线")]
     return {
         "ok": True,
         "date": market["date"],
@@ -168,22 +185,35 @@ async def build_snapshot(date: str | None = None, mode: str | None = None) -> di
             "zt": len(market["zt"]),
             "broken": len(market["broken"]),
             "scored": len(scored),
-            "leaders": sum(1 for s in scored if s.pass_leader),
+            "leaders": len(leaders),
         },
         "mainline": result["mainline"],
+        "secondary": result["secondary"],
         "theme_rank": result["ranked"],
         "steps": result["steps"],
-        "watch": _pack(result["watch"]),
+        "watch": _pack(watch),
         "action": result["action"],
+        "reason": decision.reason,
+        "notes": decision.notes,
+        "watch_hat": decision.watch_hat,
         "picks": {
-            "watch": _pack(result["watch"]),
-            "mainline": _pack(result["roles"]["mainline"]),
-            "height": _pack(result["roles"]["height"]),
-            "volume": _pack(result["roles"]["volume"]),
+            "watch": _pack(watch),
+            "locomotive": _pack(decision.locomotive),
+            "sentiment": _pack(decision.sentiment),
+            "height": _pack(decision.height),
+            "mainline": _pack(decision.locomotive),
+            "volume": _pack(
+                max(
+                    (s for s in scored if s.lane == "主线" and s.tradable),
+                    key=lambda s: s.amount_yi,
+                    default=None,
+                )
+            ),
         },
-        "leaders": [s.to_dict() for s in scored if s.pass_leader],
+        "leaders": [s.to_dict() for s in leaders],
         "board": [s.to_dict() for s in scored],
         "themes": result["themes"],
+        "definitions": DEFINITIONS,
         "method": {
             "title": "10秒定龙头",
             "order": [
@@ -191,9 +221,9 @@ async def build_snapshot(date: str | None = None, mode: str | None = None) -> di
                 "涨停时间排序",
                 "板块指数红不红",
                 "砸盘谁抗谁碎",
-                "人气能不能叫出来",
+                "情绪能不能叫出来",
                 "最后看量",
             ],
-            "rule": "只在主线里比。支线再猛也不进定龙池。盘中跟、盘后盯，都是这一只。",
+            "rule": "先定板块。火车头、情绪龙头、空间高标三路对照，最后盯一只。",
         },
     }

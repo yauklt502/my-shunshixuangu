@@ -8,7 +8,7 @@
     :root {
       --bg: #0b1020; --panel: #141b2e; --line: #243049; --text: #e8edf7;
       --muted: #8b97b3; --gold: #f0b429; --cyan: #3ee0c6; --red: #ff5d73;
-      --green: #3dd68c; --warn: #ff8a4c;
+      --green: #3dd68c; --warn: #ff8a4c; --purple: #b7a9d9;
     }
     * { box-sizing: border-box; }
     body {
@@ -29,8 +29,13 @@
     .wrap { padding: 16px 24px 40px; display: grid; gap: 14px; }
     .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
     .card.watch { border-color: #3d4d28; }
+    .card.hat-loco { border-color: #2a4a5a; }
+    .card.hat-sent { border-color: #5a4a22; }
+    .card.hat-height { border-color: #3a2a55; }
+    .card.on { box-shadow: inset 0 0 0 1px rgba(240,180,41,.35); }
     .kicker { font-size: 12px; color: var(--muted); }
     .name { font-size: 26px; margin: 6px 0 4px; }
+    .name.mid { font-size: 20px; }
     .name small { color: var(--muted); font-size: 14px; margin-left: 8px; }
     .action { color: var(--gold); font-size: 14px; }
     .why { font-size: 12px; color: #c9d3e7; line-height: 1.55; }
@@ -40,15 +45,18 @@
     .ok { color: var(--green); font-weight: 700; }
     .no { color: var(--red); font-weight: 700; }
     .two { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; }
+    .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
     th { color: var(--muted); font-weight: 500; }
     tr.pass td { background: rgba(61, 214, 140, 0.06); }
     tr.side td { color: #8e98b0; }
-    .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; }
+    .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
     .tag.pass { background: #163427; color: var(--green); }
-    .tag.side { background: #2a2438; color: #b7a9d9; }
+    .tag.side { background: #2a2438; color: var(--purple); }
     .tag.kill { background: #3a1d24; color: var(--red); }
+    .tag.gold { background: #3a2f12; color: var(--gold); }
+    .tag.cyan { background: #16343a; color: var(--cyan); }
     button, input, select {
       background: #1c2540; color: var(--text); border: 1px solid var(--line);
       border-radius: 8px; padding: 6px 10px;
@@ -56,14 +64,18 @@
     button { cursor: pointer; }
     .tools { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
     .warns { color: var(--warn); font-size: 12px; }
-    @media (max-width: 1100px) { .two, header { display: block; } }
+    .notes { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: #c9d3e7; }
+    .defs b { color: var(--gold); }
+    details.card summary { cursor: pointer; color: var(--muted); }
+    @media (max-width: 1100px) { .two, .three, header, .defs { display: block; } }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1>10秒定龙头 · <span>先定板块再定票</span></h1>
-      <div class="sub">盘中跟、盘后盯，同一套顺序。只在主线里比，支线再猛也不进定龙池。</div>
+      <h1>10秒定龙头 · <span>三路对照，盯一只</span></h1>
+      <div class="sub">先定板块。火车头管带动，情绪龙头管人气，空间高标管高度。盘中跟、盘后盯同一只。</div>
     </div>
     <div>
       <div class="tools">
@@ -75,103 +87,144 @@
         <input id="date" placeholder="复盘日 20260904" maxlength="8" />
         <button id="go">加载</button>
         <button id="live">实时</button>
-        <a href="/backtest" style="color:#3ee0c6;font-size:13px">近3月回测</a>
       </div>
       <div class="meta" id="meta">正在拉行情…</div>
     </div>
   </header>
   <div class="wrap">
     <div id="warns" class="warns"></div>
+    <div class="card watch" id="watchCard"></div>
+    <div class="three" id="hats"></div>
     <div class="two">
-      <div class="card watch" id="watchCard"></div>
       <div class="card">
         <div class="kicker">6 步清单（盘中盘后同一套）</div>
         <div class="steps" id="steps"></div>
       </div>
-    </div>
-    <div class="two">
       <div class="card">
-        <div class="kicker">主线封板序 · 谁先封、谁封得死</div>
+        <div class="kicker">主线封板序 · 谁先封、谁封得死（一字/爆量/烂板会跳过）</div>
         <div style="overflow:auto;max-height:420px;margin-top:8px;">
           <table>
             <thead>
-              <tr><th>序</th><th>名称</th><th>首封</th><th>炸</th><th>板</th><th>换手%</th><th>成交亿</th><th>人气</th><th>量能</th><th>角色</th></tr>
+              <tr><th>序</th><th>名称</th><th>首封</th><th>炸</th><th>板</th><th>换手%</th><th>成交亿</th><th>人气</th><th>量能</th><th>帽子</th></tr>
             </thead>
             <tbody id="mainboard"></tbody>
           </table>
         </div>
       </div>
+    </div>
+    <div class="two">
       <div class="card">
-        <div class="kicker">主题强度 · 绿=主线，其余=支线不进池</div>
-        <div style="overflow:auto;max-height:420px;margin-top:8px;">
+        <div class="kicker">主题通道 · 主线定火车头，次主线/支线高标留下对照</div>
+        <div style="overflow:auto;max-height:360px;margin-top:8px;">
           <table>
-            <thead><tr><th></th><th>主题</th><th>涨停</th><th>额亿</th><th>最高板</th><th>先封</th></tr></thead>
+            <thead><tr><th>通道</th><th>主题</th><th>涨停</th><th>额亿</th><th>最高板</th><th>先封</th></tr></thead>
             <tbody id="themes"></tbody>
           </table>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="kicker">全市场对照（支线只看不进池）</div>
-      <div style="overflow:auto;max-height:360px;margin-top:8px;">
-        <table>
-          <thead>
-            <tr><th>通道</th><th>名称</th><th>主题</th><th>板</th><th>首封</th><th>换手%</th><th>成交亿</th><th>炸</th><th>人气</th><th>角色</th></tr>
-          </thead>
-          <tbody id="all"></tbody>
-        </table>
+      <div class="card">
+        <div class="kicker">全市场对照</div>
+        <div style="overflow:auto;max-height:360px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr><th>通道</th><th>名称</th><th>主题</th><th>板</th><th>首封</th><th>换手%</th><th>成交亿</th><th>炸</th><th>人气</th><th>角色</th></tr>
+            </thead>
+            <tbody id="all"></tbody>
+          </table>
+        </div>
       </div>
     </div>
+    <details class="card">
+      <summary>定义（先问这是什么，再问盯谁）</summary>
+      <div class="defs" id="defs" style="margin-top:10px"></div>
+    </details>
   </div>
 <script>
 let timer = null, currentDate = "", currentMode = "";
-function tagClass(role, inMain) {
-  if (role === "支线") return "tag side";
+function hatsOf(r) { return (r && r.hats) || []; }
+function tagClass(role, lane) {
+  if (["情绪龙头","火车头"].includes(role)) return "tag gold";
+  if (role === "空间高标" || role === "空间龙") return "tag cyan";
   if (["高度锚","独立票","见顶观察"].includes(role)) return "tag kill";
-  if (inMain) return "tag pass";
+  if (lane === "主线") return "tag pass";
   return "tag side";
+}
+function mini(p, empty) {
+  if (!p) return `<div class="why">${empty}</div>`;
+  const hats = (p.hats || []).join(" / ") || p.role;
+  return `
+    <div class="name mid">${p.name}<small>${p.code} · ${p.boards}板 · ${p.theme}</small></div>
+    <div class="why">${hats} · 人气${p.pop_rank ?? "-"} · 换手${p.turnover}% · 成交${p.amount_yi}亿 · 炸${p.open_count} · 首封${p.first_seal}</div>
+    <div class="why">${p.status || ""}</div>`;
 }
 function render(s) {
   const sess = s.session || {};
   const ml = s.mainline;
+  const sec = s.secondary;
   document.getElementById("meta").innerHTML =
     `交易日 <b>${s.date}</b> · ${sess.phase || ""} · 模式 <b>${s.mode}</b><br/>` +
     `数据源 ${s.source?.name || ""} · 涨停 ${s.stats?.zt || 0}` + (s.cached ? " · 缓存" : "");
   document.getElementById("warns").textContent = (s.warnings || []).join("；");
   const w = s.watch;
+  const hat = s.watch_hat || "";
+  const notes = (s.notes || []).map(n => `· ${n}`).join("<br/>");
   const watchHtml = w ? `
-    <div class="kicker">${s.mode === "盘中" ? "盘中跟 · 只盯这一只" : "盘后复盘 · 明天开盘只盯这一只"}</div>
+    <div class="kicker">${s.mode === "盘中" ? "盘中跟 · 只盯这一只" : "盘后复盘 · 明天开盘只盯这一只"} · ${hat}</div>
     <div class="name">${w.name}<small>${w.code} · ${w.boards}板 · ${w.theme} · 人气${w.pop_rank ?? "-"}</small></div>
     <div class="action">${s.action || ""}</div>
-    <div class="why">${w.why}<br/>换手${w.turnover}% · 成交${w.amount_yi}亿 · 量比${w.volume_ratio ?? "-"} · 炸${w.open_count}次 · 首封${w.first_seal}</div>
-  ` : `<div class="kicker">盯1只</div><div class="name">今日无龙</div><div class="why">主线不够或量能/炸板不过关。</div>`;
-  const mlHtml = ml ? `<div class="why" style="margin-top:10px">主线 <b>${ml.theme}</b>：涨停${ml.count}只 / ${ml.amount_yi}亿 / 最高${ml.max_boards}板</div>` : "";
-  document.getElementById("watchCard").innerHTML = watchHtml + mlHtml;
+    <div class="why">${s.reason || w.why}</div>
+    <div class="why">换手${w.turnover}% · 成交${w.amount_yi}亿 · 量比${w.volume_ratio ?? "-"} · 炸${w.open_count}次 · 首封${w.first_seal}</div>
+    ${notes ? `<div class="notes">${notes}</div>` : ""}
+  ` : `<div class="kicker">盯1只</div><div class="name">今日无龙</div><div class="why">${s.reason || "主线不够，或只剩一字/爆量/烂板。"}</div>`;
+  const laneHtml = ml
+    ? `<div class="why" style="margin-top:10px">主线 <b>${ml.theme}</b>：涨停${ml.count}只 / ${ml.amount_yi}亿 / 最高${ml.max_boards}板` +
+      (sec ? ` · 次主线 <b>${sec.theme}</b> ${sec.count}只/${sec.max_boards}板` : "") + `</div>`
+    : `<div class="why" style="margin-top:10px">今天没有主线，只看空间和情绪。</div>`;
+  document.getElementById("watchCard").innerHTML = watchHtml + laneHtml;
+
+  const p = s.picks || {};
+  const watchCode = w && w.code;
+  document.getElementById("hats").innerHTML = [
+    { key: "locomotive", title: "火车头", cls: "hat-loco", empty: "主线没有能买的先封", hint: "主线里最早封的能买的板" },
+    { key: "sentiment", title: "情绪龙头", cls: "hat-sent", empty: "没有叫得出来的情绪", hint: "人气和辨识度，不一定先封" },
+    { key: "height", title: "空间高标", cls: "hat-height", empty: "没有非一字高标", hint: "全市场非一字最高板" },
+  ].map(item => {
+    const stock = p[item.key];
+    const on = stock && stock.code === watchCode;
+    return `<div class="card ${item.cls} ${on ? "on" : ""}">
+      <div class="kicker">${item.title}${on ? " · 就是盯的这只" : ""} · ${item.hint}</div>
+      ${mini(stock, item.empty)}
+    </div>`;
+  }).join("");
+
   document.getElementById("steps").innerHTML = (s.steps || []).map(st => `
     <div class="step">
       <div class="${st.pass ? "ok" : "no"}">${st.step} ${st.pass ? "过" : "否"}</div>
       <div><b>${st.title}</b><div class="why">${st.detail}</div></div>
     </div>`).join("");
-  const main = (s.board || []).filter(r => r.in_mainline);
+  const main = (s.board || []).filter(r => r.lane === "主线" || r.in_mainline);
   document.getElementById("mainboard").innerHTML = main.map((r, i) => `
     <tr class="${r.code === w?.code ? "pass" : ""}">
       <td>${i+1}</td><td>${r.name}</td><td>${r.first_seal}</td><td>${r.open_count}</td>
       <td>${r.boards}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.pop_rank ?? "-"}</td><td>${r.dimensions?.volume?.verdict || ""}</td>
-      <td><span class="${tagClass(r.role, true)}">${r.role}</span></td>
+      <td>${(hatsOf(r).length ? hatsOf(r) : [r.role]).map(h => `<span class="${tagClass(h, r.lane)}">${h}</span>`).join("")}</td>
     </tr>`).join("");
   document.getElementById("themes").innerHTML = (s.themes || []).map(t => `
-    <tr class="${t.mainline ? "pass" : "side"}">
-      <td>${t.mainline ? "主线" : "支线"}</td><td>${t.theme}</td><td>${t.count}</td>
+    <tr class="${t.lane === "主线" ? "pass" : "side"}">
+      <td>${t.lane || (t.mainline ? "主线" : "支线")}</td><td>${t.theme}</td><td>${t.count}</td>
       <td>${t.amount_yi}</td><td>${t.max_boards}</td><td>${t.first} ${t.first_time}</td>
     </tr>`).join("");
   document.getElementById("all").innerHTML = (s.board || []).map(r => `
-    <tr class="${r.in_mainline ? (r.code===w?.code?"pass":"") : "side"}">
-      <td>${r.in_mainline ? "主线" : "支线"}</td><td>${r.name}</td><td>${r.theme}</td>
+    <tr class="${r.code===w?.code?"pass": (r.lane==="主线"?"":"side")}">
+      <td>${r.lane || ""}</td><td>${r.name}</td><td>${r.theme}</td>
       <td>${r.boards}</td><td>${r.first_seal}</td><td>${r.turnover}</td><td>${r.amount_yi}</td>
       <td>${r.open_count}</td><td>${r.pop_rank ?? "-"}</td>
-      <td><span class="${tagClass(r.role, r.in_mainline)}">${r.role}</span></td>
+      <td><span class="${tagClass(r.role, r.lane)}">${r.role}</span></td>
     </tr>`).join("");
+  document.getElementById("defs").innerHTML = (s.definitions || []).map(d =>
+    `<div><b>${d.name}</b> ${d.rule}<br/><span style="color:#8b97b3">${d.use}</span></div>`
+  ).join("");
 }
 async function load() {
   const q = new URLSearchParams();
