@@ -1,23 +1,15 @@
 # 先比独选股（Tick Stock Panel）
 
-## 一键启动（Windows 请看这里）
+## 一键启动（Windows）
 
-解压 ZIP 后，进入内层文件夹，**双击这个英文文件**（不会一闪退出）：
+1. 重新下载并解压最新 ZIP
+2. 进入内层文件夹，**双击 `START.cmd`**
+3. 等待依赖安装结束，浏览器会自动打开 http://127.0.0.1:8765
+4. **黑窗口不要关**
 
-### `START.cmd`
+如果以前失败过：先删除 `tsp\.venv` 再启动。
 
-若仍失败，先双击 **`检查环境.bat`**，看是否提示缺少 Python。
-
-- 需要先安装 [Python 3.10+](https://www.python.org/downloads/windows/)
-- 安装时务必勾选 **Add python.exe to PATH**
-- 启动成功后浏览器打开：http://127.0.0.1:8765
-- 窗口必须保持打开；关掉窗口 = 服务停止
-
-macOS / Linux：
-
-```bash
-chmod +x 一键启动.sh && ./一键启动.sh
-```
+需要 Python 3.10+（3.11 可用）。安装时勾选 **Add python.exe to PATH**。
 
 ## 完整下载链接
 

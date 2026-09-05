@@ -5,14 +5,14 @@
 ## 一键启动
 
 ### Windows（重要）
-解压后双击根目录 **`START.cmd`**（推荐，英文名，窗口不会一闪就关）。
+解压后双击根目录 **`START.cmd`**。装完依赖后会**自动打开网页**。
 
-若闪退 / 报错：
-1. 先双击 **`检查环境.bat`**
-2. 安装 [Python 3.10+](https://www.python.org/downloads/windows/)，勾选 **Add python.exe to PATH**
-3. 再双击 `START.cmd`；失败时同目录会生成 `tsp/startup.log`
+若提示 pip / tdx-mcp 失败（旧包问题）：
+1. 删除文件夹 `tsp\.venv`
+2. 重新下载最新 ZIP 后再双击 `START.cmd`  
+   （新版本已去掉对 Python 3.12 的 tdx-mcp 强制依赖，3.11 可用）
 
-也可用 `一键启动.bat`（同样会 `pause` 留住窗口）。
+其它排查：双击 `检查环境.bat`；需 Python 3.10+ 并勾选 PATH。
 
 ### macOS / Linux
 ```bash
@@ -37,7 +37,8 @@ chmod +x 一键启动.sh
 完整压缩包（本分支最新代码）：
 
 ```
-https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/xianbidu-tsp-33cc.zip
+https://github.com/yauklt502/my-shunshixuangu
+/archive/refs/heads/cursor/xianbidu-tsp-33cc.zip
 ```
 
 解压后运行根目录 `一键启动.bat`（Windows）或 `./一键启动.sh`（Mac/Linux）。

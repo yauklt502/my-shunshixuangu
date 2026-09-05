@@ -1,6 +1,6 @@
-# 通达信第三方插件（tdx-mcp / eltdx）
+# 通达信行情（eltdx）
 
-TSP 后端通过 `eltdx` 直连通达信行情主站，并在 venv 中安装 `tdx-mcp`（含 eltdx 依赖）。
+TSP 后端通过 **eltdx** 直连通达信行情主站。`tdx-mcp` 为可选插件（需 Python ≥ 3.12），**不是启动必需**。
 
 ## 默认主站
 
@@ -8,27 +8,30 @@ TSP 后端通过 `eltdx` 直连通达信行情主站，并在 venv 中安装 `td
 115.238.90.165:7709
 ```
 
-可用环境变量覆盖：
-
 ```bash
 export TDX_HOST=115.238.90.165:7709
 ```
 
 ## 已验证能力
 
-- 五档盘口 `quotes.get_depth`
-- 当日分时 `minutes.today`
-- 1 分钟 / 5 分钟 / 日 K `bars.get`
+- 五档盘口
+- 当日分时
+- 1 分钟 / 5 分钟 / 日 K
 
 ## 安装
 
+核心依赖（Python 3.10+ 均可）：
+
 ```bash
 cd tsp
-python3 -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` 含：
+可选（仅 Python ≥ 3.12）：
 
-- `eltdx[http]>=3.1.1`
-- `tdx-mcp==0.1.5`（兼容声明的 0.1.x 插件链）
+```bash
+pip install -r requirements-optional.txt
+```

@@ -1,0 +1,2 @@
+# Optional extras (Python >=3.12 only). Core app uses eltdx directly.
+# tdx-mcp>=0.1.5
