@@ -5,6 +5,7 @@ import json
 import sys
 
 from dragon.engine import build_snapshot
+from dragon.shot import save_png
 
 
 def _line(stock: dict | None, title: str) -> str:
@@ -53,6 +54,9 @@ async def main() -> None:
     else:
         print("盯1只：无")
         print(f"理由：{snap.get('reason')}")
+    if "--shot" in flags:
+        path = save_png(snap)
+        print(f"截屏：{path}")
     if "--json" in flags:
         print(json.dumps({
             "watch": snap.get("watch"),

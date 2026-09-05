@@ -62,6 +62,7 @@
       border-radius: 8px; padding: 6px 10px;
     }
     button { cursor: pointer; }
+    button.shot { background: #3a2f12; border-color: #6b5420; color: var(--gold); }
     .tools { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
     .warns { color: var(--warn); font-size: 12px; }
     .notes { font-size: 12px; color: var(--muted); margin-top: 8px; }
@@ -87,11 +88,12 @@
         <input id="date" placeholder="复盘日 20260904" maxlength="8" />
         <button id="go">加载</button>
         <button id="live">实时</button>
+        <button id="shot" class="shot">截屏</button>
       </div>
       <div class="meta" id="meta">正在拉行情…</div>
     </div>
   </header>
-  <div class="wrap">
+  <div class="wrap" id="shotRoot">
     <div id="warns" class="warns"></div>
     <div class="card watch" id="watchCard"></div>
     <div class="three" id="hats"></div>
@@ -139,8 +141,9 @@
       <div class="defs" id="defs" style="margin-top:10px"></div>
     </details>
   </div>
+<script src="/static/vendor/html2canvas.min.js"></script>
 <script>
-let timer = null, currentDate = "", currentMode = "";
+let timer = null, currentDate = "", currentMode = "", lastSnap = null;
 function hatsOf(r) { return (r && r.hats) || []; }
 function tagClass(role, lane) {
   if (["情绪龙头","火车头"].includes(role)) return "tag gold";
@@ -158,6 +161,7 @@ function mini(p, empty) {
     <div class="why">${p.status || ""}</div>`;
 }
 function render(s) {
+  lastSnap = s;
   const sess = s.session || {};
   const ml = s.mainline;
   const sec = s.secondary;
@@ -248,6 +252,42 @@ document.getElementById("live").onclick = () => {
   document.getElementById("mode").value = "";
   load();
 };
+function shotQuery() {
+  const q = new URLSearchParams();
+  if (currentDate) q.set("date", currentDate);
+  if (currentMode) q.set("mode", currentMode);
+  return q.toString();
+}
+async function downloadShot() {
+  const btn = document.getElementById("shot");
+  const old = btn.textContent;
+  btn.textContent = "截屏中…";
+  try {
+    if (window.html2canvas) {
+      const canvas = await html2canvas(document.getElementById("shotRoot"), {
+        backgroundColor: "#0b1020",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const a = document.createElement("a");
+      const date = (lastSnap && lastSnap.date) || currentDate || "live";
+      const name = (lastSnap && lastSnap.watch && lastSnap.watch.name) || "无龙";
+      a.download = `定龙头-${date}-${name}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+      return;
+    }
+    const q = shotQuery();
+    window.location.href = "/api/shot.png" + (q ? "?" + q : "");
+  } catch (err) {
+    const q = shotQuery();
+    window.location.href = "/api/shot.png" + (q ? "?" + q : "");
+  } finally {
+    btn.textContent = old;
+  }
+}
+document.getElementById("shot").onclick = downloadShot;
 load();
 startPoll();
 </script>

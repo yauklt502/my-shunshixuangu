@@ -9,3 +9,4 @@ venv/
 .idea/
 .vscode/
 data/xgb/
+data/shots/

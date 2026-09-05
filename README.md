@@ -9,35 +9,40 @@
 5. 谁叫得出来 —— **情绪龙头**（人气是加分，不是硬门槛）
 6. 最后看量：健康留下，一字或爆量见顶放弃
 
-三路对照：
+三路对照：火车头、情绪龙头、空间高标。
 
-- **火车头**：主线里最早封的能买的板
-- **情绪龙头**：今天情绪围着谁转，不一定先封，也不一定板最高
-- **空间高标**：全市场非一字最高连板。4板以上即使板块没跟风，也当高度看，不当垃圾
+## 一键启动
 
-支线高标留下对照，不进火车头池。独立 1–2 板即使人气第一，也只是游资热点，不当情绪龙。
+Windows 双击 `一键启动.bat`  
+Mac / Linux 运行 `./一键启动.sh` 或 `./run.sh`
 
-## 启动
+会自动装依赖、打开服务、弹出浏览器：
 
-```bash
-./run.sh
-```
+http://127.0.0.1:8688
 
-Windows 双击 `start.bat`。打开 http://127.0.0.1:8765
+页面右上角 **截屏** 一键存图。也可以直接打开：
 
-页面可切「盘中跟 / 盘后复盘」，日期框复盘例如 `20260904`。
+http://127.0.0.1:8688/api/shot.png
 
 ```bash
-python3 -m dragon              # 按时段自动
-python3 -m dragon --review
-python3 -m dragon --intraday
-python3 -m dragon 20260904 --review
+python3 launch.py
+python3 -m dragon 20260904 --review --shot
 ```
+
+## 下载
+
+源码 zip（GitHub 当前分支）：
+
+https://github.com/yauklt502/my-shunshixuangu/archive/refs/heads/cursor/ten-sec-dragon-6202.zip
+
+本地跑起来后也可以下：
+
+http://127.0.0.1:8688/download.zip
 
 ## 测试
 
 ```bash
-python3 -m unittest tests.test_score tests.test_backtest -v
+python3 -m unittest tests.test_score tests.test_backtest tests.test_shot -v
 ```
 
 ## 数据
