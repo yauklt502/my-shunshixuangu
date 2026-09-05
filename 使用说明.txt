@@ -1,18 +1,23 @@
-三条纪律看板 · 本地完整包
+三条纪律看板 · 本地完整包（venv 四步启动）
 ================================
 
 一、下载
 
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
 
-二、怎么用（和以前一样）
+二、怎么用
 
-1. 解压
-2. 双击「启动.bat」
-3. 浏览器自动打开 http://127.0.0.1:5177/
+1. 解压完整包
+2. 双击「启动.bat」（或 start.cmd）
+3. 窗口会显示：
+   [1/4] Creating / checking venv ...
+   [2/4] Installing dependencies (first run 1-3 min) ...
+   [3/4] Starting server ...
+   [4/4] Browser will open automatically when ready.
+4. 浏览器自动打开 http://127.0.0.1:5177/
 
-不需要 npm install，不需要创建 venv，不需要装依赖。
-本机只需已安装 Node.js（https://nodejs.org/ ，勾选 Add to PATH）。
+首次安装依赖约 1–3 分钟，之后再开就快。
+本机需要已安装 Python 3.10+（https://www.python.org/downloads/windows/ ，勾选 Add to PATH）。
 
 可选：
 - 「一键部署到本地.bat」→ 复制到 %USERPROFILE%\三条纪律看板 再启动
@@ -20,11 +25,13 @@ https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashbo
 
 三、功能
 
-- 数据源切换：东方财富 / 同花顺 / 通达信兼容（腾讯）
+- 数据源：东方财富 / 同花顺 / 通达信兼容（腾讯）
 - ① 低吸纪律  ② 二三板节奏  ③ 回撤别乱动
 - 「一键截图」导出白底 PNG
 
 四、注意
 
 - 不要直接双击 web\index.html
+- 若启动失败：删除目录里的 .venv 后重开「启动.bat」
+- 详细日志：startup.log
 - 仅供纪律可视化，不构成投资建议
