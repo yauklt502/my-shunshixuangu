@@ -52,12 +52,15 @@
     th.sort { cursor: pointer; user-select: none; }
     th.sort:hover { color: var(--text); }
     th.sort.on { color: var(--cyan); }
+    th.sort .dirs { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
     th.sort .dir {
-      display: inline-block; min-width: 12px; padding: 0 2px;
-      color: #9ca3af; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; min-height: 22px; padding: 0 5px;
+      border: 1px solid var(--line); border-radius: 6px;
+      color: #6b7280; font-weight: 700; line-height: 1; background: #f9fafb;
     }
-    th.sort .dir:hover { color: var(--text); }
-    th.sort .dir.on { color: var(--cyan); }
+    th.sort .dir:hover { color: var(--text); background: #e5e7eb; }
+    th.sort .dir.on { color: #fff; background: var(--cyan); border-color: var(--cyan); }
     tr.pass td { background: #f0fdf4; }
     tr.side td { color: #6b7280; }
     .tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: 11px; margin-right: 4px; }
@@ -139,13 +142,13 @@
             <thead>
               <tr>
                 <th>序</th><th>名称</th>
-                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
+                <th class="sort" data-table="main" data-key="first_seal" data-label="首封">首封 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
                 <th class="sort" data-table="main" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
                 <th class="sort" data-table="main" data-key="seal" data-label="封单">封单</th>
                 <th>炸</th><th>板</th>
-                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手% <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
-                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
-                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
+                <th class="sort" data-table="main" data-key="turnover" data-label="换手%">换手% <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="main" data-key="amount" data-label="成交亿">成交亿 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="main" data-key="pop" data-label="人气">人气 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
                 <th>量能</th><th>帽子</th>
               </tr>
             </thead>
@@ -178,13 +181,13 @@
             <thead>
               <tr>
                 <th>通道</th><th>名称</th><th>主题</th><th>板</th>
-                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
+                <th class="sort" data-table="all" data-key="first_seal" data-label="首封">首封 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
                 <th class="sort" data-table="all" data-key="peer_zt" data-label="板块涨停">板块涨停</th>
                 <th class="sort" data-table="all" data-key="seal" data-label="封单">封单</th>
-                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手% <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
-                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
+                <th class="sort" data-table="all" data-key="turnover" data-label="换手%">换手% <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
+                <th class="sort" data-table="all" data-key="amount" data-label="成交亿">成交亿 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
                 <th>炸</th>
-                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气 <span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></th>
+                <th class="sort" data-table="all" data-key="pop" data-label="人气">人气 <span class="dirs"><span class="dir" data-dir="1">↑</span><span class="dir" data-dir="-1">↓</span></span></th>
                 <th>角色</th>
               </tr>
             </thead>
