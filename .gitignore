@@ -11,4 +11,5 @@ dist/
 frontend/dist/
 backend/.venv/
 .run/
+*.tsbuildinfo
 # 预构建页面 web/ 需要随 ZIP 发布，不要忽略
