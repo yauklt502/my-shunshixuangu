@@ -34,6 +34,9 @@ async def main() -> None:
     )
     if mood:
         print(f"开盘啦情绪 {mood.get('strong')}  涨停{mood.get('zt')}  最高{mood.get('height')}板")
+    ladder = snap.get("ladder") or []
+    if ladder:
+        print("连板 " + " · ".join(f"{x.get('boards')}板{x.get('count')}" for x in ladder))
     lanes = src.get("lanes") or {}
     if lanes:
         print("各路 " + " · ".join(f"{k}{v.get('name')}" for k, v in lanes.items()))
