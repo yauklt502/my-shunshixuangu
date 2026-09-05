@@ -10,7 +10,7 @@ if not exist E:\ (
   exit /b %errorlevel%
 )
 
-echo 将安装到: %DST%
+echo 将复制到: %DST%
 if not exist "%DST%" mkdir "%DST%"
 robocopy "%SRC%." "%DST%" /E /XD .git .wrangler web\download /NFL /NDL /NJH /NJS /nc /ns /np >nul
 if errorlevel 8 (
@@ -20,14 +20,8 @@ if errorlevel 8 (
 )
 
 cd /d "%DST%"
-if not exist "node_modules\iconv-lite" (
-  echo 正在安装依赖...
-  call npm install --omit=dev
-)
-
-echo.
-echo 部署完成: %DST%
-echo 正在启动...
+echo 部署完成，正在启动...
+echo 浏览器: http://127.0.0.1:5177/
 start "" "http://127.0.0.1:5177/"
 node server\index.mjs
 pause

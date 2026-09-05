@@ -202,16 +202,11 @@ export async function fetchText(url, { headers = {}, encoding = 'utf8', timeout 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const buf = await res.arrayBuffer();
     if (encoding === 'utf8') return new TextDecoder('utf-8').decode(buf);
+    // 零依赖：Node / Workers 均用内置 TextDecoder
     try {
       return new TextDecoder('gbk').decode(buf);
     } catch {
-      // Node fallback via dynamic import
-      try {
-        const iconv = await import('iconv-lite');
-        return iconv.default.decode(Buffer.from(buf), 'gbk');
-      } catch {
-        return new TextDecoder('utf-8').decode(buf);
-      }
+      return new TextDecoder('utf-8').decode(buf);
     }
   } finally {
     if (t) clearTimeout(t);

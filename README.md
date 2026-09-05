@@ -16,7 +16,12 @@
 
 https://github.com/yauklt502/my-shunshixuangu/raw/cursor/three-discipline-dashboard-a337/web/download/three-discipline-local.zip
 
-解压后双击 `启动.bat`（或 `一键部署到本地.bat` / `一键部署到E盘.bat`）。
+解压后**双击 `启动.bat` 即可打开网页**（和以前一样）。
+
+- 不需要 `npm install`
+- 不需要创建 venv
+- 不需要联网装依赖  
+本机只需已安装 Node.js（勾选 Add to PATH）。
 
 重新打包：
 
@@ -27,10 +32,11 @@ npm run pack:local
 ## 本地启动（开发）
 
 ```bash
-npm install
 npm start
 # http://127.0.0.1:5177
 ```
+
+（运行期零 npm 依赖；只有部署 Workers 时才需要 `npm i` 装 wrangler。）
 
 ## Cloudflare Workers 部署
 
